@@ -822,6 +822,20 @@ tbody tr:last-child td{border-bottom:none;}
 
 <script>
 /* ══════════════════════════════════
+   ZUGRIFFSSCHUTZ
+══════════════════════════════════ */
+(function(){
+  const isLocal=['localhost','127.0.0.1',''].includes(location.hostname);
+  const validRef=document.referrer.includes('jasonschreiber.at');
+  const ACCESS_KEY='flv2025';
+  const urlKey=new URLSearchParams(location.search).get('access');
+  if(!isLocal&&!validRef&&urlKey!==ACCESS_KEY){
+    document.body.style.cssText='margin:0;background:#0F0F0F;display:flex;align-items:center;justify-content:center;height:100vh;font-family:Inter,sans-serif;';
+    document.body.innerHTML='<div style="color:#555;font-size:14px;text-align:center"><div style="font-size:32px;margin-bottom:12px">🔒</div>Zugriff nicht gestattet.</div>';
+  }
+})();
+
+/* ══════════════════════════════════
    NAVIGATION
 ══════════════════════════════════ */
 function goTo(id){
@@ -830,6 +844,7 @@ function goTo(id){
   window.scrollTo({top:0,behavior:'smooth'});
   if(id==='dash') syncDash();
   setTimeout(updatePanelMaxHeight,50);
+  setTimeout(sendHeight,100);
 }
 
 function syncDash(){
@@ -1458,6 +1473,19 @@ if(typeof ResizeObserver!=='undefined'){
 }
 window.addEventListener('resize',updatePanelMaxHeight);
 
+/* ══════════════════════════════════
+   IFRAME HEIGHT (postMessage)
+══════════════════════════════════ */
+function sendHeight(){
+  if(window.parent===window)return;
+  window.parent.postMessage({type:'resize',height:document.body.scrollHeight},'*');
+}
+window.addEventListener('resize',sendHeight);
+if(typeof ResizeObserver!=='undefined'){
+  const _hObs=new ResizeObserver(sendHeight);
+  _hObs.observe(document.body);
+}
+
 window.addEventListener('DOMContentLoaded',()=>{
   berechneKurz();
   setMittelAnbieter();
@@ -1465,6 +1493,7 @@ window.addEventListener('DOMContentLoaded',()=>{
   buildLangLeg();
   syncDash();
   setTimeout(updatePanelMaxHeight,0);
+  setTimeout(sendHeight,100);
 });
 </script>
 </body>

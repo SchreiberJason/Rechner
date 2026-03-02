@@ -627,6 +627,14 @@ tbody tr:last-child td{border-bottom:none;}
         <div class="fu"><input type="number" id="m_dage" value="100" min="0" max="100" step="1" oninput="berechneMittel()"><span class="ub">%</span></div></div>
       <div class="f"><label>Spread An-/Verkauf</label>
         <div class="fu"><input type="number" id="m_spread" value="0" min="0" step="0.01" oninput="berechneMittel()"><span class="ub">%</span></div></div>
+      <div class="opt-toggle" onclick="toggleMInflation()" style="margin:8px -18px -18px;border-top:1px solid var(--brd);border-bottom:none;border-radius:0 0 0 0">
+        <span class="opt-label">📉 Inflation berücksichtigen</span>
+        <div class="opt-pill" id="minf-pill"></div>
+      </div>
+      <div id="minf-fields" class="hidden" style="margin:0 -18px -18px;border-top:1px solid var(--brd);padding:12px 18px 14px">
+        <div class="f" style="margin-bottom:0"><label>Inflation p.a.</label>
+          <div class="fu"><input type="number" id="m_inflation" value="2.1" min="0" step="0.1" oninput="berechneMittel()"><span class="ub">%</span></div></div>
+      </div>
     </div>
 
     <!-- Sonderzahlungen collapsible (Mittelfristig) -->
@@ -693,6 +701,14 @@ tbody tr:last-child td{border-bottom:none;}
         <div class="fu"><input type="number" id="l_lj" value="40" min="1" max="50"><span class="ub">Jahre</span></div></div>
       <div class="f"><label>Marktrendite p.a.</label>
         <div class="fu"><input type="number" id="l_rpa" value="7" min="0" max="30" step="0.1"><span class="ub">% p.a.</span></div></div>
+      <div class="opt-toggle" onclick="toggleLInflation()" style="margin:8px -18px -16px;border-top:1px solid var(--brd);border-bottom:none">
+        <span class="opt-label">📉 Inflation berücksichtigen</span>
+        <div class="opt-pill" id="linf-pill"></div>
+      </div>
+      <div id="linf-fields" class="hidden" style="margin:0 -18px -16px;border-top:1px solid var(--brd);padding:12px 18px 14px">
+        <div class="f" style="margin-bottom:0"><label>Inflation p.a.</label>
+          <div class="fu"><input type="number" id="l_inflation" value="2.1" min="0" step="0.1" oninput="berechneLang()"><span class="ub">%</span></div></div>
+      </div>
     </div>
     <div class="ps">
       <div class="sl">Sonderzahlungen</div>
@@ -783,7 +799,7 @@ tbody tr:last-child td{border-bottom:none;}
       </div>
     </div>
     <div class="g2">
-      <div class="met"><div class="ml">FLV (Netto)</div><div class="mv green" id="l_flv">—</div><div class="ms">nach Kosten & Steuer</div></div>
+      <div class="met"><div class="ml">FLV (Netto)</div><div class="mv green" id="l_flv">—</div><div class="ms">nach Kosten &amp; Steuer</div><div class="ms hidden" id="l_flv_real" style="color:#a78bfa"></div></div>
       <div class="met"><div class="ml">Depot Thesaurierend</div><div class="mv blue" id="l_thes">—</div><div class="ms">nach KESt bei Verkauf</div></div>
     </div>
     <div class="card">
@@ -794,7 +810,7 @@ tbody tr:last-child td{border-bottom:none;}
       <div class="ch"><span class="ct-title">Jahrestabelle</span></div>
       <div class="tw">
         <table>
-          <thead><tr><th>Jahr</th><th>Eingezahlt</th><th style="color:#4ade80">FLV</th><th style="color:#60a5fa">Thesaur.</th><th style="color:#fb923c">Ausschütt.</th></tr></thead>
+          <thead id="l_thead"><tr><th>Jahr</th><th>Eingezahlt</th><th style="color:#4ade80">FLV</th><th style="color:#60a5fa">Thesaur.</th><th style="color:#fb923c">Ausschütt.</th></tr></thead>
           <tbody id="l_tbody"></tbody>
         </table>
       </div>
@@ -948,6 +964,7 @@ function setMittelAnbieter(){
 ══════════════════════════════════ */
 let mMode='frei';
 let mRegAn=false,mRegBetrag=1000,mRegIntervall=1,mRegAbJahr=1;
+let mInflAn=false;
 let tagesAn=false;
 let lastMFonds=0,lastMZins=0;
 let lastLFlv=0,lastLDelta=0;
@@ -1080,6 +1097,7 @@ function berechneMittel(){
   const div   =(+(document.getElementById('m_ddiv')?.value||0))/100;
   const age   =(+(document.getElementById('m_dage')?.value||100))/100;
   const spread=(+(document.getElementById('m_spread')?.value||0))/100;
+  const inflation=mInflAn?(+(document.getElementById('m_inflation')?.value||0))/100:0;
   const qf=Math.pow(1+rendite-ter-depotgeb,1/12);
 
   function calcF(r,j){
@@ -1151,7 +1169,7 @@ function berechneMittel(){
       <div class="met"><span class="mi">💡</span><div class="ml">Benötigte Sparrate</div><div class="mv">${needed!==null?eur(needed)+'/Mo.':'—'}</div><div class="ms">um Ziel exakt zu erreichen</div></div>`;
   }else{
     g.innerHTML=`
-      <div class="met hi"><span class="mi">📈</span><div class="ml">Fonds-Ergebnis</div><div class="mv ac">${eur(last.f)}</div><div class="ms">nach ${jahre} Jahren</div></div>
+      <div class="met hi"><span class="mi">📈</span><div class="ml">Fonds-Ergebnis</div><div class="mv ac">${eur(last.f)}</div><div class="ms">nach ${jahre} Jahren${inflation>0?` · <span style="color:#a78bfa">${eur(last.f/Math.pow(1+inflation,jahre))}</span> real`:''}</div></div>
       <div class="met"><span class="mi">💰</span><div class="ml">Eingezahlt</div><div class="mv">${eur(last.e)}</div><div class="ms">Gesamte Einzahlungen</div></div>
       <div class="met"><span class="mi">⚡</span><div class="ml">Netto-Zuwachs</div><div class="mv pos">+${eur(last.f-last.e)}</div><div class="ms">Rendite nach KESt</div></div>`;
   }
@@ -1176,7 +1194,8 @@ function berechneMittel(){
   // Table
   const tc2=document.createElement('div');tc2.className='card';
   const extraH=isZ?'<th>Ziellücke</th>':'<th>Zuwachs</th>';
-  tc2.innerHTML=`<div class="ch"><span class="ct-title">Jahresübersicht</span></div><div class="tw"><table><thead><tr><th>Jahr</th><th>Eingezahlt</th><th style="color:#60a5fa">Fonds</th>${tagesAn?'<th style="color:#4ade80">Tagesgeld</th>':''}${extraH}</tr></thead><tbody id="m_tbody"></tbody></table></div>`;
+  const infH=inflation>0?'<th style="color:#a78bfa">Kaufkraft</th>':'';
+  tc2.innerHTML=`<div class="ch"><span class="ct-title">Jahresübersicht</span></div><div class="tw"><table><thead><tr><th>Jahr</th><th>Eingezahlt</th><th style="color:#60a5fa">Fonds</th>${tagesAn?'<th style="color:#4ade80">Tagesgeld</th>':''}${extraH}${infH}</tr></thead><tbody id="m_tbody"></tbody></table></div>`;
   panel.appendChild(tc2);
 
   // Render chart
@@ -1223,8 +1242,9 @@ function berechneMittel(){
     rows.forEach(r=>{
       const extra=isZ?`<td style="color:${r.f>=(ziel||0)?'#4ade80':'var(--ts)'}">${r.f>=(ziel||0)?'✓':eur((ziel||0)-r.f)}</td>`:`<td style="color:#4ade80">+${eur(r.f-r.e)}</td>`;
       const tagesCell=tagesAn?`<td style="color:#4ade80">${eur(r.t)}</td>`:'';
+      const infCell=inflation>0?`<td style="color:#a78bfa">${eur(r.f/Math.pow(1+inflation,r.j))}</td>`:'';
       const tr=document.createElement('tr');
-      tr.innerHTML=`<td>${r.j}</td><td>${eur(r.e)}</td><td style="color:#60a5fa">${eur(r.f)}</td>${tagesCell}${extra}`;
+      tr.innerHTML=`<td>${r.j}</td><td>${eur(r.e)}</td><td style="color:#60a5fa">${eur(r.f)}</td>${tagesCell}${extra}${infCell}`;
       tb2.appendChild(tr);
     });
   }
@@ -1234,6 +1254,7 @@ function berechneMittel(){
    LANGFRISTIG
 ══════════════════════════════════ */
 let lRegAn=false,lRegBetrag=1000,lRegIntervall=1,lRegAbJahr=1;
+let lInflAn=false;
 let lChart=null;
 let lVis={flv:true,thes:true,ausch:true,einz:true};
 let einmal=[{j:0,b:2000},{j:5,b:5000},{j:7,b:5000}];
@@ -1253,6 +1274,18 @@ function toggleLReg(){
   lRegAn=!lRegAn;
   document.getElementById('lreg-pill').classList.toggle('on',lRegAn);
   document.getElementById('lreg-fields').classList.toggle('hidden',!lRegAn);
+  berechneLang();
+}
+function toggleMInflation(){
+  mInflAn=!mInflAn;
+  document.getElementById('minf-pill').classList.toggle('on',mInflAn);
+  document.getElementById('minf-fields').classList.toggle('hidden',!mInflAn);
+  berechneMittel();
+}
+function toggleLInflation(){
+  lInflAn=!lInflAn;
+  document.getElementById('linf-pill').classList.toggle('on',lInflAn);
+  document.getElementById('linf-fields').classList.toggle('hidden',!lInflAn);
   berechneLang();
 }
 function renderEinmal(){
@@ -1298,6 +1331,7 @@ function berechneLang(){
     +(document.getElementById('l_reg_ab')?.value||1),
     lj):[];
   const ein=[...einmal,...lRegArr].map(e=>({j:+e.j,b:+e.b||0}));
+  const inflation=lInflAn?(+(document.getElementById('l_inflation')?.value||0))/100:0;
   const flv={ai:+document.getElementById('l_fagio').value/100,lk:+document.getElementById('l_fkosten').value/100};
   const dep={ag:+document.getElementById('l_dagio').value/100,sp:+document.getElementById('l_dsp').value,ez:+document.getElementById('l_dez').value,ter:+document.getElementById('l_dter').value/100,ke:+document.getElementById('l_dkest').value/100,dv:+document.getElementById('l_ddiv').value/100,ae:+document.getElementById('l_dage').value/100,dg:+(document.getElementById('l_ddepotgeb')?.value||0)/100,spread:+(document.getElementById('l_dspread')?.value||0)/100};
 
@@ -1327,6 +1361,13 @@ function berechneLang(){
 
   document.getElementById('l_flv').textContent =eur(last.FN);
   document.getElementById('l_thes').textContent=eur(last.TN);
+  const flvRealEl=document.getElementById('l_flv_real');
+  if(flvRealEl){
+    if(inflation>0){
+      flvRealEl.textContent=`≈ ${eur(last.FN/Math.pow(1+inflation,lj))} real`;
+      flvRealEl.classList.remove('hidden');
+    }else{flvRealEl.classList.add('hidden');}
+  }
 
   let beT=null,beA=null;
   for(const d of data){if(!beT&&d.FN>=d.TN)beT=d.J;if(!beA&&d.FN>=d.AN)beA=d.J;}
@@ -1340,8 +1381,18 @@ function berechneLang(){
   document.getElementById('l_delta').className='mv '+(dl>=0?'pos':'neg');
   set('l_delta_s',dl>=0?`FLV schlägt ${bn} um ${eur(dl)}`:`${bn} schlägt FLV um ${eur(Math.abs(dl))}`);
 
+  const thead=document.getElementById('l_thead');
+  if(thead){
+    const infH=inflation>0?'<th style="color:#a78bfa">Kaufkraft (FLV)</th>':'';
+    thead.innerHTML=`<tr><th>Jahr</th><th>Eingezahlt</th><th style="color:#4ade80">FLV</th><th style="color:#60a5fa">Thesaur.</th><th style="color:#fb923c">Ausschütt.</th>${infH}</tr>`;
+  }
   const tb=document.getElementById('l_tbody');tb.innerHTML='';
-  data.forEach(r=>{const tr=document.createElement('tr');tr.innerHTML=`<td>${r.J}</td><td>${eur(r.E)}</td><td style="color:#4ade80">${eur(r.FN)}</td><td style="color:#60a5fa">${eur(r.TN)}</td><td style="color:#fb923c">${eur(r.AN)}</td>`;tb.appendChild(tr);});
+  data.forEach(r=>{
+    const infCell=inflation>0?`<td style="color:#a78bfa">${eur(r.FN/Math.pow(1+inflation,r.J))}</td>`:'';
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td>${r.J}</td><td>${eur(r.E)}</td><td style="color:#4ade80">${eur(r.FN)}</td><td style="color:#60a5fa">${eur(r.TN)}</td><td style="color:#fb923c">${eur(r.AN)}</td>${infCell}`;
+    tb.appendChild(tr);
+  });
 }
 
 /* ══════════════════════════════════

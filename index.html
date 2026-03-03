@@ -42,7 +42,7 @@ body{
 /* ══════════ BACK NAV ══════════ */
 .back-nav{
   max-width:1240px; margin:0 auto;
-  padding:env(safe-area-inset-top,16px) 16px 0;
+  padding:env(safe-area-inset-top,16px) 0 0;
   padding-top:max(16px, env(safe-area-inset-top));
   display:flex; align-items:center; gap:10px;
 }
@@ -126,7 +126,7 @@ body{
 /* ══════════ CALC LAYOUT ══════════ */
 .calc-layout{
   max-width:1240px; margin:0 auto;
-  padding:20px 16px 80px;
+  padding:20px 0 80px;
   display:grid; grid-template-columns:320px 1fr;
   gap:20px; align-items:start;
 }
@@ -321,7 +321,7 @@ tbody tr:last-child td{border-bottom:none;}
   .pillar-grid>.pillar-card:last-child{grid-column:1/-1;}
   .calc-layout{
     grid-template-columns:1fr;
-    padding:16px 20px 60px;
+    padding:16px 0 60px;
     gap:16px;
   }
   .params-panel{position:static;max-height:none;overflow-y:visible;}
@@ -342,7 +342,7 @@ tbody tr:last-child td{border-bottom:none;}
 /* ---- Mobile <600px ---- */
 @media(max-width:599px){
   body{font-size:14px;}
-  .back-nav{padding:14px 14px 0;}
+  .back-nav{padding:14px 0 0;}
   .dash-wrap{padding:20px 0 56px;}
   .dash-summary{grid-template-columns:1fr 1fr;gap:1px;}
   .dash-summary .ds-item:nth-child(3){grid-column:1/-1;border-top:1px solid var(--brd);}
@@ -352,7 +352,7 @@ tbody tr:last-child td{border-bottom:none;}
   .pillar-card:hover{transform:none;border-color:var(--brd);box-shadow:0 4px 20px var(--sh);}
   .calc-layout{
     grid-template-columns:1fr;
-    padding:14px 14px 64px;
+    padding:14px 0 64px;
     gap:14px;
   }
   .params-panel{position:static;max-height:none;overflow-y:visible;}
@@ -371,10 +371,10 @@ tbody tr:last-child td{border-bottom:none;}
 /* ---- Large desktop ≥1024px ---- */
 @media(min-width:1024px){
   .dash-wrap{padding:40px 0 80px;}
-  .back-nav{padding:20px 28px 0;}
+  .back-nav{padding:20px 0 0;}
   .calc-layout{
     grid-template-columns:330px 1fr;
-    padding:24px 28px 80px;
+    padding:24px 0 80px;
     gap:24px;
   }
   .g3{grid-template-columns:repeat(3,1fr);}
@@ -1483,7 +1483,9 @@ window.addEventListener('resize',updatePanelMaxHeight);
 ══════════════════════════════════ */
 function sendHeight(){
   if(window.parent===window)return;
-  window.parent.postMessage({type:'resize',height:document.body.scrollHeight},'*');
+  const view=document.querySelector('.view.active');
+  const h=view?view.scrollHeight:Math.max(document.body.scrollHeight,document.documentElement.scrollHeight);
+  window.parent.postMessage({type:'resize',height:h},'*');
 }
 window.addEventListener('resize',sendHeight);
 if(typeof ResizeObserver!=='undefined'){

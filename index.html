@@ -47,7 +47,7 @@ body{
   display:flex; align-items:center; gap:10px;
 }
 .back-btn{
-  background:none; border:1px solid var(--brd); border-radius:10px;
+  background:none; border:1px solid var(--brd); border-radius:32px;
   padding:0 14px; height:40px; color:var(--ts);
   font-family:inherit; font-size:13px; font-weight:600;
   cursor:pointer; display:flex; align-items:center; gap:7px;
@@ -73,7 +73,7 @@ body{
 .dash-summary{
   display:grid; grid-template-columns:repeat(3,1fr);
   gap:1px; background:var(--brd);
-  border:1px solid var(--brd); border-radius:14px;
+  border-radius:32px;
   overflow:hidden; margin-bottom:24px;
 }
 .ds-item{background:var(--ss);padding:18px 16px;text-align:center;}
@@ -85,13 +85,13 @@ body{
 .pillar-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
 
 .pillar-card{
-  background:var(--ss); border:1px solid var(--brd); border-radius:16px;
+  background:var(--ss); border-radius:32px;
   overflow:hidden; cursor:pointer;
-  transition:border-color .2s,transform .15s,box-shadow .15s;
+  transition:transform .15s,box-shadow .15s;
   box-shadow:0 4px 20px var(--sh); display:flex; flex-direction:column;
   -webkit-tap-highlight-color:transparent;
 }
-.pillar-card:hover{border-color:var(--ac);transform:translateY(-2px);box-shadow:0 8px 28px var(--sh),0 0 0 1px var(--adim2);}
+.pillar-card:hover{transform:translateY(-2px);box-shadow:0 8px 28px var(--sh),0 0 0 2px var(--ac);}
 .pillar-card:active{transform:translateY(0);}
 .pc-top{padding:22px 20px 0;flex:1;}
 .pc-badge{
@@ -133,21 +133,20 @@ body{
 
 /* ══════════ PARAMS PANEL ══════════ */
 .params-panel{
-  background:var(--ss); border:1px solid var(--brd); border-radius:14px;
+  background:var(--ss); border-radius:32px;
   overflow:hidden; overflow-y:auto;
   box-shadow:0 4px 20px var(--sh);
   min-width:0;
 }
 .rp{min-width:0;}
 
-.ps{padding:16px 18px;border-bottom:1px solid var(--brd);}
-.ps:last-child{border-bottom:none;}
+.ps{padding:16px 18px;}
 .sl{font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--ac);margin-bottom:12px;}
 
 /* Mode toggle */
 .mode-toggle{
   display:grid;grid-template-columns:1fr 1fr;
-  gap:2px;background:var(--st);border-radius:10px;overflow:hidden;
+  gap:2px;background:var(--st);border-radius:14px;overflow:hidden;
   margin-bottom:0;
 }
 .mode-btn{
@@ -163,7 +162,7 @@ body{
 .ct{
   display:flex;align-items:center;justify-content:space-between;
   cursor:pointer;user-select:none;
-  padding:14px 18px;border-bottom:1px solid var(--brd);
+  padding:14px 18px;
   transition:background .15s;
   -webkit-tap-highlight-color:transparent;
 }
@@ -171,7 +170,7 @@ body{
 .ct .sl{margin-bottom:0;}
 .ca{color:var(--tm);font-size:9px;transition:transform .22s;flex-shrink:0;}
 .ct.open .ca{transform:rotate(180deg);}
-.cb{display:none;padding:14px 18px;border-bottom:1px solid var(--brd);}
+.cb{display:none;padding:14px 18px;}
 .cb.open{display:block;}
 
 /* Fields */
@@ -201,6 +200,7 @@ select option{background:var(--ss);}
   border-radius:0 8px 8px 0;padding:0 10px;
   font-size:11px;font-weight:500;color:var(--tm);
   white-space:nowrap;display:flex;align-items:center;
+  min-width:58px;justify-content:center;
 }
 
 /* Einmal rows */
@@ -231,18 +231,36 @@ select option{background:var(--ss);}
 .btn-calc:hover{background:var(--bh);transform:translateY(-1px);box-shadow:0 6px 18px rgba(56,217,163,.22);}
 .btn-calc:active{background:var(--bpr);transform:translateY(0);box-shadow:none;}
 
+.ps-sticky{position:sticky;bottom:0;background-color:var(--ss);z-index:2;border-bottom:none;}
+
+/* Break-even footer strip inside chart card */
+.be-row{display:flex;align-items:center;flex-wrap:wrap;gap:0;padding:0;}
+.be-item{display:flex;flex-direction:column;gap:3px;padding:11px 18px;flex:1;min-width:100px;}
+.be-label{font-size:9.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--ts);}
+.be-val{font-size:14px;font-weight:700;color:var(--ac);letter-spacing:-.01em;}
+.be-sep{width:1px;height:36px;background:var(--brd);flex-shrink:0;align-self:center;}
+
+/* Eingerückte Trennlinien (18px Abstand je Seite) */
+.ps:not(.ps-sticky),.ct,.cb,.opt-toggle,.ch,.be-row{position:relative;}
+.ps:not(:last-child)::after,.ct::after,.cb.open::after,.opt-toggle::after,.ch::after{
+  content:'';position:absolute;bottom:0;left:18px;right:18px;height:1px;background:var(--brd);pointer-events:none;
+}
+.be-row::before,.ps-sticky::before{
+  content:'';position:absolute;top:0;left:18px;right:18px;height:1px;background:var(--brd);pointer-events:none;
+}
+
 /* ══════════ RESULTS ══════════ */
 .rp{display:flex;flex-direction:column;gap:16px;}
 
-.card{background:var(--ss);border:1px solid var(--brd);border-radius:14px;overflow:hidden;box-shadow:0 2px 10px var(--sh);}
-.ch{padding:14px 18px;border-bottom:1px solid var(--brd);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;}
+.card{background:var(--ss);border-radius:32px;overflow:hidden;box-shadow:0 2px 10px var(--sh);}
+.ch{padding:14px 18px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;}
 .ct-title{font-weight:600;font-size:14px;color:var(--tp);}
 .cb2{padding:18px;}
 
-.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
-.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
 
-.met{background:var(--ss);border:1px solid var(--brd);border-radius:14px;padding:16px;box-shadow:0 2px 10px var(--sh);}
+.met{background:var(--ss);border-radius:32px;padding:16px;box-shadow:0 2px 10px var(--sh);}
 .met.hi{border-color:var(--ac);background:var(--adim);}
 .mi{font-size:16px;margin-bottom:7px;display:block;}
 .ml{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--ts);margin-bottom:6px;}
@@ -282,13 +300,13 @@ tbody tr:last-child td{border-bottom:none;}
 @media(hover:hover){tbody tr:hover td{background:var(--adim);color:var(--tp);}}
 
 /* Info box */
-.ib{background:var(--adim);border:1px solid rgba(56,217,163,.18);border-radius:10px;padding:11px 13px;font-size:12px;color:var(--ts);line-height:1.6;margin-top:8px;}
+.ib{background:var(--adim);border:1px solid rgba(56,217,163,.18);border-radius:16px;padding:11px 13px;font-size:12px;color:var(--ts);line-height:1.6;margin-top:8px;}
 .ib b,.ib strong{color:var(--ac);}
 
 /* Toggle pill for optional tagesgeld */
 .opt-toggle{
   display:flex;align-items:center;justify-content:space-between;
-  gap:10px;padding:12px 18px;border-bottom:1px solid var(--brd);
+  gap:10px;padding:12px 18px;
   cursor:pointer;-webkit-tap-highlight-color:transparent;
 }
 .opt-label{font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--ts);}
@@ -349,7 +367,7 @@ tbody tr:last-child td{border-bottom:none;}
   .ds-item{padding:14px 12px;}
   .pillar-grid{grid-template-columns:1fr;gap:10px;}
   /* No hover lift on mobile */
-  .pillar-card:hover{transform:none;border-color:var(--brd);box-shadow:0 4px 20px var(--sh);}
+  .pillar-card:hover{transform:none;box-shadow:0 4px 20px var(--sh);}
   .calc-layout{
     grid-template-columns:1fr;
     padding:14px 0 64px;
@@ -392,7 +410,7 @@ tbody tr:last-child td{border-bottom:none;}
   <div class="dash-summary">
     <div class="ds-item">
       <div class="ds-label">🏦 Notgroschen-Ziel</div>
-      <div class="ds-value ac" id="dash-k">—</div>
+      <div class="ds-value" id="dash-k">—</div>
     </div>
     <div class="ds-item">
       <div class="ds-label">🎯 Mittelfrist</div>
@@ -434,9 +452,9 @@ tbody tr:last-child td{border-bottom:none;}
 
     <div class="pillar-card" onclick="goTo('lang')">
       <div class="pc-top">
-        <div class="pc-badge lang">📈 Langfristig · 20–40 J.</div>
+        <div class="pc-badge lang">📈 Langfristig · 20+ J.</div>
         <div class="pc-title">Pensionsvorsorge</div>
-        <div class="pc-desc">FLV vs. Flatex Depot im Direktvergleich — mit allen Kosten, Steuern und Break-even-Analyse.</div>
+        <div class="pc-desc">FLV vs. Wertpapierdepot im Direktvergleich — inklusive aller Kosten, Steuern und Break-even-Analyse.</div>
       </div>
       <div class="pc-metrics">
         <div class="pc-metric"><div class="pcm-label">Endbetrag FLV</div><div class="pcm-value a" id="dl-flv">—</div></div>
@@ -463,31 +481,31 @@ tbody tr:last-child td{border-bottom:none;}
     <div class="ps">
       <div class="sl">Meine Situation</div>
       <div class="f"><label>Monatliches Nettoeinkommen</label>
-        <div class="fu"><input type="number" id="k_eink" value="2500" min="0" step="100" oninput="berechneKurz()"><span class="ub">€ / Mo.</span></div></div>
+        <div class="fu"><input type="number" id="k_eink" value="2500" min="0" step="100"><span class="ub">€ / Mo.</span></div></div>
       <div class="f"><label>Bereits vorhandenes Erspartes</label>
-        <div class="fu"><input type="number" id="k_vorh" value="0" min="0" step="100" oninput="berechneKurz()"><span class="ub">€</span></div></div>
+        <div class="fu"><input type="number" id="k_vorh" value="0" min="0" step="100"><span class="ub">€</span></div></div>
       <div class="f"><label>Monatliche Sparrate</label>
-        <div class="fu"><input type="number" id="k_rate" value="300" min="0" step="50" oninput="berechneKurz()"><span class="ub">€ / Mo.</span></div></div>
+        <div class="fu"><input type="number" id="k_rate" value="300" min="0" step="50"><span class="ub">€ / Mo.</span></div></div>
     </div>
     <div class="ps">
       <div class="sl">Notgroschen-Ziel</div>
       <div class="f"><label>Absicherung in Monatsgehältern</label>
-        <div class="fu"><input type="number" id="k_mo" value="3" min="1" max="12" step="1" oninput="berechneKurz()"><span class="ub">Monate</span></div></div>
+        <div class="fu"><input type="number" id="k_mo" value="3" min="1" max="12" step="1"><span class="ub">Monate</span></div></div>
     </div>
     <div class="ps">
       <div class="sl">Konto & Zinsen</div>
       <div class="f"><label>Kontotyp</label>
-        <div class="fu"><select id="k_typ" onchange="updateKontoHint();berechneKurz()">
+        <div class="fu"><select id="k_typ" onchange="updateKontoHint()">
           <option value="tagesgeld">Tagesgeldkonto</option>
           <option value="festgeld">Festgeld</option>
           <option value="sparkonto">Sparkonto</option>
           <option value="girokonto">Girokonto (0%)</option>
         </select></div></div>
       <div class="f"><label>Zinssatz p.a.</label>
-        <div class="fu"><input type="number" id="k_zins" value="3.0" min="0" max="20" step="0.1" oninput="berechneKurz()"><span class="ub">%&nbsp;p.a.</span></div></div>
+        <div class="fu"><input type="number" id="k_zins" value="3.0" min="0" max="20" step="0.1"><span class="ub">%&nbsp;p.a.</span></div></div>
       <div class="ib" id="k_hint">Tagesgeld: täglich verfügbar, 2–4 % p.a. — ideal für den Notgroschen.</div>
     </div>
-    <div class="ps">
+    <div class="ps ps-sticky">
       <button class="btn-calc" onclick="berechneKurz()">Berechnen</button>
     </div>
   </aside>
@@ -551,17 +569,17 @@ tbody tr:last-child td{border-bottom:none;}
       <div class="ps">
         <div class="sl">Mein Sparziel</div>
         <div class="f"><label>Bezeichnung</label>
-          <input type="text" id="m_name" value="Eigenkapital Hauskauf" oninput="berechneMittel()"></div>
+          <input type="text" id="m_name" value="Eigenkapital Hauskauf"></div>
         <div class="f"><label>Zielbetrag</label>
-          <div class="fu"><input type="number" id="m_ziel" value="50000" min="0" step="1000" oninput="berechneMittel()"><span class="ub">€</span></div></div>
+          <div class="fu"><input type="number" id="m_ziel" value="50000" min="0" step="1000"><span class="ub">€</span></div></div>
         <div class="f"><label>Laufzeit</label>
-          <div class="fu"><input type="number" id="m_jahre" value="7" min="1" max="30" oninput="berechneMittel()"><span class="ub">Jahre</span></div></div>
+          <div class="fu"><input type="number" id="m_jahre" value="7" min="1" max="30"><span class="ub">Jahre</span></div></div>
         <div class="f"><label>Startkapital</label>
-          <div class="fu"><input type="number" id="m_start" value="5000" min="0" step="500" oninput="berechneMittel()"><span class="ub">€</span></div></div>
+          <div class="fu"><input type="number" id="m_start" value="5000" min="0" step="500"><span class="ub">€</span></div></div>
       </div>
       <div class="ps">
         <div class="sl">Sparrate</div>
-        <div class="fu"><input type="number" id="m_rate" value="500" min="0" step="50" oninput="berechneMittel()"><span class="ub">€ / Mo.</span></div>
+        <div class="fu"><input type="number" id="m_rate" value="500" min="0" step="50"><span class="ub">€ / Mo.</span></div>
         <div class="ib" id="m_hint" style="margin-top:10px">Benötigte Sparrate wird automatisch berechnet.</div>
       </div>
     </div>
@@ -571,11 +589,11 @@ tbody tr:last-child td{border-bottom:none;}
       <div class="ps">
         <div class="sl">Sparplan</div>
         <div class="f"><label>Laufzeit</label>
-          <div class="fu"><input type="number" id="mf_jahre" value="7" min="1" max="30" oninput="berechneMittel()"><span class="ub">Jahre</span></div></div>
+          <div class="fu"><input type="number" id="mf_jahre" value="7" min="1" max="30"><span class="ub">Jahre</span></div></div>
         <div class="f"><label>Startkapital</label>
-          <div class="fu"><input type="number" id="mf_start" value="5000" min="0" step="500" oninput="berechneMittel()"><span class="ub">€</span></div></div>
+          <div class="fu"><input type="number" id="mf_start" value="5000" min="0" step="500"><span class="ub">€</span></div></div>
         <div class="f"><label>Monatliche Sparrate</label>
-          <div class="fu"><input type="number" id="mf_rate" value="500" min="0" step="50" oninput="berechneMittel()"><span class="ub">€ / Mo.</span></div></div>
+          <div class="fu"><input type="number" id="mf_rate" value="500" min="0" step="50"><span class="ub">€ / Mo.</span></div></div>
       </div>
     </div>
 
@@ -612,31 +630,23 @@ tbody tr:last-child td{border-bottom:none;}
     </div>
     <div class="cb" id="cb-fonds">
       <div class="f"><label>Agio</label>
-        <div class="fu"><input type="number" id="m_agio" value="0" min="0" step="0.1" oninput="berechneMittel()"><span class="ub">%</span></div></div>
+        <div class="fu"><input type="number" id="m_agio" value="0" min="0" step="0.1"><span class="ub">%</span></div></div>
       <div class="f"><label>Depotgebühr p.a.</label>
-        <div class="fu"><input type="number" id="m_depotgeb" value="0" min="0" step="0.01" oninput="berechneMittel()"><span class="ub">% p.a.</span></div></div>
+        <div class="fu"><input type="number" id="m_depotgeb" value="0" min="0" step="0.01"><span class="ub">% p.a.</span></div></div>
       <div class="f"><label>Rendite p.a.</label>
-        <div class="fu"><input type="number" id="m_rendite" value="7" min="0" max="30" step="0.5" oninput="berechneMittel()"><span class="ub">% p.a.</span></div></div>
+        <div class="fu"><input type="number" id="m_rendite" value="7" min="0" max="30" step="0.5"><span class="ub">% p.a.</span></div></div>
       <div class="f"><label>TER p.a.</label>
-        <div class="fu"><input type="number" id="m_ter" value="0.3" min="0" step="0.01" oninput="berechneMittel()"><span class="ub">% p.a.</span></div></div>
+        <div class="fu"><input type="number" id="m_ter" value="0.3" min="0" step="0.01"><span class="ub">% p.a.</span></div></div>
       <div class="f"><label>Ordergebühr Sparplan</label>
-        <div class="fu"><input type="number" id="m_order" value="0" min="0" step="0.10" oninput="berechneMittel()"><span class="ub">€ / Order</span></div></div>
+        <div class="fu"><input type="number" id="m_order" value="0" min="0" step="0.10"><span class="ub">€ / Order</span></div></div>
       <div class="f"><label>KESt bei Entnahme</label>
-        <div class="fu"><input type="number" id="m_kest" value="27.5" min="0" max="100" step="0.5" oninput="berechneMittel()"><span class="ub">%</span></div></div>
+        <div class="fu"><input type="number" id="m_kest" value="27.5" min="0" max="100" step="0.5"><span class="ub">%</span></div></div>
       <div class="f"><label>Dividendenrendite p.a.</label>
-        <div class="fu"><input type="number" id="m_ddiv" value="2" min="0" step="0.1" oninput="berechneMittel()"><span class="ub">% p.a.</span></div></div>
+        <div class="fu"><input type="number" id="m_ddiv" value="2" min="0" step="0.1"><span class="ub">% p.a.</span></div></div>
       <div class="f"><label>Anteil AgE</label>
-        <div class="fu"><input type="number" id="m_dage" value="100" min="0" max="100" step="1" oninput="berechneMittel()"><span class="ub">%</span></div></div>
+        <div class="fu"><input type="number" id="m_dage" value="100" min="0" max="100" step="1"><span class="ub">%</span></div></div>
       <div class="f"><label>Spread An-/Verkauf</label>
-        <div class="fu"><input type="number" id="m_spread" value="0" min="0" step="0.01" oninput="berechneMittel()"><span class="ub">%</span></div></div>
-      <div class="opt-toggle" onclick="toggleMInflation()" style="margin:8px -18px -18px;border-top:1px solid var(--brd);border-bottom:none;border-radius:0 0 0 0">
-        <span class="opt-label">📉 Inflation berücksichtigen</span>
-        <div class="opt-pill" id="minf-pill"></div>
-      </div>
-      <div id="minf-fields" class="hidden" style="margin:0 -18px -18px;border-top:1px solid var(--brd);padding:12px 18px 14px">
-        <div class="f" style="margin-bottom:0"><label>Inflation p.a.</label>
-          <div class="fu"><input type="number" id="m_inflation" value="2.1" min="0" step="0.1" oninput="berechneMittel()"><span class="ub">%</span></div></div>
-      </div>
+        <div class="fu"><input type="number" id="m_spread" value="0" min="0" step="0.01"><span class="ub">%</span></div></div>
     </div>
 
     <!-- Sonderzahlungen collapsible (Mittelfristig) -->
@@ -651,12 +661,24 @@ tbody tr:last-child td{border-bottom:none;}
       <div id="mreg-fields" class="hidden">
         <div style="padding:4px 18px 14px">
           <div class="f"><label>Betrag</label>
-            <div class="fu"><input type="number" id="m_reg_betrag" value="1000" min="0" step="100" oninput="mRegBetrag=+this.value;berechneMittel()"><span class="ub">€</span></div></div>
+            <div class="fu"><input type="number" id="m_reg_betrag" value="1000" min="0" step="100" oninput="mRegBetrag=+this.value"><span class="ub">€</span></div></div>
           <div class="f"><label>Alle X Jahre</label>
-            <div class="fu"><input type="number" id="m_reg_int" value="1" min="1" step="1" oninput="mRegIntervall=+this.value;berechneMittel()"><span class="ub">J.</span></div></div>
+            <div class="fu"><input type="number" id="m_reg_int" value="1" min="1" step="1" oninput="mRegIntervall=+this.value"><span class="ub">J.</span></div></div>
           <div class="f"><label>Ab Jahr</label>
-            <div class="fu"><input type="number" id="m_reg_ab" value="1" min="0" step="1" oninput="mRegAbJahr=+this.value;berechneMittel()"><span class="ub">J.</span></div></div>
+            <div class="fu"><input type="number" id="m_reg_ab" value="1" min="0" step="1" oninput="mRegAbJahr=+this.value"><span class="ub">J.</span></div></div>
         </div>
+      </div>
+    </div>
+
+    <!-- Inflation OPTIONAL toggle -->
+    <div class="opt-toggle" onclick="toggleMInflation()">
+      <span class="opt-label">📉 Inflation berücksichtigen</span>
+      <div class="opt-pill" id="minf-pill"></div>
+    </div>
+    <div id="minf-fields" class="hidden">
+      <div class="cb open" style="border-top:none">
+        <div class="f" style="margin-bottom:0"><label>Inflation p.a.</label>
+          <div class="fu"><input type="number" id="m_inflation" value="2.1" min="0" step="0.1"><span class="ub">%</span></div></div>
       </div>
     </div>
 
@@ -668,13 +690,13 @@ tbody tr:last-child td{border-bottom:none;}
     <div id="tages-fields" class="hidden">
       <div class="cb open" style="border-top:none">
         <div class="f"><label>Zinssatz p.a.</label>
-          <div class="fu"><input type="number" id="m_tzins" value="3.0" min="0" max="20" step="0.1" oninput="berechneMittel()"><span class="ub">% p.a.</span></div></div>
+          <div class="fu"><input type="number" id="m_tzins" value="3.0" min="0" max="20" step="0.1"><span class="ub">% p.a.</span></div></div>
         <div class="f"><label>KESt auf Zinsen</label>
-          <div class="fu"><input type="number" id="m_tkest" value="27.5" min="0" max="100" step="0.5" oninput="berechneMittel()"><span class="ub">%</span></div></div>
+          <div class="fu"><input type="number" id="m_tkest" value="27.5" min="0" max="100" step="0.5"><span class="ub">%</span></div></div>
       </div>
     </div>
 
-    <div class="ps">
+    <div class="ps ps-sticky">
       <button class="btn-calc" onclick="berechneMittel()">Berechnen</button>
     </div>
   </aside>
@@ -703,14 +725,6 @@ tbody tr:last-child td{border-bottom:none;}
         <div class="fu"><input type="number" id="l_lj" value="40" min="1" max="50"><span class="ub">Jahre</span></div></div>
       <div class="f"><label>Marktrendite p.a.</label>
         <div class="fu"><input type="number" id="l_rpa" value="7" min="0" max="30" step="0.1"><span class="ub">% p.a.</span></div></div>
-      <div class="opt-toggle" onclick="toggleLInflation()" style="margin:8px -18px -16px;border-top:1px solid var(--brd);border-bottom:none">
-        <span class="opt-label">📉 Inflation berücksichtigen</span>
-        <div class="opt-pill" id="linf-pill"></div>
-      </div>
-      <div id="linf-fields" class="hidden" style="margin:0 -18px -16px;border-top:1px solid var(--brd);padding:12px 18px 14px">
-        <div class="f" style="margin-bottom:0"><label>Inflation p.a.</label>
-          <div class="fu"><input type="number" id="l_inflation" value="2.1" min="0" step="0.1" oninput="berechneLang()"><span class="ub">%</span></div></div>
-      </div>
     </div>
     <div class="ps">
       <div class="sl">Sonderzahlungen</div>
@@ -776,22 +790,38 @@ tbody tr:last-child td{border-bottom:none;}
       <div class="f"><label>Anteil AgE</label><div class="fu"><input type="number" id="l_dage" value="100" step="1" min="0" max="100"><span class="ub">%</span></div></div>
       <div class="f"><label>Spread An-/Verkauf</label><div class="fu"><input type="number" id="l_dspread" value="0" min="0" step="0.01" oninput="berechneLang()"><span class="ub">%</span></div></div>
     </div>
-    <div class="ps">
+
+    <!-- Inflation OPTIONAL toggle -->
+    <div class="opt-toggle" onclick="toggleLInflation()">
+      <span class="opt-label">📉 Inflation berücksichtigen</span>
+      <div class="opt-pill" id="linf-pill"></div>
+    </div>
+    <div id="linf-fields" class="hidden">
+      <div class="cb open" style="border-top:none">
+        <div class="f" style="margin-bottom:0"><label>Inflation p.a.</label>
+          <div class="fu"><input type="number" id="l_inflation" value="2.1" min="0" step="0.1" oninput="berechneLang()"><span class="ub">%</span></div></div>
+      </div>
+    </div>
+
+    <div class="ps ps-sticky">
       <button class="btn-calc" onclick="berechneLang()">Berechnen</button>
     </div>
   </aside>
 
   <div class="rp">
-    <div class="g2">
+    <div class="g3">
       <div class="met hi">
-        <span class="mi">⚖️</span>
-        <div class="ml">Break-even FLV vs. Depot</div>
-        <div class="mv ac" id="l_be_thes">—</div>
-        <div class="ms" id="l_be_thes_s" style="margin-bottom:10px"></div>
-        <div style="height:1px;background:var(--brd);margin:8px 0"></div>
-        <div class="ml" style="margin-bottom:5px">vs. Ausschüttend</div>
-        <div class="mv ac" id="l_be_ausch" style="font-size:18px;margin-bottom:4px">—</div>
-        <div class="ms" id="l_be_ausch_s"></div>
+        <span class="mi">📈</span>
+        <div class="ml">FLV (Netto)</div>
+        <div class="mv green" id="l_flv">—</div>
+        <div class="ms">nach Kosten &amp; Steuer</div>
+        <div class="ms hidden" id="l_flv_real" style="color:#a78bfa"></div>
+      </div>
+      <div class="met">
+        <span class="mi">💰</span>
+        <div class="ml">Eingezahlt</div>
+        <div class="mv" id="l_einzahlt">—</div>
+        <div class="ms" id="l_einzahlt_s"></div>
       </div>
       <div class="met">
         <span class="mi">📊</span>
@@ -800,13 +830,17 @@ tbody tr:last-child td{border-bottom:none;}
         <div class="ms" id="l_delta_s">vs. bestes Depot</div>
       </div>
     </div>
-    <div class="g2">
-      <div class="met"><div class="ml">FLV (Netto)</div><div class="mv green" id="l_flv">—</div><div class="ms">nach Kosten &amp; Steuer</div><div class="ms hidden" id="l_flv_real" style="color:#a78bfa"></div></div>
-      <div class="met"><div class="ml">Depot Thesaurierend</div><div class="mv blue" id="l_thes">—</div><div class="ms">nach KESt bei Verkauf</div></div>
-    </div>
+    <div class="hidden"><span id="l_thes"></span></div>
     <div class="card">
       <div class="ch"><span class="ct-title">Kapitalentwicklung (nach Steuern)</span><div class="legend" id="l_legend"></div></div>
       <div class="chart-box"><canvas id="langChart"></canvas></div>
+      <div class="be-row">
+        <div class="be-item"><span class="be-label">💸 Einzahlung gedeckt</span><span class="be-val" id="l_be_cap">—</span></div>
+        <div class="be-sep"></div>
+        <div class="be-item"><span class="be-label">⚖️ vs. Ausschüttend</span><span class="be-val" id="l_be_ausch">—</span></div>
+        <div class="be-sep"></div>
+        <div class="be-item"><span class="be-label">⚖️ vs. Thesaurierend</span><span class="be-val" id="l_be_thes">—</span></div>
+      </div>
     </div>
     <div class="card">
       <div class="ch"><span class="ct-title">Jahrestabelle</span></div>
@@ -921,7 +955,7 @@ const DEPOTANBIETER={
 
 const ANBIETER_NOTES={
   bks:'⚠️ <b>Klassik-Depot:</b> Zusätzlich €2,80/Monat Servicegebühr (€33,60 p.a.) — nicht modelliert. ETF-Sparplan-Gebühr (1,60%) als Agio dargestellt.',
-  plattform:'ℹ️ <b>die Plattform:</b> Zusätzlich +0,15% pro Order-Transaktion sowie €5,30/Quartal Verrechnungskontogebühr — nicht modelliert.'
+  plattform:''
 };
 
 function showAnbieterNote(infoId,key){
@@ -1017,6 +1051,24 @@ function tc(){
   return{grid:d?'rgba(255,255,255,.04)':'rgba(0,0,0,.05)',ticks:d?'#555860':'#AAAAAA',
     bg:d?'#16171B':'#F7F2EA',bdr:d?'#282930':'#DEDAD3',tt:d?'#F0EDE8':'#1A1A1A',ts:'#969696'};
 }
+const crosshairPlugin={
+  id:'crosshair',
+  afterDraw(chart){
+    if(!chart.tooltip._active||!chart.tooltip._active.length) return;
+    const {ctx,chartArea:{top,bottom}}=chart;
+    const x=chart.tooltip._active[0].element.x;
+    const d=window.matchMedia('(prefers-color-scheme:dark)').matches;
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(x,top);
+    ctx.lineTo(x,bottom);
+    ctx.lineWidth=1;
+    ctx.strokeStyle=d?'rgba(255,255,255,.2)':'rgba(0,0,0,.12)';
+    ctx.setLineDash([4,3]);
+    ctx.stroke();
+    ctx.restore();
+  }
+};
 
 /* ══════════════════════════════════
    KURZFRISTIG
@@ -1074,11 +1126,12 @@ function berechneKurz(){
       {label:'Ziel',data:rows.map(()=>ziel),borderColor:'#f87171',borderDash:[6,3],borderWidth:1.5,pointRadius:0,fill:false}
     ]},
     options:{responsive:true,maintainAspectRatio:false,
-      plugins:{legend:{display:false},tooltip:{backgroundColor:t.bg,borderColor:t.bdr,borderWidth:1,padding:10,titleColor:t.tt,bodyColor:t.ts,callbacks:{label:c=>` ${c.dataset.label}: ${eur(c.parsed.y)}`}}},
+      plugins:{legend:{display:false},tooltip:{mode:'index',intersect:false,cornerRadius:16,caretSize:0,backgroundColor:t.bg,borderColor:t.bdr,borderWidth:1,padding:16,titleFont:{weight:'600',size:12},bodyFont:{size:12},boxPadding:5,titleMarginBottom:8,titleColor:t.tt,bodyColor:t.ts,callbacks:{label:c=>` ${c.dataset.label}: ${eur(c.parsed.y)}`}}},
       scales:{
         x:{grid:{color:t.grid,drawTicks:false},ticks:{color:t.ticks,font:{size:10},maxTicksLimit:12},border:{color:'transparent'}},
         y:{grid:{color:t.grid,drawTicks:false},ticks:{color:t.ticks,font:{size:10},callback:v=>eurS(v)},border:{color:'transparent'}}
-      }}
+      }},
+    plugins:[crosshairPlugin]
   });
 
   const tb=document.getElementById('k_tbody');tb.innerHTML='';
@@ -1090,7 +1143,7 @@ function berechneKurz(){
   }
   sendHeight();
 }
-function set(id,v){document.getElementById(id).textContent=v;}
+function set(id,v){const el=document.getElementById(id);if(el)el.textContent=v;}
 
 /* ══════════════════════════════════
    MITTELFRISTIG
@@ -1230,11 +1283,12 @@ function berechneMittel(){
   mChart=new Chart(document.getElementById('mChart').getContext('2d'),{
     type:'line',data:{labels:rows.map(r=>'J.'+r.j),datasets:ds},
     options:{responsive:true,maintainAspectRatio:false,
-      plugins:{legend:{display:false},tooltip:{backgroundColor:t.bg,borderColor:t.bdr,borderWidth:1,padding:10,titleColor:t.tt,bodyColor:t.ts,callbacks:{label:c=>` ${c.dataset.label}: ${eur(c.parsed.y)}`}}},
+      plugins:{legend:{display:false},tooltip:{mode:'index',intersect:false,cornerRadius:16,caretSize:0,backgroundColor:t.bg,borderColor:t.bdr,borderWidth:1,padding:16,titleFont:{weight:'600',size:12},bodyFont:{size:12},boxPadding:5,titleMarginBottom:8,titleColor:t.tt,bodyColor:t.ts,callbacks:{label:c=>` ${c.dataset.label}: ${eur(c.parsed.y)}`}}},
       scales:{
         x:{grid:{color:t.grid,drawTicks:false},ticks:{color:t.ticks,font:{size:10}},border:{color:'transparent'}},
         y:{grid:{color:t.grid,drawTicks:false},ticks:{color:t.ticks,font:{size:10},callback:v=>eurS(v)},border:{color:'transparent'}}
-      }}
+      }},
+    plugins:[crosshairPlugin]
   });
 
   // Legend
@@ -1371,16 +1425,17 @@ function berechneLang(){
       {label:LL.einz,data:data.map(r=>r.E), borderColor:LC.einz, borderDash:[6,4],borderWidth:1.5,tension:0,pointRadius:0,fill:false,hidden:!lVis.einz}
     ]},
     options:{responsive:true,maintainAspectRatio:false,
-      plugins:{legend:{display:false},tooltip:{backgroundColor:t.bg,borderColor:t.bdr,borderWidth:1,padding:12,titleColor:t.tt,bodyColor:t.ts,callbacks:{label:c=>` ${c.dataset.label}: ${eur(c.parsed.y)}`}}},
+      plugins:{legend:{display:false},tooltip:{mode:'index',intersect:false,cornerRadius:16,caretSize:0,backgroundColor:t.bg,borderColor:t.bdr,borderWidth:1,padding:16,titleFont:{weight:'600',size:12},bodyFont:{size:12},boxPadding:5,titleMarginBottom:8,titleColor:t.tt,bodyColor:t.ts,callbacks:{label:c=>` ${c.dataset.label}: ${eur(c.parsed.y)}`}}},
       scales:{
         x:{grid:{color:t.grid,drawTicks:false},ticks:{color:t.ticks,font:{size:11},maxTicksLimit:10},border:{color:'transparent'}},
         y:{grid:{color:t.grid,drawTicks:false},ticks:{color:t.ticks,font:{size:11},callback:v=>eurS(v)},border:{color:'transparent'}}
-      }}
+      }},
+    plugins:[crosshairPlugin]
   });
   buildLangLeg();
 
   document.getElementById('l_flv').textContent =eur(last.FN);
-  document.getElementById('l_thes').textContent=eur(last.TN);
+  const thesEl=document.getElementById('l_thes');if(thesEl)thesEl.textContent=eur(last.TN);
   const flvRealEl=document.getElementById('l_flv_real');
   if(flvRealEl){
     if(inflation>0){
@@ -1389,8 +1444,17 @@ function berechneLang(){
     }else{flvRealEl.classList.add('hidden');}
   }
 
-  let beT=null,beA=null;
-  for(const d of data){if(!beT&&d.FN>=d.TN)beT=d.J;if(!beA&&d.FN>=d.AN)beA=d.J;}
+  set('l_einzahlt',eur(last.E));
+  set('l_einzahlt_s',`über ${lj} Jahre`);
+
+  let beT=null,beA=null,beCap=null;
+  for(const d of data){
+    if(!beCap&&d.FN>=d.E)beCap=d.J;
+    if(!beT&&d.FN>=d.TN)beT=d.J;
+    if(!beA&&d.FN>=d.AN)beA=d.J;
+  }
+  set('l_be_cap',beCap?'Jahr '+beCap:'Nie');
+  set('l_be_cap_s',beCap?`FLV deckt Einzahlung ab Jahr ${beCap}`:'FLV deckt Einzahlung in dieser Laufzeit nicht');
   set('l_be_thes',beT?'Jahr '+beT:'Nie');
   set('l_be_thes_s',beT?`FLV überholt Thesaurierend ab Jahr ${beT}`:'FLV überholt Depot in dieser Laufzeit nicht');
   set('l_be_ausch',beA?'Jahr '+beA:'Nie');

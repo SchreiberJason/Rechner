@@ -13,7 +13,7 @@
   --bp:#38D9A3; --bh:#2FC493; --bpr:#1C8764;
   --brd:#212430; --tp:#F0EDE8; --ts:#969696; --tm:#555860;
   --ac:#38D9A3; --adim:rgba(56,217,163,0.08); --adim2:rgba(56,217,163,0.16);
-  --sh:rgba(0,0,0,0.45); color-scheme:dark;
+  --sh:rgba(0,0,0,0.45); --sh-ac:rgba(56,217,163,.22); color-scheme:dark;
 }
 @media(prefers-color-scheme:light){
   :root{
@@ -21,7 +21,7 @@
     --bp:#039F6B; --bh:#2FC493; --bpr:#1C8764;
     --brd:#DDD8CF; --tp:#1A1A1A; --ts:#969696; --tm:#AAAAAA;
     --ac:#039F6B; --adim:rgba(3,159,107,0.08); --adim2:rgba(3,159,107,0.15);
-    --sh:rgba(0,0,0,0.07); color-scheme:light;
+    --sh:rgba(0,0,0,0.07); --sh-ac:rgba(3,159,107,.22); color-scheme:light;
   }
 }
 
@@ -58,7 +58,7 @@ body{
 .back-crumb b{color:var(--ts);font-weight:500;}
 
 /* ══════════ DASHBOARD ══════════ */
-.dash-wrap{max-width:1240px;margin:0 auto;padding:28px 0 80px;}
+.dash-wrap{max-width:1240px;margin:0 auto;padding:28px 5px 80px;}
 
 .dash-header{margin-bottom:28px;}
 .dash-eyebrow{
@@ -204,11 +204,11 @@ select option{background:var(--ss);}
 }
 
 /* Einmal rows */
-.er{display:grid;grid-template-columns:1fr 1fr 38px;gap:6px;margin-bottom:6px;align-items:end;}
+.er{display:grid;grid-template-columns:1fr 2fr 30px;gap:6px;margin-bottom:6px;align-items:end;}
 .btn-rm{
   background:none;border:1px solid var(--brd);color:var(--tm);
-  border-radius:7px;width:38px;height:42px;cursor:pointer;
-  font-size:17px;display:flex;align-items:center;justify-content:center;
+  border-radius:7px;width:30px;height:auto;padding:9px 0;cursor:pointer;
+  font-size:13px;display:flex;align-items:center;justify-content:center;
   transition:all .13s;-webkit-tap-highlight-color:transparent;
 }
 .btn-rm:active{border-color:#f87171;color:#f87171;background:rgba(248,113,113,.08);}
@@ -228,7 +228,7 @@ select option{background:var(--ss);}
   transition:background .13s,transform .1s,box-shadow .13s;
   min-height:48px;-webkit-tap-highlight-color:transparent;
 }
-.btn-calc:hover{background:var(--bh);transform:translateY(-1px);box-shadow:0 6px 18px rgba(56,217,163,.22);}
+.btn-calc:hover{background:var(--bh);transform:translateY(-1px);box-shadow:0 6px 18px var(--sh-ac);}
 .btn-calc:active{background:var(--bpr);transform:translateY(0);box-shadow:none;}
 
 .ps-sticky{position:sticky;bottom:0;background-color:var(--ss);z-index:2;border-bottom:none;}
@@ -334,7 +334,7 @@ tbody tr:last-child td{border-bottom:none;}
 
 /* ---- Tablet 600–1023px ---- */
 @media(min-width:600px) and (max-width:1023px){
-  .dash-wrap{padding:24px 0 60px;}
+  .dash-wrap{padding:24px 5px 60px;}
   .pillar-grid{grid-template-columns:1fr 1fr;gap:12px;}
   .pillar-grid>.pillar-card:last-child{grid-column:1/-1;}
   .calc-layout{
@@ -361,7 +361,7 @@ tbody tr:last-child td{border-bottom:none;}
 @media(max-width:599px){
   body{font-size:14px;}
   .back-nav{padding:14px 0 0;}
-  .dash-wrap{padding:20px 0 56px;}
+  .dash-wrap{padding:20px 5px 56px;}
   .dash-summary{grid-template-columns:1fr 1fr;gap:1px;}
   .dash-summary .ds-item:nth-child(3){grid-column:1/-1;border-top:1px solid var(--brd);}
   .ds-item{padding:14px 12px;}
@@ -388,7 +388,7 @@ tbody tr:last-child td{border-bottom:none;}
 
 /* ---- Large desktop ≥1024px ---- */
 @media(min-width:1024px){
-  .dash-wrap{padding:40px 0 80px;}
+  .dash-wrap{padding:40px 5px 80px;}
   .back-nav{padding:20px 0 0;}
   .calc-layout{
     grid-template-columns:330px 1fr;
@@ -397,6 +397,14 @@ tbody tr:last-child td{border-bottom:none;}
   }
   .g3{grid-template-columns:repeat(3,1fr);}
 }
+#chart-tip{
+  position:fixed;z-index:9999;pointer-events:none;display:none;
+  background:var(--st);border-radius:32px;padding:16px;
+  min-width:120px;box-shadow:0 4px 24px rgba(0,0,0,.25);
+}
+#chart-tip .ctt{font-weight:600;font-size:12px;margin-bottom:8px;}
+#chart-tip .cti{display:flex;align-items:center;gap:8px;font-size:12px;margin-bottom:2px;}
+#chart-tip .ctd{width:8px;height:8px;border-radius:4px;flex-shrink:0;}
 </style>
 </head>
 <body>
@@ -808,7 +816,7 @@ tbody tr:last-child td{border-bottom:none;}
       <div class="met hi">
         <span class="mi">📈</span>
         <div class="ml">FLV (Netto)</div>
-        <div class="mv green" id="l_flv">—</div>
+        <div class="mv ac" id="l_flv">—</div>
         <div class="ms">nach Kosten &amp; Steuer</div>
         <div class="ms hidden" id="l_flv_real" style="color:#a78bfa"></div>
       </div>
@@ -841,7 +849,7 @@ tbody tr:last-child td{border-bottom:none;}
       <div class="ch"><span class="ct-title">Jahrestabelle</span></div>
       <div class="tw">
         <table>
-          <thead id="l_thead"><tr><th>Jahr</th><th>Eingezahlt</th><th style="color:#4ade80">FLV</th><th style="color:#60a5fa">Thesaur.</th><th style="color:#fb923c">Ausschütt.</th></tr></thead>
+          <thead id="l_thead"><tr><th>Jahr</th><th>Eingezahlt</th><th style="color:var(--ac)">FLV</th><th style="color:#60a5fa">Thesaur.</th><th style="color:#fb923c">Ausschütt.</th></tr></thead>
           <tbody id="l_tbody"></tbody>
         </table>
       </div>
@@ -870,6 +878,7 @@ tbody tr:last-child td{border-bottom:none;}
    NAVIGATION
 ══════════════════════════════════ */
 function goTo(id){
+  const ct=document.getElementById('chart-tip');if(ct)ct.style.display='none';
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
   document.getElementById('view-'+id).classList.add('active');
   window.scrollTo({top:0,behavior:'smooth'});
@@ -1046,10 +1055,36 @@ function eurN(v){
   if(v>=1e3) return (v/1e3).toFixed(0)+' K';
   return v.toFixed(0);
 }
+function externalTooltip({chart,tooltip}){
+  const el=document.getElementById('chart-tip');
+  if(!el) return;
+  if(!tooltip.opacity){el.style.display='none';return;}
+  const t=tc();
+  const title=tooltip.title?.[0]||'';
+  let html=`<div class="ctt" style="color:${t.tt}">${title}</div>`;
+  (tooltip.body||[]).forEach((b,i)=>{
+    const col=(tooltip.labelColors?.[i]?.backgroundColor)||'#888';
+    const line=(b.lines?.[0]||'').trim();
+    html+=`<div class="cti" style="color:${t.ts}"><span class="ctd" style="background:${col}"></span>${line}</div>`;
+  });
+  el.innerHTML=html;
+  el.style.display='block';
+  const r=chart.canvas.getBoundingClientRect();
+  let x=r.left+tooltip.caretX+14;
+  let y=r.top+tooltip.caretY-el.offsetHeight/2;
+  const w=el.offsetWidth,h=el.offsetHeight;
+  if(x+w>window.innerWidth-8) x=r.left+tooltip.caretX-w-14;
+  if(x<8) x=8;
+  if(y<8) y=8;
+  if(y+h>window.innerHeight-8) y=window.innerHeight-h-8;
+  el.style.left=x+'px';
+  el.style.top=y+'px';
+}
 function tc(){
   const d=window.matchMedia('(prefers-color-scheme:dark)').matches;
-  return{grid:d?'rgba(255,255,255,.04)':'rgba(0,0,0,.05)',ticks:d?'#555860':'#AAAAAA',
-    bg:d?'#16171B':'#F7F2EA',st:d?'#282930':'#FFFEFC',bdr:d?'#282930':'#DEDAD3',tt:d?'#F0EDE8':'#1A1A1A',ts:'#969696'};
+  return{grid:d?'rgba(255,255,255,.06)':'rgba(0,0,0,.14)',ticks:d?'#666B78':'#777777',
+    bg:d?'#16171B':'#F7F2EA',st:d?'#282930':'#FFFEFC',bdr:d?'#282930':'#DEDAD3',tt:d?'#F0EDE8':'#1A1A1A',ts:'#969696',
+    ac:d?'#38D9A3':'#039F6B',acFill:d?'rgba(56,217,163,.07)':'rgba(3,159,107,.07)'};
 }
 const crosshairPlugin={
   id:'crosshair',
@@ -1116,11 +1151,11 @@ function berechneKurz(){
   kChart=new Chart(document.getElementById('kurzChart').getContext('2d'),{
     type:'line',
     data:{labels:rows.map(r=>r.m),datasets:[
-      {label:'Kapital',data:rows.map(r=>r.k),borderColor:'#38D9A3',backgroundColor:'rgba(56,217,163,.07)',borderWidth:2.5,tension:.4,pointRadius:0,fill:true},
+      {label:'Kapital',data:rows.map(r=>r.k),borderColor:t.ac,backgroundColor:t.acFill,borderWidth:2.5,tension:.4,pointRadius:0,fill:true},
       {label:'Ziel',data:rows.map(()=>ziel),borderColor:'#f87171',borderDash:[6,3],borderWidth:1.5,pointRadius:0,fill:false}
     ]},
     options:{responsive:true,maintainAspectRatio:false,
-      plugins:{legend:{display:false},tooltip:{mode:'index',intersect:false,cornerRadius:32,caretSize:0,boxWidth:8,boxHeight:8,backgroundColor:t.st,borderWidth:0,padding:16,titleFont:{weight:'600',size:12},bodyFont:{size:12},boxPadding:6,titleMarginBottom:8,titleColor:t.tt,bodyColor:t.ts,callbacks:{title:items=>{const n=+items[0].label;return `${n}. Monat`;},labelColor:c=>({borderColor:'transparent',backgroundColor:c.dataset.borderColor,borderWidth:0,borderRadius:4}),label:c=>` ${c.dataset.label}: ${eur(c.parsed.y)}`}}},
+      plugins:{legend:{display:false},tooltip:{enabled:false,mode:'index',intersect:false,external:externalTooltip,callbacks:{title:items=>{const n=+items[0].label;return `${n}. Monat`;},labelColor:c=>({borderColor:'transparent',backgroundColor:c.dataset.borderColor,borderWidth:0,borderRadius:4}),label:c=>` ${c.dataset.label}: ${eur(c.parsed.y)}`}}},
       scales:{
         x:{grid:{color:t.grid,drawTicks:false},ticks:{color:t.ticks,font:{size:10},maxTicksLimit:12},border:{color:'transparent'},title:{display:true,text:'(Monate)',align:'end',color:t.ticks,font:{size:10}}},
         y:{grid:{color:t.grid,drawTicks:false},ticks:{color:t.ticks,font:{size:10},callback:v=>eurN(v)},border:{color:'transparent'},title:{display:true,text:'(€)',align:'end',color:t.ticks,font:{size:10}}}
@@ -1132,7 +1167,7 @@ function berechneKurz(){
   const show=Math.min(rows.length,(zm||36)+2);
   for(let i=0;i<show;i++){
     const r=rows[i],fl=Math.max(0,ziel-r.k),tr=document.createElement('tr');
-    tr.innerHTML=`<td>${r.m}</td><td>${eur(r.rate)}</td><td style="color:#38D9A3">${eur(r.z)}</td><td style="color:${r.k>=ziel?'#4ade80':'var(--ts)'}">${eur(r.k)}</td><td style="color:${fl===0?'#4ade80':'var(--ts)'}">${fl===0?'✓ Erreicht':eur(fl)}</td>`;
+    tr.innerHTML=`<td>${r.m}</td><td>${eur(r.rate)}</td><td style="color:${t.ac}">${eur(r.z)}</td><td style="color:${r.k>=ziel?'#4ade80':'var(--ts)'}">${eur(r.k)}</td><td style="color:${fl===0?'#4ade80':'var(--ts)'}">${fl===0?'✓ Erreicht':eur(fl)}</td>`;
     tb.appendChild(tr);
   }
   sendHeight();
@@ -1237,7 +1272,7 @@ function berechneMittel(){
     g.innerHTML=`
       <div class="met hi"><span class="mi">📈</span><div class="ml">Fonds-Ergebnis</div><div class="mv ac">${eur(last.f)}</div><div class="ms">nach ${jahre} Jahren${inflation>0?` · <span style="color:#a78bfa">${eur(last.f/Math.pow(1+inflation,jahre))}</span> real`:''}</div></div>
       <div class="met"><span class="mi">💰</span><div class="ml">Eingezahlt</div><div class="mv">${eur(last.e)}</div><div class="ms">Gesamte Einzahlungen</div></div>
-      <div class="met"><span class="mi">⚡</span><div class="ml">Netto-Zuwachs</div><div class="mv pos">+${eur(last.f-last.e)}</div><div class="ms">Rendite nach KESt</div></div>`;
+      <div class="met"><span class="mi">⚡</span><div class="ml">Netto-Zuwachs</div><div class="mv ac">+${eur(last.f-last.e)}</div><div class="ms">Rendite nach KESt</div></div>`;
   }
   panel.appendChild(g);
 
@@ -1259,7 +1294,7 @@ function berechneMittel(){
 
   // Table
   const tc2=document.createElement('div');tc2.className='card';
-  const extraH=isZ?'<th>Ziellücke</th>':'<th>Zuwachs</th>';
+  const extraH=isZ?'<th>Ziellücke</th>':'<th style="color:var(--ac)">Zuwachs</th>';
   const infH=inflation>0?'<th style="color:#a78bfa">Kaufkraft</th>':'';
   tc2.innerHTML=`<div class="ch"><span class="ct-title">Jahresübersicht</span></div><div class="tw"><table><thead><tr><th>Jahr</th><th>Eingezahlt</th><th style="color:#60a5fa">Fonds</th>${tagesAn?'<th style="color:#4ade80">Tagesgeld</th>':''}${extraH}${infH}</tr></thead><tbody id="m_tbody"></tbody></table></div>`;
   panel.appendChild(tc2);
@@ -1277,7 +1312,7 @@ function berechneMittel(){
   mChart=new Chart(document.getElementById('mChart').getContext('2d'),{
     type:'line',data:{labels:rows.map(r=>r.j),datasets:ds},
     options:{responsive:true,maintainAspectRatio:false,
-      plugins:{legend:{display:false},tooltip:{mode:'index',intersect:false,cornerRadius:32,caretSize:0,boxWidth:8,boxHeight:8,backgroundColor:t.st,borderWidth:0,padding:16,titleFont:{weight:'600',size:12},bodyFont:{size:12},boxPadding:6,titleMarginBottom:8,titleColor:t.tt,bodyColor:t.ts,callbacks:{title:items=>{const n=+items[0].label;return n===1?'1 Jahr':`${n} Jahre`;},labelColor:c=>({borderColor:'transparent',backgroundColor:c.dataset.borderColor,borderWidth:0,borderRadius:4}),label:c=>` ${c.dataset.label}: ${eur(c.parsed.y)}`}}},
+      plugins:{legend:{display:false},tooltip:{enabled:false,mode:'index',intersect:false,external:externalTooltip,callbacks:{title:items=>{const n=+items[0].label;return n===1?'1 Jahr':`${n} Jahre`;},labelColor:c=>({borderColor:'transparent',backgroundColor:c.dataset.borderColor,borderWidth:0,borderRadius:4}),label:c=>` ${c.dataset.label}: ${eur(c.parsed.y)}`}}},
       scales:{
         x:{grid:{color:t.grid,drawTicks:false},ticks:{color:t.ticks,font:{size:10}},border:{color:'transparent'},title:{display:true,text:'(Jahre)',align:'end',color:t.ticks,font:{size:10}}},
         y:{grid:{color:t.grid,drawTicks:false},ticks:{color:t.ticks,font:{size:10},callback:v=>eurN(v)},border:{color:'transparent'},title:{display:true,text:'(€)',align:'end',color:t.ticks,font:{size:10}}}
@@ -1307,7 +1342,7 @@ function berechneMittel(){
   if(tb2){
     tb2.innerHTML='';
     rows.forEach(r=>{
-      const extra=isZ?`<td style="color:${r.f>=(ziel||0)?'#4ade80':'var(--ts)'}">${r.f>=(ziel||0)?'✓':eur((ziel||0)-r.f)}</td>`:`<td style="color:#4ade80">+${eur(r.f-r.e)}</td>`;
+      const extra=isZ?`<td style="color:${r.f>=(ziel||0)?'#4ade80':'var(--ts)'}">${r.f>=(ziel||0)?'✓':eur((ziel||0)-r.f)}</td>`:`<td style="color:var(--ac)">+${eur(r.f-r.e)}</td>`;
       const tagesCell=tagesAn?`<td style="color:#4ade80">${eur(r.t)}</td>`:'';
       const infCell=inflation>0?`<td style="color:#a78bfa">${eur(r.f/Math.pow(1+inflation,r.j))}</td>`:'';
       const tr=document.createElement('tr');
@@ -1373,7 +1408,7 @@ function addEinmal(){einmal.push({j:0,b:0});renderEinmal();}
 function removeEinmal(i){einmal.splice(i,1);renderEinmal();}
 renderEinmal();
 
-const LC={flv:'#4ade80',thes:'#60a5fa',ausch:'#fb923c',einz:'#555860'};
+const LC={flv:getComputedStyle(document.documentElement).getPropertyValue('--ac').trim()||'#38D9A3',thes:'#60a5fa',ausch:'#fb923c',einz:'#555860'};
 const LL={flv:'FLV Netto',thes:'Depot Thesaurierend',ausch:'Depot Ausschüttend',einz:'Eingezahlt'};
 
 function buildLangLeg(){
@@ -1413,13 +1448,13 @@ function berechneLang(){
   lChart=new Chart(document.getElementById('langChart').getContext('2d'),{
     type:'line',
     data:{labels:data.map(r=>r.J),datasets:[
-      {label:LL.flv, data:data.map(r=>r.FN),borderColor:LC.flv, backgroundColor:'rgba(74,222,128,.05)',borderWidth:2.5,tension:.4,pointRadius:0,fill:false,hidden:!lVis.flv},
+      {label:LL.flv, data:data.map(r=>r.FN),borderColor:LC.flv, backgroundColor:t.acFill,borderWidth:2.5,tension:.4,pointRadius:0,fill:false,hidden:!lVis.flv},
       {label:LL.thes,data:data.map(r=>r.TN),borderColor:LC.thes,backgroundColor:'rgba(96,165,250,.05)',borderWidth:2.5,tension:.4,pointRadius:0,fill:false,hidden:!lVis.thes},
       {label:LL.ausch,data:data.map(r=>r.AN),borderColor:LC.ausch,borderDash:[5,3],borderWidth:2,tension:.4,pointRadius:0,fill:false,hidden:!lVis.ausch},
       {label:LL.einz,data:data.map(r=>r.E), borderColor:LC.einz, borderDash:[6,4],borderWidth:1.5,tension:0,pointRadius:0,fill:false,hidden:!lVis.einz}
     ]},
     options:{responsive:true,maintainAspectRatio:false,
-      plugins:{legend:{display:false},tooltip:{mode:'index',intersect:false,cornerRadius:32,caretSize:0,boxWidth:8,boxHeight:8,backgroundColor:t.st,borderWidth:0,padding:16,titleFont:{weight:'600',size:12},bodyFont:{size:12},boxPadding:6,titleMarginBottom:8,titleColor:t.tt,bodyColor:t.ts,callbacks:{title:items=>{const n=+items[0].label;return n===1?'1 Jahr':`${n} Jahre`;},labelColor:c=>({borderColor:'transparent',backgroundColor:c.dataset.borderColor,borderWidth:0,borderRadius:4}),label:c=>` ${c.dataset.label}: ${eur(c.parsed.y)}`}}},
+      plugins:{legend:{display:false},tooltip:{enabled:false,mode:'index',intersect:false,external:externalTooltip,callbacks:{title:items=>{const n=+items[0].label;return n===1?'1 Jahr':`${n} Jahre`;},labelColor:c=>({borderColor:'transparent',backgroundColor:c.dataset.borderColor,borderWidth:0,borderRadius:4}),label:c=>` ${c.dataset.label}: ${eur(c.parsed.y)}`}}},
       scales:{
         x:{grid:{color:t.grid,drawTicks:false},ticks:{color:t.ticks,font:{size:11},maxTicksLimit:10},border:{color:'transparent'},title:{display:true,text:'(Jahre)',align:'end',color:t.ticks,font:{size:11}}},
         y:{grid:{color:t.grid,drawTicks:false},ticks:{color:t.ticks,font:{size:11},callback:v=>eurN(v)},border:{color:'transparent'},title:{display:true,text:'(€)',align:'end',color:t.ticks,font:{size:11}}}
@@ -1456,19 +1491,19 @@ function berechneLang(){
 
   const bd=Math.max(last.TN,last.AN),bn=last.TN>=last.AN?'Thesaurierend':'Ausschüttend',dl=last.FN-bd;
   document.getElementById('l_delta').textContent=(dl>=0?'+':'')+eur(dl);
-  document.getElementById('l_delta').className='mv '+(dl>=0?'pos':'neg');
+  document.getElementById('l_delta').className='mv '+(dl>=0?'ac':'neg');
   set('l_delta_s',dl>=0?'FLV schlägt Depot':'Depot schlägt FLV');
 
   const thead=document.getElementById('l_thead');
   if(thead){
     const infH=inflation>0?'<th style="color:#a78bfa">Kaufkraft (FLV)</th>':'';
-    thead.innerHTML=`<tr><th>Jahr</th><th>Eingezahlt</th><th style="color:#4ade80">FLV</th><th style="color:#60a5fa">Thesaur.</th><th style="color:#fb923c">Ausschütt.</th>${infH}</tr>`;
+    thead.innerHTML=`<tr><th>Jahr</th><th>Eingezahlt</th><th style="color:var(--ac)">FLV</th><th style="color:#60a5fa">Thesaur.</th><th style="color:#fb923c">Ausschütt.</th>${infH}</tr>`;
   }
   const tb=document.getElementById('l_tbody');tb.innerHTML='';
   data.forEach(r=>{
     const infCell=inflation>0?`<td style="color:#a78bfa">${eur(r.FN/Math.pow(1+inflation,r.J))}</td>`:'';
     const tr=document.createElement('tr');
-    tr.innerHTML=`<td>${r.J}</td><td>${eur(r.E)}</td><td style="color:#4ade80">${eur(r.FN)}</td><td style="color:#60a5fa">${eur(r.TN)}</td><td style="color:#fb923c">${eur(r.AN)}</td>${infCell}`;
+    tr.innerHTML=`<td>${r.J}</td><td>${eur(r.E)}</td><td style="color:var(--ac)">${eur(r.FN)}</td><td style="color:#60a5fa">${eur(r.TN)}</td><td style="color:#fb923c">${eur(r.AN)}</td>${infCell}`;
     tb.appendChild(tr);
   });
   sendHeight();
@@ -1561,5 +1596,6 @@ window.addEventListener('DOMContentLoaded',()=>{
   setTimeout(sendHeight,100);
 });
 </script>
+<div id="chart-tip"></div>
 </body>
 </html>

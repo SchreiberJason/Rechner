@@ -1049,7 +1049,7 @@ function eurS(v){
 function tc(){
   const d=window.matchMedia('(prefers-color-scheme:dark)').matches;
   return{grid:d?'rgba(255,255,255,.04)':'rgba(0,0,0,.05)',ticks:d?'#555860':'#AAAAAA',
-    bg:d?'#16171B':'#F7F2EA',bdr:d?'#282930':'#DEDAD3',tt:d?'#F0EDE8':'#1A1A1A',ts:'#969696'};
+    bg:d?'#16171B':'#F7F2EA',st:d?'#282930':'#FFFEFC',bdr:d?'#282930':'#DEDAD3',tt:d?'#F0EDE8':'#1A1A1A',ts:'#969696'};
 }
 const crosshairPlugin={
   id:'crosshair',
@@ -1126,7 +1126,7 @@ function berechneKurz(){
       {label:'Ziel',data:rows.map(()=>ziel),borderColor:'#f87171',borderDash:[6,3],borderWidth:1.5,pointRadius:0,fill:false}
     ]},
     options:{responsive:true,maintainAspectRatio:false,
-      plugins:{legend:{display:false},tooltip:{mode:'index',intersect:false,cornerRadius:16,caretSize:0,boxWidth:8,boxHeight:8,backgroundColor:t.bg,borderColor:t.bdr,borderWidth:1,padding:16,titleFont:{weight:'600',size:12},bodyFont:{size:12},boxPadding:6,titleMarginBottom:8,titleColor:t.tt,bodyColor:t.ts,callbacks:{labelColor:c=>({borderColor:'transparent',backgroundColor:c.dataset.borderColor,borderWidth:0,borderRadius:4}),label:c=>` ${c.dataset.label}: ${eur(c.parsed.y)}`}}},
+      plugins:{legend:{display:false},tooltip:{mode:'index',intersect:false,cornerRadius:32,caretSize:0,boxWidth:8,boxHeight:8,backgroundColor:t.st,borderWidth:0,padding:16,titleFont:{weight:'600',size:12},bodyFont:{size:12},boxPadding:6,titleMarginBottom:8,titleColor:t.tt,bodyColor:t.ts,callbacks:{labelColor:c=>({borderColor:'transparent',backgroundColor:c.dataset.borderColor,borderWidth:0,borderRadius:4}),label:c=>` ${c.dataset.label}: ${eur(c.parsed.y)}`}}},
       scales:{
         x:{grid:{color:t.grid,drawTicks:false},ticks:{color:t.ticks,font:{size:10},maxTicksLimit:12},border:{color:'transparent'}},
         y:{grid:{color:t.grid,drawTicks:false},ticks:{color:t.ticks,font:{size:10},callback:v=>eurS(v)},border:{color:'transparent'}}
@@ -1283,7 +1283,7 @@ function berechneMittel(){
   mChart=new Chart(document.getElementById('mChart').getContext('2d'),{
     type:'line',data:{labels:rows.map(r=>'J.'+r.j),datasets:ds},
     options:{responsive:true,maintainAspectRatio:false,
-      plugins:{legend:{display:false},tooltip:{mode:'index',intersect:false,cornerRadius:16,caretSize:0,boxWidth:8,boxHeight:8,backgroundColor:t.bg,borderColor:t.bdr,borderWidth:1,padding:16,titleFont:{weight:'600',size:12},bodyFont:{size:12},boxPadding:6,titleMarginBottom:8,titleColor:t.tt,bodyColor:t.ts,callbacks:{labelColor:c=>({borderColor:'transparent',backgroundColor:c.dataset.borderColor,borderWidth:0,borderRadius:4}),label:c=>` ${c.dataset.label}: ${eur(c.parsed.y)}`}}},
+      plugins:{legend:{display:false},tooltip:{mode:'index',intersect:false,cornerRadius:32,caretSize:0,boxWidth:8,boxHeight:8,backgroundColor:t.st,borderWidth:0,padding:16,titleFont:{weight:'600',size:12},bodyFont:{size:12},boxPadding:6,titleMarginBottom:8,titleColor:t.tt,bodyColor:t.ts,callbacks:{title:items=>{const n=parseInt(items[0].label.replace('J.',''));return n===1?'1 Jahr':`${n} Jahre`;},labelColor:c=>({borderColor:'transparent',backgroundColor:c.dataset.borderColor,borderWidth:0,borderRadius:4}),label:c=>` ${c.dataset.label}: ${eur(c.parsed.y)}`}}},
       scales:{
         x:{grid:{color:t.grid,drawTicks:false},ticks:{color:t.ticks,font:{size:10}},border:{color:'transparent'}},
         y:{grid:{color:t.grid,drawTicks:false},ticks:{color:t.ticks,font:{size:10},callback:v=>eurS(v)},border:{color:'transparent'}}
@@ -1425,7 +1425,7 @@ function berechneLang(){
       {label:LL.einz,data:data.map(r=>r.E), borderColor:LC.einz, borderDash:[6,4],borderWidth:1.5,tension:0,pointRadius:0,fill:false,hidden:!lVis.einz}
     ]},
     options:{responsive:true,maintainAspectRatio:false,
-      plugins:{legend:{display:false},tooltip:{mode:'index',intersect:false,cornerRadius:16,caretSize:0,boxWidth:8,boxHeight:8,backgroundColor:t.bg,borderColor:t.bdr,borderWidth:1,padding:16,titleFont:{weight:'600',size:12},bodyFont:{size:12},boxPadding:6,titleMarginBottom:8,titleColor:t.tt,bodyColor:t.ts,callbacks:{labelColor:c=>({borderColor:'transparent',backgroundColor:c.dataset.borderColor,borderWidth:0,borderRadius:4}),label:c=>` ${c.dataset.label}: ${eur(c.parsed.y)}`}}},
+      plugins:{legend:{display:false},tooltip:{mode:'index',intersect:false,cornerRadius:32,caretSize:0,boxWidth:8,boxHeight:8,backgroundColor:t.st,borderWidth:0,padding:16,titleFont:{weight:'600',size:12},bodyFont:{size:12},boxPadding:6,titleMarginBottom:8,titleColor:t.tt,bodyColor:t.ts,callbacks:{title:items=>{const n=+items[0].label;return n===1?'1 Jahr':`${n} Jahre`;},labelColor:c=>({borderColor:'transparent',backgroundColor:c.dataset.borderColor,borderWidth:0,borderRadius:4}),label:c=>` ${c.dataset.label}: ${eur(c.parsed.y)}`}}},
       scales:{
         x:{grid:{color:t.grid,drawTicks:false},ticks:{color:t.ticks,font:{size:11},maxTicksLimit:10},border:{color:'transparent'}},
         y:{grid:{color:t.grid,drawTicks:false},ticks:{color:t.ticks,font:{size:11},callback:v=>eurS(v)},border:{color:'transparent'}}

@@ -440,7 +440,7 @@ tbody tr:last-child td{border-bottom:none;}
     <div class="pillar-card" onclick="goTo('mittel')">
       <div class="pc-top">
         <div class="pc-badge mittel">🎯 Mittelfristig · 2–10 J.</div>
-        <div class="pc-title">Zielsparen</div>
+        <div class="pc-title">Mittelfristiges Investment</div>
         <div class="pc-desc">Für konkrete Lebensziele oder freies Ansparen. Mit Fondssparplan erreichst du mehr. Ziel oder freies Sparen wählbar.</div>
       </div>
       <div class="pc-metrics">
@@ -453,7 +453,7 @@ tbody tr:last-child td{border-bottom:none;}
     <div class="pillar-card" onclick="goTo('lang')">
       <div class="pc-top">
         <div class="pc-badge lang">📈 Langfristig · 20+ J.</div>
-        <div class="pc-title">Pensionsvorsorge</div>
+        <div class="pc-title">Langfristiges Investment</div>
         <div class="pc-desc">FLV vs. Wertpapierdepot im Direktvergleich — inklusive aller Kosten, Steuern und Break-even-Analyse.</div>
       </div>
       <div class="pc-metrics">
@@ -503,7 +503,7 @@ tbody tr:last-child td{border-bottom:none;}
         </select></div></div>
       <div class="f"><label>Zinssatz p.a.</label>
         <div class="fu"><input type="number" id="k_zins" value="3.0" min="0" max="20" step="0.1"><span class="ub">%&nbsp;p.a.</span></div></div>
-      <div class="ib" id="k_hint">Tagesgeld: täglich verfügbar, 2–4 % p.a. — ideal für den Notgroschen.</div>
+      <div class="ib" id="k_hint">Tagesgeld: täglich verfügbar, 0,1–1,5 % p.a. — ideal für den Notgroschen.</div>
     </div>
     <div class="ps ps-sticky">
       <button class="btn-calc" onclick="berechneKurz()">Berechnen</button>
@@ -549,7 +549,7 @@ tbody tr:last-child td{border-bottom:none;}
 <div class="view" id="view-mittel">
 <div class="back-nav">
   <button class="back-btn" onclick="goTo('dash')">← Zurück</button>
-  <span class="back-crumb">Finanzplan / <b>Zielsparen</b></span>
+  <span class="back-crumb">Finanzplan / <b>Mittelfristiges Investment</b></span>
 </div>
 <div class="calc-layout">
 
@@ -712,7 +712,7 @@ tbody tr:last-child td{border-bottom:none;}
 <div class="view" id="view-lang">
 <div class="back-nav">
   <button class="back-btn" onclick="goTo('dash')">← Zurück</button>
-  <span class="back-crumb">Finanzplan / <b>Pensionsvorsorge</b></span>
+  <span class="back-crumb">Finanzplan / <b>Langfristiges Investment</b></span>
 </div>
 <div class="calc-layout">
 
@@ -1075,7 +1075,7 @@ const crosshairPlugin={
 ══════════════════════════════════ */
 let kChart=null;
 const KHINT={
-  tagesgeld:'<b>Tagesgeld</b>: täglich verfügbar, 2–4 % p.a. — ideal für den Notgroschen.',
+  tagesgeld:'<b>Tagesgeld</b>: täglich verfügbar, 0,1–1,5 % p.a. — ideal für den Notgroschen.',
   festgeld:'<b>Festgeld</b>: höhere Zinsen, aber Kapital gebunden. Nur für Beträge über dem Notgroschen.',
   sparkonto:'<b>Sparkonto</b>: geringe Zinsen, flexibel verfügbar.',
   girokonto:'<b>Girokonto</b>: keine Zinsen — Tagesgeld wäre deutlich besser.'
@@ -1126,7 +1126,7 @@ function berechneKurz(){
       {label:'Ziel',data:rows.map(()=>ziel),borderColor:'#f87171',borderDash:[6,3],borderWidth:1.5,pointRadius:0,fill:false}
     ]},
     options:{responsive:true,maintainAspectRatio:false,
-      plugins:{legend:{display:false},tooltip:{mode:'index',intersect:false,cornerRadius:16,caretSize:0,backgroundColor:t.bg,borderColor:t.bdr,borderWidth:1,padding:16,titleFont:{weight:'600',size:12},bodyFont:{size:12},boxPadding:5,titleMarginBottom:8,titleColor:t.tt,bodyColor:t.ts,callbacks:{label:c=>` ${c.dataset.label}: ${eur(c.parsed.y)}`}}},
+      plugins:{legend:{display:false},tooltip:{mode:'index',intersect:false,cornerRadius:16,caretSize:0,boxWidth:8,boxHeight:8,backgroundColor:t.bg,borderColor:t.bdr,borderWidth:1,padding:16,titleFont:{weight:'600',size:12},bodyFont:{size:12},boxPadding:6,titleMarginBottom:8,titleColor:t.tt,bodyColor:t.ts,callbacks:{labelColor:c=>({borderColor:'transparent',backgroundColor:c.dataset.borderColor,borderWidth:0,borderRadius:4}),label:c=>` ${c.dataset.label}: ${eur(c.parsed.y)}`}}},
       scales:{
         x:{grid:{color:t.grid,drawTicks:false},ticks:{color:t.ticks,font:{size:10},maxTicksLimit:12},border:{color:'transparent'}},
         y:{grid:{color:t.grid,drawTicks:false},ticks:{color:t.ticks,font:{size:10},callback:v=>eurS(v)},border:{color:'transparent'}}
@@ -1283,7 +1283,7 @@ function berechneMittel(){
   mChart=new Chart(document.getElementById('mChart').getContext('2d'),{
     type:'line',data:{labels:rows.map(r=>'J.'+r.j),datasets:ds},
     options:{responsive:true,maintainAspectRatio:false,
-      plugins:{legend:{display:false},tooltip:{mode:'index',intersect:false,cornerRadius:16,caretSize:0,backgroundColor:t.bg,borderColor:t.bdr,borderWidth:1,padding:16,titleFont:{weight:'600',size:12},bodyFont:{size:12},boxPadding:5,titleMarginBottom:8,titleColor:t.tt,bodyColor:t.ts,callbacks:{label:c=>` ${c.dataset.label}: ${eur(c.parsed.y)}`}}},
+      plugins:{legend:{display:false},tooltip:{mode:'index',intersect:false,cornerRadius:16,caretSize:0,boxWidth:8,boxHeight:8,backgroundColor:t.bg,borderColor:t.bdr,borderWidth:1,padding:16,titleFont:{weight:'600',size:12},bodyFont:{size:12},boxPadding:6,titleMarginBottom:8,titleColor:t.tt,bodyColor:t.ts,callbacks:{labelColor:c=>({borderColor:'transparent',backgroundColor:c.dataset.borderColor,borderWidth:0,borderRadius:4}),label:c=>` ${c.dataset.label}: ${eur(c.parsed.y)}`}}},
       scales:{
         x:{grid:{color:t.grid,drawTicks:false},ticks:{color:t.ticks,font:{size:10}},border:{color:'transparent'}},
         y:{grid:{color:t.grid,drawTicks:false},ticks:{color:t.ticks,font:{size:10},callback:v=>eurS(v)},border:{color:'transparent'}}
@@ -1425,7 +1425,7 @@ function berechneLang(){
       {label:LL.einz,data:data.map(r=>r.E), borderColor:LC.einz, borderDash:[6,4],borderWidth:1.5,tension:0,pointRadius:0,fill:false,hidden:!lVis.einz}
     ]},
     options:{responsive:true,maintainAspectRatio:false,
-      plugins:{legend:{display:false},tooltip:{mode:'index',intersect:false,cornerRadius:16,caretSize:0,backgroundColor:t.bg,borderColor:t.bdr,borderWidth:1,padding:16,titleFont:{weight:'600',size:12},bodyFont:{size:12},boxPadding:5,titleMarginBottom:8,titleColor:t.tt,bodyColor:t.ts,callbacks:{label:c=>` ${c.dataset.label}: ${eur(c.parsed.y)}`}}},
+      plugins:{legend:{display:false},tooltip:{mode:'index',intersect:false,cornerRadius:16,caretSize:0,boxWidth:8,boxHeight:8,backgroundColor:t.bg,borderColor:t.bdr,borderWidth:1,padding:16,titleFont:{weight:'600',size:12},bodyFont:{size:12},boxPadding:6,titleMarginBottom:8,titleColor:t.tt,bodyColor:t.ts,callbacks:{labelColor:c=>({borderColor:'transparent',backgroundColor:c.dataset.borderColor,borderWidth:0,borderRadius:4}),label:c=>` ${c.dataset.label}: ${eur(c.parsed.y)}`}}},
       scales:{
         x:{grid:{color:t.grid,drawTicks:false},ticks:{color:t.ticks,font:{size:11},maxTicksLimit:10},border:{color:'transparent'}},
         y:{grid:{color:t.grid,drawTicks:false},ticks:{color:t.ticks,font:{size:11},callback:v=>eurS(v)},border:{color:'transparent'}}
@@ -1463,7 +1463,7 @@ function berechneLang(){
   const bd=Math.max(last.TN,last.AN),bn=last.TN>=last.AN?'Thesaurierend':'Ausschüttend',dl=last.FN-bd;
   document.getElementById('l_delta').textContent=(dl>=0?'+':'')+eur(dl);
   document.getElementById('l_delta').className='mv '+(dl>=0?'pos':'neg');
-  set('l_delta_s',dl>=0?`FLV schlägt ${bn} um ${eur(dl)}`:`${bn} schlägt FLV um ${eur(Math.abs(dl))}`);
+  set('l_delta_s',dl>=0?'FLV schlägt Depot':'Depot schlägt FLV');
 
   const thead=document.getElementById('l_thead');
   if(thead){

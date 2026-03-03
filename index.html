@@ -136,7 +136,9 @@ body{
   background:var(--ss); border:1px solid var(--brd); border-radius:14px;
   overflow:hidden; overflow-y:auto;
   box-shadow:0 4px 20px var(--sh);
+  min-width:0;
 }
+.rp{min-width:0;}
 
 .ps{padding:16px 18px;border-bottom:1px solid var(--brd);}
 .ps:last-child{border-bottom:none;}
@@ -1086,6 +1088,7 @@ function berechneKurz(){
     tr.innerHTML=`<td>${r.m}</td><td>${eur(r.rate)}</td><td style="color:#38D9A3">${eur(r.z)}</td><td style="color:${r.k>=ziel?'#4ade80':'var(--ts)'}">${eur(r.k)}</td><td style="color:${fl===0?'#4ade80':'var(--ts)'}">${fl===0?'✓ Erreicht':eur(fl)}</td>`;
     tb.appendChild(tr);
   }
+  sendHeight();
 }
 function set(id,v){document.getElementById(id).textContent=v;}
 
@@ -1264,6 +1267,7 @@ function berechneMittel(){
       tb2.appendChild(tr);
     });
   }
+  sendHeight();
 }
 
 /* ══════════════════════════════════
@@ -1409,6 +1413,7 @@ function berechneLang(){
     tr.innerHTML=`<td>${r.J}</td><td>${eur(r.E)}</td><td style="color:#4ade80">${eur(r.FN)}</td><td style="color:#60a5fa">${eur(r.TN)}</td><td style="color:#fb923c">${eur(r.AN)}</td>${infCell}`;
     tb.appendChild(tr);
   });
+  sendHeight();
 }
 
 /* ══════════════════════════════════

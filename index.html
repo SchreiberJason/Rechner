@@ -194,7 +194,7 @@ select{cursor:pointer;}
 select option{background:var(--ss);}
 
 .fu{display:flex;}
-.fu input,.fu select{border-radius:8px 0 0 8px;border-right:none;}
+.fu input,.fu select{border-radius:8px 0 0 8px;border-right:none;flex:1;min-width:0;}
 .ub{
   background:var(--sp);border:1px solid var(--brd);border-left:none;
   border-radius:0 8px 8px 0;padding:0 10px;
@@ -204,7 +204,8 @@ select option{background:var(--ss);}
 }
 
 /* Einmal rows */
-.er{display:grid;grid-template-columns:1fr 2fr 30px;gap:6px;margin-bottom:6px;align-items:end;}
+.er{display:grid;grid-template-columns:minmax(70px,1fr) 2fr 30px;gap:6px;margin-bottom:6px;align-items:end;}
+.er .ub{min-width:30px;}
 .btn-rm{
   background:none;border:1px solid var(--brd);color:var(--tm);
   border-radius:7px;width:30px;height:auto;padding:9px 0;cursor:pointer;
@@ -1082,7 +1083,7 @@ function externalTooltip({chart,tooltip}){
 }
 function tc(){
   const d=window.matchMedia('(prefers-color-scheme:dark)').matches;
-  return{grid:d?'rgba(255,255,255,.06)':'rgba(0,0,0,.14)',ticks:d?'#666B78':'#777777',
+  return{grid:d?'rgba(255,255,255,.12)':'rgba(0,0,0,.28)',ticks:d?'#666B78':'#777777',
     bg:d?'#16171B':'#F7F2EA',st:d?'#282930':'#FFFEFC',bdr:d?'#282930':'#DEDAD3',tt:d?'#F0EDE8':'#1A1A1A',ts:'#969696',
     ac:d?'#38D9A3':'#039F6B',acFill:d?'rgba(56,217,163,.07)':'rgba(3,159,107,.07)'};
 }
@@ -1408,7 +1409,7 @@ function addEinmal(){einmal.push({j:0,b:0});renderEinmal();}
 function removeEinmal(i){einmal.splice(i,1);renderEinmal();}
 renderEinmal();
 
-const LC={flv:getComputedStyle(document.documentElement).getPropertyValue('--ac').trim()||'#38D9A3',thes:'#60a5fa',ausch:'#fb923c',einz:'#555860'};
+let LC={flv:getComputedStyle(document.documentElement).getPropertyValue('--ac').trim()||'#38D9A3',thes:'#60a5fa',ausch:'#fb923c',einz:'#555860'};
 const LL={flv:'FLV Netto',thes:'Depot Thesaurierend',ausch:'Depot Ausschüttend',einz:'Eingezahlt'};
 
 function buildLangLeg(){
@@ -1594,6 +1595,14 @@ window.addEventListener('DOMContentLoaded',()=>{
   syncDash();
   setTimeout(updatePanelMaxHeight,0);
   setTimeout(sendHeight,100);
+});
+window.matchMedia('(prefers-color-scheme:dark)').addEventListener('change',()=>{
+  LC.flv=getComputedStyle(document.documentElement).getPropertyValue('--ac').trim()||'#38D9A3';
+  const v=document.querySelector('[id^="view-"]:not(.hidden)');
+  if(v?.id==='view-kurz')berechneKurz();
+  else if(v?.id==='view-mittel')berechneMittel();
+  else if(v?.id==='view-lang')berechneLang();
+  syncDash();
 });
 </script>
 <div id="chart-tip"></div>

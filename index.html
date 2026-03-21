@@ -504,14 +504,14 @@ tbody tr:last-child td{border-bottom:none;}
     <div class="ps">
       <div class="sl">Konto & Zinsen</div>
       <div class="f"><label>Kontotyp</label>
-        <div class="fu"><select id="k_typ" onchange="updateKontoHint()">
+        <select id="k_typ" onchange="updateKontoHint()">
           <option value="tagesgeld">Tagesgeldkonto</option>
           <option value="festgeld">Festgeld</option>
           <option value="sparkonto">Sparkonto</option>
           <option value="girokonto">Girokonto (0%)</option>
-        </select></div></div>
+        </select></div>
       <div class="f"><label>Zinssatz p.a.</label>
-        <div class="fu"><input type="number" id="k_zins" value="3.0" min="0" max="20" step="0.1"><span class="ub">%&nbsp;p.a.</span></div></div>
+        <div class="fu"><input type="number" id="k_zins" value="2.0" min="0" max="20" step="0.1"><span class="ub">%&nbsp;p.a.</span></div></div>
       <div class="ib" id="k_hint">Tagesgeld: täglich verfügbar, 0,1–1,5 % p.a. — ideal für den Notgroschen.</div>
     </div>
     <div class="ps ps-sticky">
@@ -577,7 +577,7 @@ tbody tr:last-child td{border-bottom:none;}
         <div class="f"><label>Zielbetrag</label>
           <div class="fu"><input type="number" id="m_ziel" value="50000" min="0" step="1000"><span class="ub">€</span></div></div>
         <div class="f"><label>Laufzeit</label>
-          <div class="fu"><input type="number" id="m_jahre" value="7" min="1" max="30"><span class="ub">Jahre</span></div></div>
+          <div class="fu"><input type="number" id="m_jahre" value="7" min="1" max="30" step="0.5"><span class="ub">Jahre</span></div></div>
         <div class="f"><label>Startkapital</label>
           <div class="fu"><input type="number" id="m_start" value="5000" min="0" step="500"><span class="ub">€</span></div></div>
       </div>
@@ -593,7 +593,7 @@ tbody tr:last-child td{border-bottom:none;}
       <div class="ps">
         <div class="sl">Sparplan</div>
         <div class="f"><label>Laufzeit</label>
-          <div class="fu"><input type="number" id="mf_jahre" value="7" min="1" max="30"><span class="ub">Jahre</span></div></div>
+          <div class="fu"><input type="number" id="mf_jahre" value="7" min="1" max="30" step="0.5"><span class="ub">Jahre</span></div></div>
         <div class="f"><label>Startkapital</label>
           <div class="fu"><input type="number" id="mf_start" value="5000" min="0" step="500"><span class="ub">€</span></div></div>
         <div class="f"><label>Monatliche Sparrate</label>
@@ -694,7 +694,7 @@ tbody tr:last-child td{border-bottom:none;}
     <div id="tages-fields" class="hidden">
       <div class="cb open" style="border-top:none">
         <div class="f"><label>Zinssatz p.a.</label>
-          <div class="fu"><input type="number" id="m_tzins" value="3.0" min="0" max="20" step="0.1"><span class="ub">% p.a.</span></div></div>
+          <div class="fu"><input type="number" id="m_tzins" value="2.0" min="0" max="20" step="0.1"><span class="ub">% p.a.</span></div></div>
         <div class="f"><label>KESt auf Zinsen</label>
           <div class="fu"><input type="number" id="m_tkest" value="27.5" min="0" max="100" step="0.5"><span class="ub">%</span></div></div>
       </div>
@@ -726,7 +726,7 @@ tbody tr:last-child td{border-bottom:none;}
       <div class="f"><label>Monatliche Sparrate</label>
         <div class="fu"><input type="number" id="l_mb" value="100" min="1" step="10"><span class="ub">€ / Mo.</span></div></div>
       <div class="f"><label>Laufzeit</label>
-        <div class="fu"><input type="number" id="l_lj" value="40" min="1" max="50"><span class="ub">Jahre</span></div></div>
+        <div class="fu"><input type="number" id="l_lj" value="40" min="1" max="50" step="0.5"><span class="ub">Jahre</span></div></div>
       <div class="f"><label>Marktrendite p.a.</label>
         <div class="fu"><input type="number" id="l_rpa" value="7" min="0" max="30" step="0.1"><span class="ub">% p.a.</span></div></div>
     </div>
@@ -1119,26 +1119,34 @@ const KHINT={
 function updateKontoHint(){document.getElementById('k_hint').innerHTML=KHINT[document.getElementById('k_typ').value];}
 
 function berechneKurz(){
-  const eink=+document.getElementById('k_eink').value||0;
-  const vorh=+document.getElementById('k_vorh').value||0;
-  const rate=+document.getElementById('k_rate').value||0;
-  const mo=+document.getElementById('k_mo').value||3;
+  // Sanitize all visible inputs before calculating
+  document.querySelectorAll('#view-kurz input[type="number"]').forEach(el=>{if(!el.closest('.hidden'))sanitizeInput(el);});
+  const eink=Math.max(0,Math.round(+document.getElementById('k_eink').value||0));
+  const vorh=Math.max(0,Math.round(+document.getElementById('k_vorh').value||0));
+  const rate=Math.max(0,Math.round(+document.getElementById('k_rate').value||0));
+  const mo=Math.max(1,Math.round(+document.getElementById('k_mo').value||3));
   const zpa=(+document.getElementById('k_zins').value||0)/100;
   const ziel=eink*mo;
 
-  let k=vorh,tz=0,zm=null;const rows=[];
-  for(let m=1;m<=120;m++){
-    const z=k*(zpa/12);tz+=z;k+=z+rate;
-    rows.push({m,rate,z,k:Math.min(k,ziel>0?ziel*1.5:k),tz});
-    if(k>=ziel&&!zm)zm=m;
-    if(ziel>0&&k>=ziel*1.5)break;
-    if(ziel===0)break;
+  // Bereits erreicht — Erspartes deckt Ziel schon ab
+  const bereitsErreicht=ziel>0&&vorh>=ziel;
+
+  let k=vorh,tz=0,zm=bereitsErreicht?0:null;const rows=[];
+  if(!bereitsErreicht){
+    for(let m=1;m<=120;m++){
+      const z=k*(zpa/12);tz+=z;k+=z+rate;
+      rows.push({m,rate,z,k:Math.min(k,ziel>0?ziel*1.5:k),tz});
+      if(k>=ziel&&!zm)zm=m;
+      if(ziel>0&&k>=ziel*1.5)break;
+      if(ziel===0)break;
+    }
   }
 
   document.getElementById('k_ziel').textContent=eur(ziel);
   document.getElementById('k_zsub').textContent=`${mo}× Monatsnetto (${eur(eink)})`;
 
   if(!ziel){set('k_dauer','—');set('k_dsub','Einkommen eingeben');}
+  else if(bereitsErreicht){set('k_dauer','✓ Bereits erreicht');set('k_dsub',`Erspartes (${eur(vorh)}) deckt das Ziel`);}
   else if(!rate&&vorh<ziel){set('k_dauer','∞');set('k_dsub','Keine Sparrate eingetragen');}
   else if(zm){
     const j=Math.floor(zm/12),r=zm%12;
@@ -1146,30 +1154,36 @@ function berechneKurz(){
     set('k_dsub',`Erreicht in Monat ${zm}`);
   }else{set('k_dauer','> 10 J.');set('k_dsub','Sparrate erhöhen empfohlen');}
 
-  document.getElementById('k_zins_val').textContent=eur(zm?rows[zm-1]?.tz||0:rows.at(-1)?.tz||0);
+  document.getElementById('k_zins_val').textContent=bereitsErreicht?'—':eur(zm?rows[zm-1]?.tz||0:rows.at(-1)?.tz||0);
   if(kChart)kChart.destroy();
   const t=tc();
-  kChart=new Chart(document.getElementById('kurzChart').getContext('2d'),{
-    type:'line',
-    data:{labels:rows.map(r=>r.m),datasets:[
-      {label:'Kapital',data:rows.map(r=>r.k),borderColor:t.ac,backgroundColor:t.acFill,borderWidth:2.5,tension:.4,pointRadius:0,fill:true},
-      {label:'Ziel',data:rows.map(()=>ziel),borderColor:'#f87171',borderDash:[6,3],borderWidth:1.5,pointRadius:0,fill:false}
-    ]},
-    options:{responsive:true,maintainAspectRatio:false,
-      plugins:{legend:{display:false},tooltip:{enabled:false,mode:'index',intersect:false,external:externalTooltip,callbacks:{title:items=>{const n=+items[0].label;return `${n}. Monat`;},labelColor:c=>({borderColor:'transparent',backgroundColor:c.dataset.borderColor,borderWidth:0,borderRadius:4}),label:c=>` ${c.dataset.label}: ${eur(c.parsed.y)}`}}},
-      scales:{
-        x:{grid:{color:t.grid,drawTicks:false},ticks:{color:t.ticks,font:{size:10},maxTicksLimit:12},border:{color:'transparent'},title:{display:true,text:'(Monate)',align:'end',color:t.ticks,font:{size:10}}},
-        y:{grid:{color:t.grid,drawTicks:false},ticks:{color:t.ticks,font:{size:10},callback:v=>eurN(v)},border:{color:'transparent'},title:{display:true,text:'(€)',align:'end',color:t.ticks,font:{size:10}}}
-      }},
-    plugins:[crosshairPlugin]
-  });
-
-  const tb=document.getElementById('k_tbody');tb.innerHTML='';
-  const show=Math.min(rows.length,(zm||36)+2);
-  for(let i=0;i<show;i++){
-    const r=rows[i],fl=Math.max(0,ziel-r.k),tr=document.createElement('tr');
-    tr.innerHTML=`<td>${r.m}</td><td>${eur(r.rate)}</td><td style="color:${t.ac}">${eur(r.z)}</td><td style="color:${r.k>=ziel?'#4ade80':'var(--ts)'}">${eur(r.k)}</td><td style="color:${fl===0?'#4ade80':'var(--ts)'}">${fl===0?'✓ Erreicht':eur(fl)}</td>`;
-    tb.appendChild(tr);
+  if(bereitsErreicht){
+    // Kein Chart/Tabelle nötig — Ziel bereits gedeckt
+    kChart=null;
+    document.getElementById('kurzChart').getContext('2d').clearRect(0,0,9999,9999);
+    document.getElementById('k_tbody').innerHTML='<tr><td colspan="5" style="text-align:center;color:var(--ac);padding:24px 0;font-weight:600">✓ Dein Notgroschen ist bereits gedeckt!</td></tr>';
+  }else{
+    kChart=new Chart(document.getElementById('kurzChart').getContext('2d'),{
+      type:'line',
+      data:{labels:rows.map(r=>r.m),datasets:[
+        {label:'Kapital',data:rows.map(r=>r.k),borderColor:t.ac,backgroundColor:t.acFill,borderWidth:2.5,tension:.4,pointRadius:0,fill:true},
+        {label:'Ziel',data:rows.map(()=>ziel),borderColor:'#f87171',borderDash:[6,3],borderWidth:1.5,pointRadius:0,fill:false}
+      ]},
+      options:{responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{display:false},tooltip:{enabled:false,mode:'index',intersect:false,external:externalTooltip,callbacks:{title:items=>{const n=+items[0].label;return `${n}. Monat`;},labelColor:c=>({borderColor:'transparent',backgroundColor:c.dataset.borderColor,borderWidth:0,borderRadius:4}),label:c=>` ${c.dataset.label}: ${eur(c.parsed.y)}`}}},
+        scales:{
+          x:{grid:{color:t.grid,drawTicks:false},ticks:{color:t.ticks,font:{size:10},maxTicksLimit:12},border:{color:'transparent'},title:{display:true,text:'(Monate)',align:'end',color:t.ticks,font:{size:10}}},
+          y:{grid:{color:t.grid,drawTicks:false},ticks:{color:t.ticks,font:{size:10},callback:v=>eurN(v)},border:{color:'transparent'},title:{display:true,text:'(€)',align:'end',color:t.ticks,font:{size:10}}}
+        }},
+      plugins:[crosshairPlugin]
+    });
+    const tb=document.getElementById('k_tbody');tb.innerHTML='';
+    const show=Math.min(rows.length,(zm||36)+2);
+    for(let i=0;i<show;i++){
+      const r=rows[i],fl=Math.max(0,ziel-r.k),tr=document.createElement('tr');
+      tr.innerHTML=`<td>${r.m}</td><td>${eur(r.rate)}</td><td style="color:${t.ac}">${eur(r.z)}</td><td style="color:${r.k>=ziel?'#4ade80':'var(--ts)'}">${eur(r.k)}</td><td style="color:${fl===0?'#4ade80':'var(--ts)'}">${fl===0?'✓ Erreicht':eur(fl)}</td>`;
+      tb.appendChild(tr);
+    }
   }
   sendHeight();
 }
@@ -1182,8 +1196,12 @@ let mChart=null;
 let mVis={fonds:true,tages:true,einz:true};
 
 function berechneMittel(){
+  // Sanitize all visible inputs before calculating
+  document.querySelectorAll('#view-mittel input[type="number"]').forEach(el=>{if(!el.closest('.hidden'))sanitizeInput(el);});
   const isZ=mMode==='ziel';
-  const jahre=isZ?(+document.getElementById('m_jahre').value||5):(+document.getElementById('mf_jahre').value||5);
+  const jahreId=isZ?'m_jahre':'mf_jahre';
+  let jahre=Math.round(+(document.getElementById(jahreId).value)||5);
+  if(jahre<1){jahre=1;document.getElementById(jahreId).value=1;}
   const start=isZ?(+document.getElementById('m_start').value||0):(+document.getElementById('mf_start').value||0);
   const rate =isZ?(+document.getElementById('m_rate').value||0) :(+document.getElementById('mf_rate').value||0);
   const ziel =isZ?(+document.getElementById('m_ziel').value||0) :null;
@@ -1398,9 +1416,9 @@ function renderEinmal(){
     const row=document.createElement('div');row.className='er';
     row.innerHTML=`
       <div>${i===0?'<label>Jahr</label>':'<label style="visibility:hidden">J</label>'}
-        <div class="fu"><input type="number" value="${e.j}" min="0" onchange="einmal[${i}].j=+this.value" style="border-radius:8px 0 0 8px;border-right:none"><span class="ub">J.</span></div></div>
+        <div class="fu"><input type="number" value="${e.j}" min="0" step="1" onchange="einmal[${i}].j=Math.max(0,Math.round(+this.value||0));this.value=einmal[${i}].j" style="border-radius:8px 0 0 8px;border-right:none"><span class="ub">J.</span></div></div>
       <div>${i===0?'<label>Betrag</label>':'<label style="visibility:hidden">B</label>'}
-        <div class="fu"><input type="number" value="${e.b}" min="0" step="100" onchange="einmal[${i}].b=+this.value" style="border-radius:8px 0 0 8px;border-right:none"><span class="ub">€</span></div></div>
+        <div class="fu"><input type="number" value="${e.b}" min="0" step="100" onchange="einmal[${i}].b=Math.max(0,Math.round(+this.value||0));this.value=einmal[${i}].b" style="border-radius:8px 0 0 8px;border-right:none"><span class="ub">€</span></div></div>
       <div style="display:flex;align-items:flex-end"><button class="btn-rm" onclick="removeEinmal(${i})">×</button></div>`;
     c.appendChild(row);
   });
@@ -1426,8 +1444,11 @@ function buildLangLeg(){
 }
 
 function berechneLang(){
-  const mb=+document.getElementById('l_mb').value;
-  const lj=+document.getElementById('l_lj').value;
+  // Sanitize all visible inputs before calculating
+  document.querySelectorAll('#view-lang input[type="number"]').forEach(el=>{if(!el.closest('.hidden'))sanitizeInput(el);});
+  const mb=Math.max(1,+document.getElementById('l_mb').value||1);
+  let lj=Math.round(+(document.getElementById('l_lj').value)||1);
+  if(lj<1){lj=1;document.getElementById('l_lj').value=1;}
   const rpa=+document.getElementById('l_rpa').value/100;
   const lRegArr=lRegAn?genRegEinmal(
     +(document.getElementById('l_reg_betrag')?.value||0),
@@ -1587,6 +1608,61 @@ if(typeof ResizeObserver!=='undefined'){
   _hObs.observe(document.body);
 }
 
+/* ══════════════════════════════════
+   INPUT SANITIZATION (DAU-PROOF)
+══════════════════════════════════ */
+// Laufzeit-Felder: min 1, Warnung bei 0
+const LAUFZEIT_IDS=new Set(['m_jahre','mf_jahre','l_lj']);
+// Ganzzahl-Felder (kein Dezimal)
+const INT_IDS=new Set(['k_eink','k_vorh','k_rate','k_mo','m_ziel','m_start','m_rate','mf_start','mf_rate',
+  'm_reg_betrag','m_reg_int','m_reg_ab','l_mb','l_reg_betrag','l_reg_int','l_reg_ab',
+  'l_dage','m_dage']);
+
+function showInputWarning(el,msg){
+  // Kurze inline-Warnung unter dem Feld
+  let w=el.closest('.f')?.querySelector('.input-warn');
+  if(!w){w=document.createElement('div');w.className='input-warn';w.style.cssText='color:#f87171;font-size:11px;margin-top:4px;font-weight:500;';el.closest('.f')?.appendChild(w);}
+  w.textContent=msg;
+  setTimeout(()=>w.remove(),4000);
+}
+
+function sanitizeInput(el){
+  if(el.type!=='number') return;
+  let v=parseFloat(el.value);
+  const id=el.id;
+  const min=el.min!==''?parseFloat(el.min):null;
+  const max=el.max!==''?parseFloat(el.max):null;
+
+  // Leeres Feld → min oder 0
+  if(isNaN(v)){v=min!=null?min:0;el.value=v;return;}
+
+  // Laufzeit: 0 → Warnung + auf 1 setzen
+  if(LAUFZEIT_IDS.has(id)&&v<1){
+    showInputWarning(el,'Laufzeit muss mindestens 1 Jahr sein.');
+    v=1;el.value=v;return;
+  }
+
+  // Clamp min/max
+  if(min!=null&&v<min){v=min;}
+  if(max!=null&&v>max){v=max;}
+
+  // Runden: Ganzzahl oder nach step
+  if(INT_IDS.has(id)){
+    v=Math.round(v);
+  }else{
+    const step=parseFloat(el.step)||1;
+    const decimals=step<1?Math.max(0,Math.ceil(-Math.log10(step))):0;
+    v=parseFloat(v.toFixed(decimals));
+  }
+
+  el.value=v;
+}
+
+// Global blur handler für alle number inputs
+document.addEventListener('blur',e=>{
+  if(e.target.matches('input[type="number"]'))sanitizeInput(e.target);
+},true);
+
 window.addEventListener('DOMContentLoaded',()=>{
   berechneKurz();
   setMittelAnbieter();
@@ -1598,7 +1674,7 @@ window.addEventListener('DOMContentLoaded',()=>{
 });
 window.matchMedia('(prefers-color-scheme:dark)').addEventListener('change',()=>{
   LC.flv=getComputedStyle(document.documentElement).getPropertyValue('--ac').trim()||'#38D9A3';
-  const v=document.querySelector('[id^="view-"]:not(.hidden)');
+  const v=document.querySelector('.view.active');
   if(v?.id==='view-kurz')berechneKurz();
   else if(v?.id==='view-mittel')berechneMittel();
   else if(v?.id==='view-lang')berechneLang();

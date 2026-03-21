@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="de" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>§14 Steuerrechner</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* ── Design Tokens ── */
+:root {
+  --surface-primary:   rgb(237, 235, 229);
+  --surface-secondary: rgb(247, 242, 234);
+  --surface-tertiary:  rgb(255, 254, 252);
+  --border:            rgb(220, 216, 208);
+  --text-primary:      rgb(0, 0, 0);
+  --text-secondary:    rgb(94, 94, 94);
+  --text-brand:        rgb(2, 136, 86);
+  --brand:             rgb(2, 136, 86);
+  --brand-hover:       rgb(1, 94, 56);
+  --brand-alpha:       rgba(2, 136, 86, 0.10);
+  --brand-alpha2:      rgba(2, 136, 86, 0.06);
+  --on-brand:          rgb(237, 235, 229);
+  --radius-card:       20px;
+  --radius-el:         12px;
+  --radius-pill:       100px;
+  --shadow:            0 2px 12px rgba(0,0,0,0.07);
+}
+
+[data-theme="dark"] {
+  --surface-primary:   rgb(15, 15, 15);
+  --surface-secondary: rgb(22, 23, 27);
+  --surface-tertiary:  rgb(40, 41, 48);
+  --border:            rgb(33, 36, 48);
+  --text-primary:      rgb(255, 255, 255);
+  --text-secondary:    rgb(150, 150, 150);
+  --text-brand:        rgb(56, 217, 163);
+  --brand:             rgb(56, 217, 163);
+  --brand-hover:       rgb(38, 180, 135);
+  --brand-alpha:       rgba(56, 217, 163, 0.10);
+  --brand-alpha2:      rgba(56, 217, 163, 0.05);
+  --on-brand:          rgb(0, 0, 0);
+  --shadow:            0 2px 12px rgba(0,0,0,0.3);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --surface-primary:   rgb(15, 15, 15);
+    --surface-secondary: rgb(22, 23, 27);
+    --surface-tertiary:  rgb(40, 41, 48);
+    --border:            rgb(33, 36, 48);
+    --text-primary:      rgb(255, 255, 255);
+    --text-secondary:    rgb(150, 150, 150);
+    --text-brand:        rgb(56, 217, 163);
+    --brand:             rgb(56, 217, 163);
+    --brand-hover:       rgb(38, 180, 135);
+    --brand-alpha:       rgba(56, 217, 163, 0.10);
+    --brand-alpha2:      rgba(56, 217, 163, 0.05);
+    --on-brand:          rgb(0, 0, 0);
+    --shadow:            0 2px 12px rgba(0,0,0,0.3);
+  }
+}
+
+/* ── Layout ── */
+body {
+  font-family: 'Inter', sans-serif;
+  background: var(--surface-primary);
+  color: var(--text-primary);
+  min-height: 100vh;
+  padding: 20px 5px 40px;
+  transition: background 0.2s, color 0.2s;
+}
+
+.wrap {
+  max-width: 860px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* ── Theme Toggle ── */
+.theme-toggle {
+  position: fixed;
+  top: 14px;
+  right: 14px;
+  width: 38px;
+  height: 38px;
+  border-radius: var(--radius-pill);
+  border: 1.5px solid var(--border);
+  background: var(--surface-secondary);
+  color: var(--text-secondary);
+  font-size: 1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  transition: background 0.2s, border-color 0.2s;
+}
+.theme-toggle:hover { background: var(--surface-tertiary); }
+
+/* ── Card ── */
+.card {
+  background: var(--surface-secondary);
+  border-radius: var(--radius-card);
+  border: 1.5px solid var(--border);
+  padding: 24px;
+  box-shadow: var(--shadow);
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.card-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  margin-bottom: 18px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.card-label::before {
+  content: '';
+  display: block;
+  width: 3px;
+  height: 13px;
+  background: var(--brand);
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.divider {
+  height: 1px;
+  background: var(--border);
+  margin: 18px 0;
+}
+
+/* ── Form Fields ── */
+.field { display: flex; flex-direction: column; gap: 7px; }
+
+.field-label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.field-label small {
+  font-weight: 400;
+  color: var(--text-secondary);
+}
+
+/* Slider */
+.slider-wrap { display: flex; flex-direction: column; gap: 4px; }
+.slider-row { display: flex; align-items: center; gap: 12px; }
+
+input[type="range"] {
+  flex: 1;
+  -webkit-appearance: none;
+  height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+  outline: none;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  background: var(--brand);
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.2);
+  transition: background 0.2s;
+}
+input[type="range"]::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  background: var(--brand);
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+}
+.slider-val {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-brand);
+  min-width: 80px;
+  text-align: right;
+}
+.slider-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.68rem;
+  color: var(--text-secondary);
+  padding: 0 1px;
+}
+
+/* Number input */
+.input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  margin-top: 4px;
+}
+.input-prefix {
+  position: absolute;
+  left: 13px;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  pointer-events: none;
+  font-weight: 500;
+}
+
+input[type="number"] {
+  width: 100%;
+  padding: 11px 13px 11px 28px;
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 600;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-el);
+  background: var(--surface-tertiary);
+  color: var(--text-primary);
+  outline: none;
+  transition: border-color 0.15s, background 0.2s;
+  -moz-appearance: textfield;
+}
+input[type="number"]::-webkit-inner-spin-button { display: none; }
+input[type="number"]:focus {
+  border-color: var(--brand);
+  background: var(--surface-secondary);
+}
+
+/* Toggle group */
+.toggle-group {
+  display: flex;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-el);
+  overflow: hidden;
+  background: var(--surface-primary);
+}
+.toggle-group input[type="radio"] { display: none; }
+.toggle-group label {
+  flex: 1;
+  text-align: center;
+  padding: 9px 6px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  color: var(--text-secondary);
+  user-select: none;
+  transition: background 0.15s, color 0.15s;
+  line-height: 1.3;
+}
+.toggle-group input[type="radio"]:checked + label {
+  background: var(--brand);
+  color: var(--on-brand);
+}
+
+/* ── Results ── */
+.results { display: flex; flex-direction: column; gap: 8px; }
+
+.result-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 13px 16px;
+  border-radius: var(--radius-el);
+  background: var(--surface-primary);
+  border: 1.5px solid var(--border);
+  transition: background 0.2s, border-color 0.2s;
+}
+.result-row.accent {
+  background: var(--brand-alpha);
+  border-color: transparent;
+}
+.result-row.total {
+  background: var(--brand);
+  border-color: transparent;
+  border-radius: var(--radius-el);
+}
+.result-row.dim { opacity: 0.4; }
+
+.result-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.83rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  flex: 1;
+  min-width: 0;
+}
+.result-row.total .result-label { color: var(--on-brand); }
+
+.dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.badge {
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: var(--radius-pill);
+  background: var(--brand-alpha);
+  color: var(--text-brand);
+  white-space: nowrap;
+}
+.result-row.total .badge {
+  background: rgba(255,255,255,0.2);
+  color: var(--on-brand);
+}
+
+.result-value {
+  font-size: 0.98rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--text-primary);
+  white-space: nowrap;
+}
+.result-row.total .result-value { color: var(--on-brand); font-size: 1.05rem; }
+.result-row.accent .result-value { color: var(--text-brand); }
+
+/* ── Breakdown Table ── */
+.breakdown {
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-el);
+  overflow: hidden;
+  margin-top: 8px;
+}
+.bd-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 9px 15px;
+  font-size: 0.78rem;
+  gap: 8px;
+  transition: background 0.2s;
+}
+.bd-row:not(:last-child) { border-bottom: 1px solid var(--border); }
+.bd-row:nth-child(even) { background: var(--surface-primary); }
+.bd-row .bd-l { color: var(--text-secondary); flex: 1; }
+.bd-row .bd-v { font-weight: 700; color: var(--text-primary); white-space: nowrap; }
+.bd-row.bd-hl { background: var(--brand-alpha); }
+.bd-row.bd-hl .bd-l,
+.bd-row.bd-hl .bd-v { color: var(--text-brand); font-weight: 700; }
+
+/* ── Savings row ── */
+.savings-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: var(--brand-alpha2);
+  border: 1.5px solid var(--brand-alpha);
+  border-radius: var(--radius-el);
+  margin-top: 8px;
+  gap: 12px;
+}
+.savings-row .sr-l { font-size: 0.78rem; color: var(--text-secondary); flex: 1; }
+.savings-row .sr-v { font-size: 0.9rem; font-weight: 700; color: var(--text-brand); white-space: nowrap; }
+
+/* ── Warn ── */
+.warn-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 15px;
+  background: rgba(220,120,0,0.07);
+  border: 1.5px solid rgba(220,120,0,0.2);
+  border-radius: var(--radius-el);
+  margin-top: 8px;
+}
+.warn-row .wi { font-size: 1rem; flex-shrink: 0; margin-top: 1px; }
+.warn-row .wt { font-size: 0.77rem; line-height: 1.5; color: var(--text-primary); }
+.warn-row .wt strong { font-weight: 700; display: block; margin-bottom: 2px; color: var(--text-primary); }
+
+/* ── Grid ── */
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+/* ── Responsive ── */
+@media (max-width: 810px) {
+  body { padding: 14px 5px 32px; }
+  .grid-2 { grid-template-columns: 1fr; }
+  .card { padding: 20px; }
+}
+
+@media (max-width: 480px) {
+  body { padding: 10px 5px 28px; }
+  .card { padding: 16px; }
+  .card-label { margin-bottom: 14px; }
+  .toggle-group label { font-size: 0.72rem; padding: 8px 4px; }
+  .result-label { font-size: 0.78rem; }
+  .result-value { font-size: 0.9rem; }
+}
+</style>
+</head>
+<body>
+
+<!-- Theme Toggle -->
+<button class="theme-toggle" id="themeBtn" aria-label="Farbschema wechseln" title="Hell/Dunkel">
+  <span id="themeIcon">🌙</span>
+</button>
+
+<div class="wrap">
+
+  <!-- ── EINGABEN ── -->
+  <div class="card">
+    <div class="card-label">Eingaben</div>
+
+    <!-- Jahresgewinn -->
+    <div class="field">
+      <div class="field-label">Jahresgewinn <small>— vor GFB / IFB</small></div>
+      <div class="slider-wrap">
+        <div class="slider-row">
+          <input type="range" id="r_gewinn" min="0" max="600000" step="1000" value="80000">
+          <span class="slider-val" id="sv_gewinn">80.000 €</span>
+        </div>
+        <div class="slider-labels"><span>0 €</span><span>600.000 €</span></div>
+      </div>
+      <div class="input-wrap">
+        <span class="input-prefix">€</span>
+        <input type="number" id="n_gewinn" value="80000" min="0" max="2000000" step="100">
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- Zeitraum -->
+    <div class="field">
+      <div class="field-label">Veranlagungszeitraum</div>
+      <div class="toggle-group">
+        <input type="radio" name="zeitraum" id="z2026" value="2026" checked>
+        <label for="z2026">2026</label>
+        <input type="radio" name="zeitraum" id="z2025" value="2025">
+        <label for="z2025">Nov / Dez 2025</label>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- IFB Typ -->
+    <div class="field">
+      <div class="field-label">Sachinvestition <small>— Maschinen, IT, Fahrzeuge, Anlagen</small></div>
+      <div class="toggle-group">
+        <input type="radio" name="ifbtyp" id="it_keine" value="keine" checked>
+        <label for="it_keine">Keine</label>
+        <input type="radio" name="ifbtyp" id="it_standard" value="standard">
+        <label for="it_standard">Standard (20 %)</label>
+        <input type="radio" name="ifbtyp" id="it_oeko" value="oeko">
+        <label for="it_oeko">Öko (22 %)</label>
+      </div>
+    </div>
+
+    <!-- IFB Betrag (conditional) -->
+    <div id="ifb_wrap" style="display:none; margin-top:12px;">
+      <div class="field">
+        <div class="field-label">Investitionsbetrag</div>
+        <div class="slider-wrap">
+          <div class="slider-row">
+            <input type="range" id="r_ifb" min="0" max="1000000" step="1000" value="50000">
+            <span class="slider-val" id="sv_ifb">50.000 €</span>
+          </div>
+          <div class="slider-labels"><span>0 €</span><span>1.000.000 €</span></div>
+        </div>
+        <div class="input-wrap">
+          <span class="input-prefix">€</span>
+          <input type="number" id="n_ifb" value="50000" min="0" max="1000000" step="100">
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── ERGEBNIS ── -->
+  <div class="card">
+    <div class="card-label">Ergebnis</div>
+
+    <div class="results">
+      <div class="result-row" id="rr_grund">
+        <div class="result-label">
+          <div class="dot" style="background:rgb(148,211,172)"></div>
+          Grundfreibetrag
+          <span class="badge">15 %</span>
+        </div>
+        <div class="result-value" id="rv_grund">—</div>
+      </div>
+
+      <div class="result-row" id="rr_ifb">
+        <div class="result-label">
+          <div class="dot" style="background:var(--brand)"></div>
+          Investitionsfreibetrag (IFB)
+          <span class="badge" id="b_ifb" style="display:none">—</span>
+        </div>
+        <div class="result-value" id="rv_ifb">—</div>
+      </div>
+
+      <div class="result-row accent">
+        <div class="result-label">
+          <div class="dot" style="background:rgb(91,176,240)"></div>
+          GFB via §14-Wertpapiere
+        </div>
+        <div class="result-value" id="rv_wp">—</div>
+      </div>
+
+      <div class="result-row total">
+        <div class="result-label" style="font-size:0.88rem; font-weight:700;">
+          Gesamte Entlastung
+        </div>
+        <div class="result-value" id="rv_total">—</div>
+      </div>
+    </div>
+
+    <!-- Breakdown -->
+    <div class="breakdown" style="margin-top:12px">
+      <div class="bd-row">
+        <span class="bd-l">Grenzsteuersatz</span>
+        <span class="bd-v" id="bd_grenz">—</span>
+      </div>
+      <div class="bd-row">
+        <span class="bd-l">Geschätzte Steuerersparnis</span>
+        <span class="bd-v" id="bd_ersparn" style="color:var(--text-brand)">—</span>
+      </div>
+      <div class="bd-row bd-hl">
+        <span class="bd-l">Benötigte §14-Wertpapiere</span>
+        <span class="bd-v" id="bd_wp">—</span>
+      </div>
+    </div>
+
+    <!-- Aliquot warning -->
+    <div class="warn-row" id="aliquot_warn" style="display:none">
+      <span class="wi">⚠️</span>
+      <div class="wt">
+        <strong>IFB-Aliquotierung Nov/Dez 2025</strong>
+        Bemessungsgrundlage begrenzt auf 166.667 € (2/12 von 1.000.000 €).
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── GFB STAFFELUNG ── -->
+  <div class="card">
+    <div class="card-label">GFB-Staffelung</div>
+    <div class="breakdown">
+      <div class="bd-row">
+        <span class="bd-l">Bis 33.000 € → 15 % (automatisch)</span>
+        <span class="bd-v" id="gfb_t0">—</span>
+      </div>
+      <div class="bd-row">
+        <span class="bd-l">33.001 – 178.000 € → 13 %</span>
+        <span class="bd-v" id="gfb_t1">—</span>
+      </div>
+      <div class="bd-row">
+        <span class="bd-l">178.001 – 353.000 € → 7 %</span>
+        <span class="bd-v" id="gfb_t2">—</span>
+      </div>
+      <div class="bd-row">
+        <span class="bd-l">353.001 – 583.000 € → 4,5 %</span>
+        <span class="bd-v" id="gfb_t3">—</span>
+      </div>
+      <div class="bd-row bd-hl">
+        <span class="bd-l">GFB gesamt (max. 46.400 €)</span>
+        <span class="bd-v" id="gfb_sum">—</span>
+      </div>
+    </div>
+    <div class="savings-row">
+      <span class="sr-l">Noch benötigte §14-Wertpapiere</span>
+      <span class="sr-v" id="sr_wp">—</span>
+    </div>
+  </div>
+
+</div><!-- /wrap -->
+
+<script>
+// ── Formatierung ──
+const € = n => n.toLocaleString('de-AT', {minimumFractionDigits:0, maximumFractionDigits:0}) + ' €';
+const pct = n => (n*100).toFixed(0) + ' %';
+
+// ── Grenzsteuersatz Österreich 2026 ──
+function grenzSatz(g) {
+  if (g <=  12816) return 0;
+  if (g <=  20818) return 0.20;
+  if (g <=  34513) return 0.30;
+  if (g <=  66612) return 0.40;
+  if (g <=  99266) return 0.48;
+  if (g <= 1000000) return 0.50;
+  return 0.55;
+}
+
+// ── GFB investitionsbedingter Teil (auf Betrag über 33k) ──
+function investGFB(x) {
+  let g = 0, r = Math.max(0, x);
+  const t1 = Math.min(r, 145000); g += t1*0.13; r -= t1;
+  const t2 = Math.min(r, 175000); g += t2*0.07; r -= t2;
+  const t3 = Math.min(r, 230000); g += t3*0.045;
+  return g;
+}
+
+// ── Haupt-Berechnung ──
+function calc() {
+  const g   = Math.max(0, +document.getElementById('n_gewinn').value || 0);
+  const typ = document.querySelector('input[name="ifbtyp"]:checked').value;
+  const ifb = (typ!=='keine') ? Math.max(0, +document.getElementById('n_ifb').value || 0) : 0;
+  const zr  = document.querySelector('input[name="zeitraum"]:checked').value;
+
+  const ifbSatz = typ==='oeko' ? 0.22 : typ==='standard' ? 0.20 : 0;
+  const maxBasis = zr==='2025' ? 166667 : 1000000;
+  const ifbEff   = Math.min(ifb, maxBasis);
+  const ifbAbs   = ifbEff * ifbSatz;
+
+  const grund    = Math.min(g, 33000) * 0.15;
+  const above33  = Math.max(0, g - 33000);
+  const totalWP  = investGFB(above33);
+  const ifbBlock = investGFB(Math.min(above33, ifb));
+  const wpGFB    = Math.max(0, totalWP - ifbBlock);
+
+  const total    = grund + ifbAbs + wpGFB;
+  const rate     = grenzSatz(g);
+  const saved    = total * rate;
+
+  // Tier table
+  const r0 = Math.max(0, above33);
+  const T1 = Math.min(r0, 145000);
+  const T2 = Math.min(Math.max(0, r0-145000), 175000);
+  const T3 = Math.min(Math.max(0, r0-320000), 230000);
+
+  // ── Update DOM ──
+  set('rv_grund',  €(grund));
+  set('rv_ifb',    €(ifbAbs));
+  set('rv_wp',     €(wpGFB));
+  set('rv_total',  €(total));
+  set('bd_grenz',  pct(rate));
+  set('bd_ersparn','~ ' + €(saved));
+  set('bd_wp',     €(wpGFB));
+  set('gfb_t0',    €(grund));
+  set('gfb_t1',    €(T1*0.13));
+  set('gfb_t2',    €(T2*0.07));
+  set('gfb_t3',    €(T3*0.045));
+  set('gfb_sum',   €(Math.min(grund + T1*0.13 + T2*0.07 + T3*0.045, 46400)));
+  set('sr_wp',     wpGFB > 0 ? €(wpGFB) : '—');
+
+  // IFB badge
+  const bIfb = document.getElementById('b_ifb');
+  if (ifbAbs > 0) { bIfb.style.display=''; bIfb.textContent=pct(ifbSatz); }
+  else              bIfb.style.display='none';
+
+  // Dim IFB row when zero
+  document.getElementById('rr_ifb').classList.toggle('dim', ifbAbs===0);
+
+  // Aliquot warning
+  document.getElementById('aliquot_warn').style.display =
+    (zr==='2025' && ifb > 166667) ? 'flex' : 'none';
+}
+
+function set(id, v) { document.getElementById(id).textContent = v; }
+
+// ── Slider ↔ Number sync ──
+function bindPair(rId, nId, vId, max) {
+  const r = document.getElementById(rId);
+  const n = document.getElementById(nId);
+  const v = document.getElementById(vId);
+  r.addEventListener('input', () => {
+    n.value = r.value;
+    v.textContent = (+r.value).toLocaleString('de-AT') + ' €';
+    calc();
+  });
+  n.addEventListener('input', () => {
+    const val = Math.min(Math.max(0, +n.value||0), max);
+    r.value = Math.min(val, +r.max);
+    v.textContent = val.toLocaleString('de-AT') + ' €';
+    calc();
+  });
+}
+bindPair('r_gewinn','n_gewinn','sv_gewinn', 2000000);
+bindPair('r_ifb',   'n_ifb',   'sv_ifb',   1000000);
+
+// ── IFB Type ──
+document.querySelectorAll('input[name="ifbtyp"]').forEach(r =>
+  r.addEventListener('change', () => {
+    document.getElementById('ifb_wrap').style.display =
+      r.value!=='keine' ? 'block' : 'none';
+    calc();
+  })
+);
+document.querySelectorAll('input[name="zeitraum"]').forEach(r =>
+  r.addEventListener('change', calc)
+);
+
+// ── Theme Toggle ──
+const html = document.documentElement;
+const btn  = document.getElementById('themeBtn');
+const icon = document.getElementById('themeIcon');
+
+// Init from system preference
+const sysDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+let dark = sysDark;
+html.setAttribute('data-theme', dark ? 'dark' : 'light');
+icon.textContent = dark ? '☀️' : '🌙';
+
+btn.addEventListener('click', () => {
+  dark = !dark;
+  html.setAttribute('data-theme', dark ? 'dark' : 'light');
+  icon.textContent = dark ? '☀️' : '🌙';
+});
+
+// ── Init ──
+calc();
+</script>
+</body>
+</html>

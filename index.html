@@ -178,7 +178,7 @@ body{
 .f:last-child{margin-bottom:0;}
 label{display:block;font-size:11.5px;font-weight:500;color:var(--ts);margin-bottom:5px;}
 
-input[type="number"],input[type="text"],select{
+input[type="number"],input[type="text"],input[type="date"],select{
   width:100%;background:var(--st);border:1px solid var(--brd);border-radius:8px;
   color:var(--tp);font-family:inherit;
   /* font-size 16px prevents iOS zoom */
@@ -186,10 +186,12 @@ input[type="number"],input[type="text"],select{
   padding:9px 12px;outline:none;transition:border-color .15s;
 }
 input[type="number"],input[type="text"]{-moz-appearance:textfield;appearance:none;}
-@media(min-width:640px){input[type="number"],input[type="text"],select{font-size:14px;}}
+@media(min-width:640px){input[type="number"],input[type="text"],input[type="date"],select{font-size:14px;}}
 input[type="number"]::-webkit-inner-spin-button,
 input[type="number"]::-webkit-outer-spin-button{-webkit-appearance:none;}
 input:focus,select:focus{border-color:var(--ac);background:var(--adim);}
+input[type="date"]::-webkit-calendar-picker-indicator{filter:invert(.7);cursor:pointer;}
+@media(prefers-color-scheme:light){input[type="date"]::-webkit-calendar-picker-indicator{filter:none;}}
 select{cursor:pointer;}
 select option{background:var(--ss);}
 
@@ -577,7 +579,7 @@ tbody tr:last-child td{border-bottom:none;}
         <div class="f"><label>Zielbetrag</label>
           <div class="fu"><input type="number" id="m_ziel" value="50000" min="0" step="1000"><span class="ub">€</span></div></div>
         <div class="f"><label>Laufzeit</label>
-          <div class="fu"><input type="number" id="m_jahre" value="7" min="1" max="30" step="0.5"><span class="ub">Jahre</span></div></div>
+          <div class="fu"><input type="number" id="m_jahre" value="7" min="1" max="50" step="0.5"><span class="ub">Jahre</span></div></div>
         <div class="f"><label>Startkapital</label>
           <div class="fu"><input type="number" id="m_start" value="5000" min="0" step="500"><span class="ub">€</span></div></div>
       </div>
@@ -593,7 +595,7 @@ tbody tr:last-child td{border-bottom:none;}
       <div class="ps">
         <div class="sl">Sparplan</div>
         <div class="f"><label>Laufzeit</label>
-          <div class="fu"><input type="number" id="mf_jahre" value="7" min="1" max="30" step="0.5"><span class="ub">Jahre</span></div></div>
+          <div class="fu"><input type="number" id="mf_jahre" value="7" min="1" max="50" step="0.5"><span class="ub">Jahre</span></div></div>
         <div class="f"><label>Startkapital</label>
           <div class="fu"><input type="number" id="mf_start" value="5000" min="0" step="500"><span class="ub">€</span></div></div>
         <div class="f"><label>Monatliche Sparrate</label>
@@ -723,10 +725,12 @@ tbody tr:last-child td{border-bottom:none;}
   <aside class="params-panel">
     <div class="ps">
       <div class="sl">Allgemeine Parameter</div>
+      <div class="f"><label>Geburtsdatum</label>
+        <input type="date" id="l_gebdat" value="2006-01-01" onchange="setFlvAlter()"></div>
       <div class="f"><label>Monatliche Sparrate</label>
         <div class="fu"><input type="number" id="l_mb" value="100" min="1" step="10"><span class="ub">€ / Mo.</span></div></div>
       <div class="f"><label>Laufzeit</label>
-        <div class="fu"><input type="number" id="l_lj" value="40" min="1" max="50" step="0.5"><span class="ub">Jahre</span></div></div>
+        <div class="fu"><input type="number" id="l_lj" value="40" min="1" max="45" step="0.5"><span class="ub">Jahre</span></div></div>
       <div class="f"><label>Marktrendite p.a.</label>
         <div class="fu"><input type="number" id="l_rpa" value="7" min="0" max="30" step="0.1"><span class="ub">% p.a.</span></div></div>
     </div>
@@ -749,10 +753,23 @@ tbody tr:last-child td{border-bottom:none;}
         </div>
       </div>
     </div>
-    <!-- FLV-Kosten: fixe Werte, ausgeblendet -->
-    <div class="hidden">
-      <input type="number" id="l_fagio" value="7.65">
-      <input type="number" id="l_fkosten" value="0.61">
+    <!-- FLV — Parameter collapsible -->
+    <div class="ct" onclick="toggleColl(this)" id="ct-l-flv">
+      <div class="sl">FLV — Parameter</div><span class="ca">▼</span>
+    </div>
+    <div class="cb" id="cb-l-flv">
+      <div class="f"><label>FLV-Anbieter</label>
+        <select id="l_flv_anbieter" onchange="setFlvAnbieter()"></select></div>
+      <div style="font-size:11px;color:var(--ts);margin-top:2px;margin-bottom:10px;line-height:1.4">Weitere Anbieter werden laufend ergänzt.</div>
+      <div class="f"><label>Beitragsdynamik</label>
+        <div class="fu"><input type="number" id="l_dynamik" value="0" min="0" max="10" step="0.5" oninput="berechneLang()"><span class="ub">% p.a.</span></div></div>
+      <div class="f"><label>Fondskosten (TER)</label>
+        <div class="fu"><input type="text" id="l_flv_ter" value="0,12" inputmode="decimal" pattern="[0-9]*[.,]?[0-9]*" oninput="berechneLang()"><span class="ub">% p.a.</span></div></div>
+      <div class="hidden">
+        <input type="number" id="l_fagio" value="7.65">
+        <input type="number" id="l_fkosten" value="0.61">
+        <input type="number" id="l_flv_ref_ter" value="0.12">
+      </div>
     </div>
     <!-- Depotanbieter collapsible -->
     <div class="ct" onclick="toggleColl(this)" id="ct-l-depot">
@@ -922,41 +939,104 @@ function toggleColl(t){
 }
 
 /* ══════════════════════════════════
-   DEPOTANBIETER
+   CONFIG + DEPOTANBIETER
 ══════════════════════════════════ */
-const DEPOTANBIETER={
-  flatex:       {name:'Flatex AT',
-    etf:  {agio:0,  sp:0,    ez:5.90,  dg:0,    spread:0.05},
-    fonds:{agio:0,  sp:0,    ez:5.90,  dg:0,    spread:0.05}},
-  traderepublic:{name:'Trade Republic',
-    etf:  {agio:0,  sp:0,    ez:1.00,  dg:0,    spread:0.05},
-    fonds:{agio:0,  sp:0,    ez:1.00,  dg:0,    spread:0.05}},
-  dadat:        {name:'Dadat',
-    etf:  {agio:0,  sp:0,    ez:3.99,  dg:0,    spread:0.05},
-    fonds:{agio:0,  sp:0,    ez:3.99,  dg:0,    spread:0.05}},
-  easybank:     {name:'Easybank',
-    etf:  {agio:0,  sp:1.50, ez:9.90,  dg:0,    spread:0   },
-    fonds:{agio:2.5,sp:1.50, ez:9.90,  dg:0,    spread:0   }},
-  bks:          {name:'BKS Bank (Klassik)',
-    etf:  {agio:1.6,sp:0,    ez:36.90, dg:0.28, spread:0   },
-    fonds:{agio:3.0,sp:0,    ez:15.00, dg:0.28, spread:0   }},
-  erste:        {name:'Erste Bank / George',
-    etf:  {agio:0,  sp:0,    ez:9.95,  dg:0,    spread:0   },
-    fonds:{agio:4.0,sp:0,    ez:9.95,  dg:0,    spread:0   }},
-  raiffeisen:   {name:'Raiffeisen Wien',
-    etf:  {agio:0,  sp:3.95, ez:12.95, dg:0,    spread:0   },
-    fonds:{agio:5.0,sp:3.95, ez:12.95, dg:0,    spread:0   }},
-  bankaustr:    {name:'Bank Austria',
-    etf:  {agio:0,  sp:5.00, ez:12.95, dg:0,    spread:0   },
-    fonds:{agio:5.0,sp:5.00, ez:12.95, dg:0,    spread:0   }},
-  bawag:        {name:'BAWAG P.S.K.',
-    etf:  {agio:0,  sp:1.95, ez:10.95, dg:0,    spread:0   },
-    fonds:{agio:3.5,sp:1.95, ez:10.95, dg:0,    spread:0   }},
-  plattform:    {name:'die Plattform',
-    etf:  {agio:0,  sp:0.95, ez:3.50,  dg:0.3,  spread:0   },
-    fonds:{agio:3.5,sp:0.45, ez:6.00,  dg:0.2,  spread:0   }},
-  manuell:      {name:'Manuell',etf:null,fonds:null}
-};
+let CFG=null;
+let DEPOTANBIETER={manuell:{name:'Manuell',etf:null,fonds:null}};
+
+async function loadConfig(){
+  try{
+    const r=await fetch('config.json?v='+Date.now());
+    CFG=await r.json();
+    // Depot-Anbieter aus Config laden
+    if(CFG.depot_anbieter){
+      const da={};
+      for(const[k,v]of Object.entries(CFG.depot_anbieter)){
+        if(k.startsWith('_'))continue;
+        da[k]=v;
+      }
+      da.manuell={name:'Manuell',etf:null,fonds:null};
+      DEPOTANBIETER=da;
+    }
+  }catch(e){console.warn('config.json nicht geladen, Fallback-Werte aktiv.',e);}
+}
+
+function applyDefaults(){
+  if(!CFG)return;
+  const st=CFG.steuern||{};
+  const pe=CFG.pension||{};
+  const rd=CFG.rechner_defaults||{};
+  const kd=rd.kurzfrist||{};
+  const md=rd.mittelfrist||{};
+  const ld=rd.langfrist_flv||{};
+  const kest=st.kest_standard_pct;
+  const infl=pe.default_inflation_pct;
+
+  // Kurzfristig
+  setVal('k_eink',kd.monatseinkommen);
+  setVal('k_vorh',kd.vorhandenes_kapital);
+  setVal('k_rate',kd.monatliche_sparrate);
+  setVal('k_mo',kd.notgroschen_monate);
+  setVal('k_zins',kd.zinssatz_pa);
+
+  // Mittelfristig
+  setVal('m_ziel',md.sparziel);
+  setVal('m_jahre',md.laufzeit_jahre);
+  setVal('mf_jahre',md.laufzeit_jahre);
+  setVal('m_start',md.startkapital);
+  setVal('mf_start',md.startkapital);
+  setVal('m_rate',md.monatliche_sparrate);
+  setVal('mf_rate',md.monatliche_sparrate);
+  setVal('m_rendite',md.rendite_pa);
+  setVal('m_ter',md.ter_pa);
+  setVal('m_kest',kest);
+  setVal('m_tkest',kest);
+  setVal('m_inflation',infl);
+  setVal('m_tzins',md.tagesgeld_zinssatz);
+
+  // Langfristig — FLV-Anbieter + Alter
+  buildFlvAnbieterSelect();
+  if(ld.default_flv_anbieter)setVal('l_flv_anbieter',ld.default_flv_anbieter);
+  if(ld.geburtsdatum)setVal('l_gebdat',ld.geburtsdatum);
+  updateLaufzeitMax();
+
+  setVal('l_mb',ld.monatsbeitrag);
+  setVal('l_lj',ld.laufzeit_jahre);
+  setVal('l_rpa',ld.marktrendite_pa);
+  setVal('l_dynamik',ld.beitragsdynamik_pct||0);
+  updateFlvKosten();
+  setVal('l_dkest',kest);
+  setVal('l_inflation',infl);
+
+  // Depot-Anbieter Select-Optionen aus Config generieren
+  buildAnbieterSelects();
+
+  // Default-Anbieter setzen
+  if(ld.default_depot_anbieter){
+    setVal('l_anbieter',ld.default_depot_anbieter);
+    setVal('m_anbieter',ld.default_depot_anbieter);
+  }
+}
+
+function setVal(id,v){
+  if(v==null)return;
+  const el=document.getElementById(id);
+  if(el)el.value=v;
+}
+
+function buildAnbieterSelects(){
+  if(!CFG?.depot_anbieter)return; // Fallback: HTML-Optionen bleiben
+  ['l_anbieter','m_anbieter'].forEach(selId=>{
+    const sel=document.getElementById(selId);
+    if(!sel)return;
+    sel.innerHTML='';
+    const mo=document.createElement('option');mo.value='manuell';mo.textContent='Manuell';sel.appendChild(mo);
+    for(const[k,v]of Object.entries(DEPOTANBIETER)){
+      if(k==='manuell'||k.startsWith('_'))continue;
+      const o=document.createElement('option');o.value=k;o.textContent=v.name;sel.appendChild(o);
+    }
+  });
+}
 
 const ANBIETER_NOTES={
   bks:'⚠️ <b>Klassik-Depot:</b> Zusätzlich €2,80/Monat Servicegebühr (€33,60 p.a.) — nicht modelliert. ETF-Sparplan-Gebühr (1,60%) als Agio dargestellt.',
@@ -1443,6 +1523,80 @@ function buildLangLeg(){
   });
 }
 
+/* ═══ FLV-Anbieter + Alter ═══ */
+function buildFlvAnbieterSelect(){
+  const sel=document.getElementById('l_flv_anbieter');if(!sel)return;
+  sel.innerHTML='';
+  const providers=CFG?.flv_anbieter||{};
+  for(const[k,v]of Object.entries(providers)){
+    if(k.startsWith('_'))continue;
+    const o=document.createElement('option');o.value=k;o.textContent=`${v.name} — ${v.produkt||''}`;
+    sel.appendChild(o);
+  }
+}
+
+function getFlvAlter(){
+  const v=document.getElementById('l_gebdat')?.value;
+  if(!v)return 20;
+  const bd=new Date(v),now=new Date();
+  let age=now.getFullYear()-bd.getFullYear();
+  if(now.getMonth()<bd.getMonth()||(now.getMonth()===bd.getMonth()&&now.getDate()<bd.getDate()))age--;
+  return Math.max(0,age);
+}
+
+function getFlvTables(){
+  const anbieter=document.getElementById('l_flv_anbieter')?.value||'donau';
+  const alter=getFlvAlter();
+  const provider=CFG?.flv_anbieter?.[anbieter];
+  if(!provider?.wertstand_tabellen)return null;
+  const avail=Object.keys(provider.wertstand_tabellen).filter(k=>k.startsWith('alter_')).map(k=>+k.replace('alter_','')).sort((a,b)=>a-b);
+  if(!avail.length)return null;
+  let best=avail[0];
+  for(const a of avail){if(a<=alter)best=a;else break;}
+  const wt=provider.wertstand_tabellen['alter_'+best];
+  if(!wt)return null;
+  let mb100=wt.mb100||wt.mb100_rückkaufswert||null;
+  let mb500=wt.mb500||wt.mb500_rückkaufswert||null;
+  if(!mb500&&mb100){mb500={};for(const[k,v]of Object.entries(mb100)){if(!k.startsWith('_'))mb500[k]=v*5;}}
+  return{mb100,mb500,laufzeit_max:wt._laufzeit_max||45,matched_alter:best,alter,ref:provider.hochrechnungszins_referenz_pct?provider.hochrechnungszins_referenz_pct/100:0.06};
+}
+
+function updateLaufzeitMax(){
+  const t=getFlvTables();
+  if(!t)return;
+  const el=document.getElementById('l_lj');if(!el)return;
+  el.max=t.laufzeit_max;
+  if(+el.value>t.laufzeit_max){el.value=t.laufzeit_max;}
+}
+
+function updateFlvKosten(){
+  const anbieter=document.getElementById('l_flv_anbieter')?.value||'donau';
+  const provider=CFG?.flv_anbieter?.[anbieter];
+  const ek=provider?.flv_kosten_effektiv;
+  if(ek){
+    setVal('l_fagio',ek.agio_pct);
+    setVal('l_fkosten',ek.laufend_pct);
+  }
+  // Fondskosten-Referenz und angezeigte TER pro Anbieter
+  const refTer=provider?.kosten?.fondskosten_pa_pct;
+  if(refTer!==undefined){
+    setVal('l_flv_ref_ter',refTer);
+    const terEl=document.getElementById('l_flv_ter');
+    if(terEl)terEl.value=String(refTer).replace('.',',');
+  }
+}
+
+function setFlvAnbieter(){
+  updateLaufzeitMax();
+  updateFlvKosten();
+  berechneLang();
+}
+
+function setFlvAlter(){
+  updateLaufzeitMax();
+  berechneLang();
+}
+
 function berechneLang(){
   // Sanitize all visible inputs before calculating
   document.querySelectorAll('#view-lang input[type="number"]').forEach(el=>{if(!el.closest('.hidden'))sanitizeInput(el);});
@@ -1457,10 +1611,13 @@ function berechneLang(){
     lj):[];
   const ein=[...einmal,...lRegArr].map(e=>({j:+e.j,b:+e.b||0}));
   const inflation=lInflAn?(+(document.getElementById('l_inflation')?.value||0))/100:0;
+  const dynamik=(+(document.getElementById('l_dynamik')?.value||0))/100;
+  const flvTer=(parseFloat((document.getElementById('l_flv_ter')?.value||'0').replace(',','.'))||0)/100;
+  const flvRefTer=(+(document.getElementById('l_flv_ref_ter')?.value||0))/100;
   const flv={ai:+document.getElementById('l_fagio').value/100,lk:+document.getElementById('l_fkosten').value/100};
   const dep={ag:+document.getElementById('l_dagio').value/100,sp:+document.getElementById('l_dsp').value,ez:+document.getElementById('l_dez').value,ter:+document.getElementById('l_dter').value/100,ke:+document.getElementById('l_dkest').value/100,dv:+document.getElementById('l_ddiv').value/100,ae:+document.getElementById('l_dage').value/100,dg:+(document.getElementById('l_ddepotgeb')?.value||0)/100,spread:+(document.getElementById('l_dspread')?.value||0)/100};
 
-  const data=calcFLV(mb,lj,rpa,ein,flv,dep);
+  const data=calcFLV(mb,lj,rpa,ein,flv,dep,dynamik,flvTer,flvRefTer);
   const last=data.at(-1);
   lastLFlv=last.FN;
   lastLDelta=last.FN-Math.max(last.TN,last.AN);
@@ -1534,36 +1691,51 @@ function berechneLang(){
 /* ══════════════════════════════════
    FLV MATH — 1:1 Python
 ══════════════════════════════════ */
-function calcFLV(mb,lj,rpa,ein,flv,dep){
-  const ref=0.06,qr=Math.pow(1+ref,1/12);
+function calcFLV(mb,lj,rpa,ein,flv,dep,dynamik,flvTer,flvRefTer){
+  dynamik=dynamik||0;flvTer=flvTer||0;flvRefTer=flvRefTer||0;
+  // Fondskosten-Anpassung: wenn User-TER höher als Referenz-TER, reduziert das die effektive Rendite
+  const terDiff=flvTer-flvRefTer;
+  const rpaAdj=rpa-terDiff;
+  const tables=getFlvTables();
+  const ref=tables?.ref||0.06,qr=Math.pow(1+ref,1/12);
   function rwr(m,n){return Math.abs(ref)<1e-8?m*n:m*((Math.pow(qr,n)-1)/(qr-1));}
-  const b1={0:0,1:618.06,2:1270.27,3:1961.42,4:2693.89,5:3470.10,10:11062.82,15:21209.92,20:34766.96,25:52875.92,30:77060,35:109352.45,40:152464.60};
-  const b5={0:0,1:3204.64,2:6597.50,3:10192.99,4:14003.30,5:18041.10,10:56149.33,15:108933.69,20:178401.14,25:271203.42,30:395157.38,35:560699.45};
-  const qf=Math.pow(1+rpa,1/12),qd=Math.pow(1+rpa-dep.ter-(dep.dg||0),1/12);
-  function rwf(m,n){return Math.abs(rpa)<1e-8?m*n:m*((Math.pow(qf,n)-1)/(qf-1));}
+  const b1=tables?.mb100||{0:0,1:618.06,2:1270.27,3:1961.42,4:2693.89,5:3470.10,10:11062.82,15:21209.92,20:34766.96,25:52875.92,30:77060,35:109352.45,40:152464.60};
+  const b5=tables?.mb500||{0:0,1:3204.64,2:6597.50,3:10192.99,4:14003.30,5:18041.10,10:56149.33,15:108933.69,20:178401.14,25:271203.42,30:395157.38,35:560699.45};
+  const qf=Math.pow(1+rpaAdj,1/12),qd=Math.pow(1+rpa-dep.ter-(dep.dg||0),1/12);
+  function rwf(m,n){return Math.abs(rpaAdj)<1e-8?m*n:m*((Math.pow(qf,n)-1)/(qf-1));}
   const res=[];let kum=0,fm=0,kt=0,bt=0,ka=0,ba=0;
   const sp=dep.spread||0;
+  let kumE=0; // Kumulierte Einzahlungen inkl. Dynamik
   for(const a of ein)if(a.j<=0){kum+=a.b;bt+=a.b;ba+=a.b;const n=Math.max(0,a.b*(1-dep.ag)*(1-sp)-dep.ez);kt+=n;ka+=n;}
   for(let j=1;j<=lj;j++){
+    // Beitragsdynamik: mb steigt jährlich um dynamik %
+    const mb_j=mb*Math.pow(1+dynamik,j-1);
     let bs,be,am;
     if(j<=5){bs=j-1;be=j;am=12;}else{bs=Math.floor((j-1)/5)*5;be=bs+5;am=60;}
     function mr(ks,ke){return(ke-ks*Math.pow(qr,am))/rwr(1,am);}
     let m1,m5;
     if(b1[be]!==undefined&&b5[be]!==undefined){m1=mr(b1[bs],b1[be]);m5=mr(b5[bs],b5[be]);}
-    else{m1=mr(b1[35],b1[40]);m5=mr(b5[30],b5[35]);}
-    const ma=m1+(m5-m1)*((mb-100)/400);
+    else{
+      const bk=Object.keys(b1).map(Number).filter(k=>k>=0&&k%5===0).sort((a,b2)=>a-b2);
+      const fb=bk.length>=2?bk.slice(-2):[35,40];
+      m1=mr(b1[fb[0]]||0,b1[fb[1]]||b1[fb[0]]||0);
+      m5=mr(b5[fb[0]]||0,b5[fb[1]]||b5[fb[0]]||0);
+    }
+    // Interpolation mit dynamischem mb_j
+    const ma=m1+(m5-m1)*((mb_j-100)/400);
     fm=fm*Math.pow(qf,12)+rwf(ma,12);
     let fe=0;
     for(const a of ein){
       if(a.j===j){kum+=a.b;bt+=a.b;ba+=a.b;const n=Math.max(0,a.b*(1-dep.ag)*(1-sp)-dep.ez);kt+=n;ka+=n;}
-      if(j>=a.j){const jsa=a.j>0?(j-a.j+1):j;fe+=a.b*(1-flv.ai)*Math.pow(1-flv.lk,jsa)*Math.pow(1+rpa,jsa);}
+      if(j>=a.j){const jsa=a.j>0?(j-a.j+1):j;fe+=a.b*(1-flv.ai)*Math.pow(1-flv.lk,jsa)*Math.pow(1+rpaAdj,jsa);}
     }
-    for(let m=1;m<=12;m++){bt+=mb;ba+=mb;const ns=Math.max(0,mb*(1-dep.ag)*(1-sp)-dep.sp);kt+=ns;ka+=ns;kt*=qd;ka*=qd;}
+    for(let m=1;m<=12;m++){bt+=mb_j;ba+=mb_j;const ns=Math.max(0,mb_j*(1-dep.ag)*(1-sp)-dep.sp);kt+=ns;ka+=ns;kt*=qd;ka*=qd;}
+    kumE+=mb_j*12;
     const te=kt*dep.dv,st=te*dep.ae*dep.ke;kt-=st;bt+=te*dep.ae;
     const da=ka*dep.dv,sa=da*dep.ke;ka-=sa;ba+=da-sa;
     const kt_s=kt*(1-sp),ka_s=ka*(1-sp);
     const FN=fm+fe,TN=kt_s-Math.max(0,kt_s-bt)*dep.ke,AN=ka_s-Math.max(0,ka_s-ba)*dep.ke;
-    res.push({J:j,E:mb*(j*12)+kum,FN,TN,AN});
+    res.push({J:j,E:kumE+kum,FN,TN,AN});
   }
   return res;
 }
@@ -1663,7 +1835,9 @@ document.addEventListener('blur',e=>{
   if(e.target.matches('input[type="number"]'))sanitizeInput(e.target);
 },true);
 
-window.addEventListener('DOMContentLoaded',()=>{
+window.addEventListener('DOMContentLoaded',async()=>{
+  await loadConfig();
+  applyDefaults();
   berechneKurz();
   setMittelAnbieter();
   setLangAnbieter();

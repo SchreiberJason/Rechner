@@ -2,7 +2,7 @@
   "_meta": {
     "version": "2026-03",
     "beschreibung": "Zentrale Parameter-Datei für alle Rechner auf jasonschreiber.at",
-    "zuletzt_aktualisiert": "2026-03-25",
+    "zuletzt_aktualisiert": "2026-03-29",
     "quellen": "Donau Prämienauskunft dslv2674460 + dslv2674492 + dslv2674482, 25.03.2026",
     "hinweis": "Nur diese Datei ändern — alle Rechner laden daraus automatisch."
   },
@@ -15,44 +15,45 @@
     "kest_tagesgeld_pct": 27.5,
     "lohnsteuer_tarifstufen": [
       {
-        "bis": 11693,
+        "bis": 13539,
         "satz": 0.0,
         "basis": 0
       },
       {
-        "bis": 19134,
+        "bis": 21992,
         "satz": 0.2,
         "basis": 0
       },
       {
-        "bis": 32075,
+        "bis": 36458,
         "satz": 0.3,
-        "basis": 1488.2
+        "basis": 1690.6
       },
       {
-        "bis": 62080,
+        "bis": 70365,
         "satz": 0.4,
-        "basis": 5370.5
+        "basis": 6030.4
       },
       {
-        "bis": 93120,
+        "bis": 104859,
         "satz": 0.48,
-        "basis": 17372.1
+        "basis": 19593.2
       },
       {
         "bis": 1000000,
         "satz": 0.5,
-        "basis": 32291.3
+        "basis": 36150.32
       }
     ],
+    "_hinweis_tarifstufen": "Tarifstufen 2026 gemäß AK Steuerwertetabelle / §33 EStG. Basis = kumulierte Steuer der Vorstufen.",
     "sonderzahlung_pauschalsatz_pct": 6.0,
     "arbeitnehmer_absetzbetrag_eur": 1542,
     "pensionisten_absetzbetrag_eur": 1121
   },
   "sozialversicherung": {
-    "_hinweis": "SV-Sätze und Beitragsgrenzen — jährlich prüfen (ASVG/GSVG). Stand: 2024.",
-    "an_sv_rate": 0.1832,
-    "hbgg_asvg_monat_eur": 6270,
+    "_hinweis": "SV-Sätze und Beitragsgrenzen — jährlich prüfen (ASVG/GSVG). Stand: 2026 (WKO Beitragswesen DN 2026).",
+    "an_sv_rate": 0.1807,
+    "hbgg_asvg_monat_eur": 6930,
     "hbgg_gsvg_monat_eur": 6930,
     "mindest_bgg_gsvg_monat_eur": 518.44,
     "kindererziehungszeiten_bgg_monat_eur": 2055.47
@@ -66,6 +67,27 @@
     "aufwertungsfaktor_jährlich": 1.022,
     "korridor_mindest_versicherungsjahre": 40,
     "default_inflation_pct": 2.1
+  },
+  "bav": {
+    "_hinweis": "Betriebliche Altersvorsorge §3(1)15a EStG — ÖBV ZukunftSicherung Tarif ZUSH-M",
+    "rechtsgrundlage": "§3 Abs. 1 Z 15 lit. a EStG",
+    "beitrag_monatlich_eur": 25,
+    "beitrag_jaehrlich_eur": 300,
+    "lohnsteuerfrei": true,
+    "sv_frei": false,
+    "_sv_hinweis": "SV-Beiträge sind nach ASVG §49 weiterhin fällig. Nur die Lohnsteuer entfällt.",
+    "kostenstruktur": {
+      "sparbeitrag_pct": 76.25,
+      "versicherungssteuer_pct": 3.84,
+      "risikobeitrag_pct": 1.83,
+      "kosten_pct": 18.08
+    },
+    "zinsminderung_pa_pct": 1.3,
+    "rueckkaufsabschlag_pct": 2.0,
+    "rueckkaufsabschlag_jahre": 10,
+    "default_fondsperformance_pct": 6.0,
+    "default_kest_privat_pct": 27.5,
+    "default_pensionsantritt": 65
   },
   "flv_anbieter": {
     "_hinweis": "FLV-Anbieter — Wertstand-Tabellen aus offiziellen Antragsunterlagen. Wertstand = Deckungsrückstellung (vor 1% Rückkaufabschlag). Referenz-Hochrechnungszins: 6% p.a.",

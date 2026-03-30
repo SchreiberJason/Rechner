@@ -1,0 +1,1011 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>BAV-Rechner §3(1)15 | Jason Schreiber</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Inter+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<style>
+:root {
+  --sp:#0F0F0F; --ss:#16171B; --st:#282930;
+  --bp:#38D9A3; --bh:#2FC493; --bpr:#1C8764;
+  --brd:#212430; --tp:#F0EDE8; --ts:#969696; --tm:#555860;
+  --ac:#38D9A3; --adim:rgba(56,217,163,0.08); --adim2:rgba(56,217,163,0.16);
+  --sh:rgba(0,0,0,0.45); --sh-ac:rgba(56,217,163,.22); color-scheme:dark;
+  --y:#fbbf24; --b:#60a5fa; --v:#a78bfa; --r:#f87171;
+}
+@media(prefers-color-scheme:light){
+  :root{
+    --sp:#EDEBE5; --ss:#F7F2EA; --st:#FFFEFC;
+    --bp:#039F6B; --bh:#2FC493; --bpr:#1C8764;
+    --brd:#DDD8CF; --tp:#1A1A1A; --ts:#969696; --tm:#AAAAAA;
+    --ac:#039F6B; --adim:rgba(3,159,107,0.08); --adim2:rgba(3,159,107,0.15);
+    --sh:rgba(0,0,0,0.07); --sh-ac:rgba(3,159,107,.22); color-scheme:light;
+    --y:#d97706; --b:#3b82f6; --v:#7c3aed; --r:#ef4444;
+  }
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html{-webkit-text-size-adjust:100%;scroll-behavior:smooth;}
+body{
+  background:var(--sp); color:var(--tp);
+  font-family:'Inter Display','Inter',sans-serif;
+  font-size:15px; line-height:1.6;
+  min-height:100vh; overflow-x:hidden;
+  padding:0 5px;
+}
+
+/* ══════════ LAYOUT ══════════ */
+.calc-layout{
+  max-width:1240px; margin:0 auto;
+  padding:20px 0 80px;
+  display:grid; grid-template-columns:330px 1fr;
+  gap:20px; align-items:start;
+}
+
+/* ══════════ PARAMS PANEL ══════════ */
+.params-panel{
+  background:var(--ss); border-radius:32px;
+  overflow:hidden; overflow-y:auto;
+  box-shadow:0 4px 20px var(--sh);
+}
+@media(min-width:1024px){
+  .params-panel{max-height:calc(100vh - 48px);position:sticky;top:24px;}
+}
+.ps{padding:16px 18px;}
+.sl{font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--ac);margin-bottom:12px;}
+.ct{display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none;padding:14px 18px;transition:background .15s;-webkit-tap-highlight-color:transparent;}
+.ct:hover{background:var(--adim);}
+.ct .sl{margin-bottom:0;}
+.ca{color:var(--tm);font-size:9px;transition:transform .22s;flex-shrink:0;}
+.ct.open .ca{transform:rotate(180deg);}
+.cb{display:none;padding:14px 18px;}
+.cb.open{display:block;}
+.f{margin-bottom:12px;}
+.f:last-child{margin-bottom:0;}
+label{display:block;font-size:11.5px;font-weight:500;color:var(--ts);margin-bottom:5px;}
+input[type="number"],input[type="date"],select{
+  width:100%;background:var(--st);border:1px solid var(--brd);border-radius:8px;
+  color:var(--tp);font-family:inherit;font-size:16px;
+  padding:9px 12px;outline:none;transition:border-color .15s;
+}
+input[type="number"]{-moz-appearance:textfield;appearance:none;}
+@media(min-width:640px){input[type="number"],input[type="date"],select{font-size:14px;}}
+input[type="number"]::-webkit-inner-spin-button,input[type="number"]::-webkit-outer-spin-button{-webkit-appearance:none;}
+input:focus,select:focus{border-color:var(--ac);background:var(--adim);}
+input[type="date"]::-webkit-calendar-picker-indicator{filter:invert(.7);cursor:pointer;}
+@media(prefers-color-scheme:light){input[type="date"]::-webkit-calendar-picker-indicator{filter:none;}}
+.fu{display:flex;}
+.fu input{border-radius:8px 0 0 8px;border-right:none;flex:1;min-width:0;}
+.ub{background:var(--sp);border:1px solid var(--brd);border-left:none;border-radius:0 8px 8px 0;padding:0 10px;font-size:11px;font-weight:500;color:var(--tm);white-space:nowrap;display:flex;align-items:center;min-width:58px;justify-content:center;}
+.auto-info{margin-top:8px;padding:10px 12px;background:var(--adim);border-radius:10px;font-size:11.5px;color:var(--ts);line-height:1.6;}
+.auto-info .ai-row{display:flex;justify-content:space-between;align-items:center;gap:8px;}
+.auto-info .ai-row+.ai-row{margin-top:3px;}
+.auto-info .ai-val{font-weight:700;color:var(--ac);text-align:right;}
+.hint-sub{font-size:10.5px;color:var(--ts);line-height:1.4;}
+.btn-calc{width:100%;background:var(--bp);color:#051a10;border:none;border-radius:10px;padding:13px;font-family:inherit;font-size:13px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;cursor:pointer;transition:background .13s,transform .1s,box-shadow .13s;min-height:48px;-webkit-tap-highlight-color:transparent;}
+.btn-calc:hover{background:var(--bh);transform:translateY(-1px);box-shadow:0 6px 18px var(--sh-ac);}
+.btn-calc:active{background:var(--bpr);transform:translateY(0);}
+.ps-sticky{position:sticky;bottom:0;background-color:var(--ss);z-index:2;}
+.ps:not(.ps-sticky),.ct,.cb{position:relative;}
+.ps:not(:last-child)::after,.ct::after,.cb.open::after{content:'';position:absolute;bottom:0;left:18px;right:18px;height:1px;background:var(--brd);pointer-events:none;}
+.ps-sticky::before{content:'';position:absolute;top:0;left:18px;right:18px;height:1px;background:var(--brd);pointer-events:none;}
+
+/* ══════════ BRUTTO/NETTO TOGGLE ══════════ */
+.bn-toggle{display:flex;gap:0;border-radius:10px;overflow:hidden;border:1px solid var(--brd);width:fit-content;margin-bottom:8px;}
+.bn-btn{padding:5px 14px;font-size:11.5px;font-weight:600;cursor:pointer;background:transparent;color:var(--ts);border:none;font-family:inherit;transition:background .18s,color .18s;letter-spacing:.03em;}
+.bn-btn.active{background:var(--ac);color:#000;}
+.bn-btn:not(.active):hover{background:rgba(255,255,255,.06);color:var(--tp);}
+
+/* ══════════ INFO ICON ══════════ */
+.info-icon{position:relative;display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);cursor:pointer;font-size:9.5px;font-weight:800;color:var(--ts);flex-shrink:0;transition:background .15s,color .15s,border-color .15s;font-style:italic;line-height:1;}
+.info-icon:hover{background:var(--ac);color:#000;border-color:var(--ac);}
+.info-tip{position:absolute;bottom:130%;left:50%;transform:translateX(-50%);background:var(--ss);border:1px solid var(--brd);color:var(--tp);font-size:10px;padding:5px 9px;border-radius:7px;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity .15s;z-index:20;font-weight:400;font-style:normal;box-shadow:0 4px 16px rgba(0,0,0,.3);}
+.info-icon:hover .info-tip{opacity:1;}
+@media(prefers-color-scheme:light){
+  .info-icon{background:rgba(0,0,0,.06);border-color:rgba(0,0,0,.12);}
+  .info-icon:hover{background:var(--ac);color:#fff;border-color:var(--ac);}
+}
+
+/* ══════════ INFO MODAL ══════════ */
+.info-overlay{position:fixed;inset:0;background:rgba(0,0,0,.72);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);z-index:1000;display:flex;align-items:center;justify-content:center;padding:16px;opacity:0;pointer-events:none;transition:opacity .22s;}
+.info-overlay.open{opacity:1;pointer-events:all;}
+.info-box{
+  background:var(--ss);border:1px solid rgba(255,255,255,.09);border-radius:20px;
+  width:min(560px,96vw);max-height:88vh;overflow-y:auto;
+  box-shadow:0 32px 80px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.07);
+  transform:translateY(12px) scale(.97);transition:transform .22s cubic-bezier(.23,1,.32,1);
+}
+.info-overlay.open .info-box{transform:translateY(0) scale(1);}
+.info-hdr{display:flex;align-items:center;justify-content:space-between;padding:18px 20px 14px;border-bottom:1px solid var(--brd);position:sticky;top:0;background:var(--ss);z-index:2;border-radius:20px 20px 0 0;}
+.info-hdr-title{font-size:14px;font-weight:700;color:var(--tp);}
+.info-hdr-sub{font-size:10px;color:var(--ts);margin-top:2px;}
+.info-close{width:28px;height:28px;border-radius:8px;background:rgba(255,255,255,.06);border:1px solid var(--brd);color:var(--ts);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;transition:background .15s;font-family:inherit;}
+.info-close:hover{background:rgba(255,255,255,.12);color:var(--tp);}
+.info-body{padding:18px 20px 20px;}
+.info-section{margin-bottom:20px;}
+.info-section:last-child{margin-bottom:0;}
+.info-section-title{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ts);margin-bottom:10px;}
+.info-table{width:100%;border-collapse:collapse;font-size:12px;}
+.info-table th{font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--tm);padding:0 8px 7px;text-align:left;border-bottom:1px solid var(--brd);}
+.info-table td{padding:7px 8px;border-bottom:1px solid rgba(255,255,255,.04);color:var(--tp);vertical-align:middle;}
+.info-table tr:last-child td{border-bottom:none;}
+.info-rate-bar{height:6px;border-radius:3px;display:inline-block;}
+.info-note{font-size:10px;color:var(--ts);margin-top:8px;line-height:1.6;}
+.info-example{background:var(--st);border-radius:12px;padding:14px 16px;}
+.ie-row{display:flex;justify-content:space-between;align-items:center;font-size:12px;padding:3px 0;}
+.ie-row .ie-label{color:var(--ts);}
+.ie-row .ie-val{font-weight:600;color:var(--tp);font-variant-numeric:tabular-nums;}
+.ie-row .ie-val.green{color:var(--ac);}
+.ie-row .ie-val.red{color:var(--r);}
+.ie-divider{height:1px;background:var(--brd);margin:6px 0;}
+
+/* ══════════ RESULTS ══════════ */
+.rp{display:flex;flex-direction:column;gap:16px;min-width:0;}
+.card{background:var(--ss);border-radius:32px;overflow:hidden;box-shadow:0 2px 10px var(--sh);}
+.ch{padding:14px 18px;}
+.ct-title{font-weight:600;font-size:14px;color:var(--tp);}
+.cb2{padding:18px;}
+.ml{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--ts);margin-bottom:6px;}
+.ms{font-size:11px;color:var(--ts);line-height:1.5;}
+
+/* ══════════ BEITRAG VISUAL ══════════ */
+.beitrag-vis{
+  background:var(--ss);border-radius:32px;overflow:hidden;
+  box-shadow:0 2px 10px var(--sh);padding:20px 24px;
+  display:flex;align-items:center;gap:24px;
+}
+.bv-bar{flex:1;min-width:0;}
+.bv-track{height:32px;border-radius:100px;background:var(--st);overflow:hidden;display:flex;position:relative;}
+.bv-seg{height:100%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;letter-spacing:.03em;transition:width .4s ease;}
+.bv-seg.tax{background:#1C8764;color:#fff;}
+.bv-seg.sv{background:rgba(248,113,113,0.35);color:var(--ts);}
+.bv-seg.net{background:var(--st);color:var(--ts);}
+@media(prefers-color-scheme:light){
+  .bv-seg.tax{background:#1C8764;color:#fff;}
+  .bv-seg.sv{background:rgba(239,68,68,0.25);color:#555;}
+}
+.bv-labels{display:flex;justify-content:space-between;margin-top:8px;font-size:11px;color:var(--ts);}
+.bv-labels b{color:var(--ac);}
+.bv-stat{text-align:right;flex-shrink:0;min-width:100px;}
+.bv-big{font-weight:700;font-size:28px;color:var(--ac);letter-spacing:-.02em;line-height:1;}
+.bv-sub{font-size:11px;color:var(--ts);margin-top:4px;}
+
+/* ══════════ EXPANDABLE DETAILS ══════════ */
+.detail-toggle{
+  display:flex;align-items:center;gap:6px;
+  background:none;border:none;cursor:pointer;
+  font-family:inherit;font-size:11px;font-weight:600;
+  color:var(--ac);padding:0;margin-top:10px;
+  -webkit-tap-highlight-color:transparent;
+}
+.detail-toggle .dt-arrow{font-size:8px;transition:transform .2s;color:var(--tm);}
+.detail-toggle.open .dt-arrow{transform:rotate(180deg);}
+.detail-body{
+  display:none;margin-top:10px;
+  padding:12px 14px;background:var(--adim);border-radius:12px;
+  font-size:12px;color:var(--ts);line-height:1.7;
+}
+.detail-body.open{display:block;}
+.db-row{display:flex;justify-content:space-between;align-items:center;gap:8px;}
+.db-row+.db-row{margin-top:2px;}
+.db-row .db-label{color:var(--ts);}
+.db-row .db-val{font-weight:600;color:var(--tp);font-variant-numeric:tabular-nums;text-align:right;}
+.db-row .db-val.green{color:var(--ac);}
+.db-sep{height:1px;background:var(--brd);margin:6px 0;}
+
+/* ══════════ ENDWERT CARD ══════════ */
+.endwert-card{
+  background:var(--ss);border-radius:32px;overflow:hidden;
+  box-shadow:0 2px 10px var(--sh);padding:24px 28px;
+  text-align:center;
+}
+.ew-big{font-weight:700;font-size:clamp(36px,6vw,52px);color:var(--ac);letter-spacing:-.03em;line-height:1;margin-bottom:4px;}
+.ew-label{font-size:12px;color:var(--ts);margin-bottom:12px;}
+.ew-vorteil{
+  display:inline-flex;align-items:center;gap:6px;
+  background:rgba(74,222,128,.08);border:1px solid rgba(74,222,128,.18);
+  border-radius:100px;padding:6px 16px;
+  font-size:13px;font-weight:600;color:#4ade80;
+}
+.ew-vorteil.neg{color:var(--r);background:rgba(248,113,113,.08);border-color:rgba(248,113,113,.18);}
+@media(prefers-color-scheme:light){
+  .ew-vorteil{background:rgba(3,159,107,.08);border-color:rgba(3,159,107,.18);color:#039F6B;}
+  .ew-vorteil.neg{background:rgba(239,68,68,.08);border-color:rgba(239,68,68,.18);color:#ef4444;}
+}
+.ew-sub{font-size:11px;color:var(--ts);margin-top:10px;}
+.ew-details-toggle{
+  display:inline-flex;align-items:center;gap:6px;
+  background:none;border:none;cursor:pointer;
+  font-family:inherit;font-size:11px;font-weight:600;
+  color:var(--ac);padding:0;margin-top:14px;
+  -webkit-tap-highlight-color:transparent;
+}
+.ew-details-toggle .dt-arrow{font-size:8px;transition:transform .2s;color:var(--tm);}
+.ew-details-toggle.open .dt-arrow{transform:rotate(180deg);}
+.ew-detail-body{
+  display:none;margin-top:12px;text-align:left;
+  padding:14px 16px;background:var(--adim);border-radius:14px;
+  font-size:12px;color:var(--ts);line-height:1.7;
+}
+.ew-detail-body.open{display:block;}
+
+/* ══════════ LINE CHART ══════════ */
+.chart-box{padding:16px 8px 10px;height:300px;}
+.legend{display:flex;flex-wrap:wrap;gap:5px;padding:0 18px;}
+.li{
+  display:flex;align-items:center;gap:6px;padding:5px 10px;
+  border:1px solid var(--brd);border-radius:100px;cursor:pointer;
+  font-size:11px;font-weight:500;color:var(--ts);background:var(--st);
+  user-select:none;transition:all .13s;-webkit-tap-highlight-color:transparent;
+}
+.li.on{color:var(--tp);border-color:transparent;}
+.li.off{opacity:.32;}
+.ld{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+
+/* ══════════ TABLE ══════════ */
+.tw{overflow-x:auto;max-height:320px;overflow-y:auto;-webkit-overflow-scrolling:touch;}
+table{width:100%;border-collapse:collapse;font-size:12px;}
+thead th{padding:9px 12px;text-align:right;font-size:9.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ts);background:var(--st);border-bottom:1px solid var(--brd);position:sticky;top:0;white-space:nowrap;}
+thead th:first-child{text-align:center;}
+tbody td{padding:9px 12px;text-align:right;border-bottom:1px solid var(--brd);font-variant-numeric:tabular-nums;color:var(--ts);}
+tbody td:first-child{text-align:center;color:var(--tm);font-weight:600;}
+tbody tr:last-child td{border-bottom:none;}
+@media(hover:hover){tbody tr:hover td{background:var(--adim);color:var(--tp);}}
+td.hl{color:var(--ac);font-weight:600;}
+
+::-webkit-scrollbar{width:4px;height:4px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--brd);border-radius:3px;}
+
+/* ══════════ TOOLTIP ══════════ */
+#chart-tip{
+  position:fixed;z-index:9999;pointer-events:none;display:none;
+  background:var(--st);border-radius:32px;padding:16px;
+  min-width:120px;box-shadow:0 4px 24px rgba(0,0,0,.25);
+}
+#chart-tip .ctt{font-weight:600;font-size:12px;margin-bottom:8px;}
+#chart-tip .cti{display:flex;align-items:center;gap:8px;font-size:12px;margin-bottom:2px;}
+#chart-tip .ctd{width:8px;height:8px;border-radius:4px;flex-shrink:0;}
+
+/* ══════════ RESPONSIVE ══════════ */
+@media(min-width:720px) and (max-width:1023px){
+  .calc-layout{grid-template-columns:300px 1fr;gap:16px;padding:16px 0 60px;}
+}
+@media(min-width:600px) and (max-width:719px){
+  .calc-layout{grid-template-columns:1fr;padding:16px 0 60px;gap:16px;}
+  .params-panel{position:static;max-height:none;overflow-y:visible;}
+}
+@media(max-width:599px){
+  body{font-size:14px;}
+  .calc-layout{grid-template-columns:1fr;padding:14px 0 64px;gap:14px;}
+  .params-panel{position:static;max-height:none;overflow-y:visible;}
+  .beitrag-vis{flex-direction:column;gap:16px;}
+  .bv-stat{text-align:center;}
+  .endwert-card{padding:20px 18px;}
+  .chart-box{height:240px;padding:12px 4px 8px;}
+  .ps{padding:14px;}
+  .ct,.cb{padding:12px 14px;}
+}
+@media(min-width:1024px){
+  .calc-layout{grid-template-columns:330px 1fr;padding:24px 0 80px;gap:24px;}
+}
+</style>
+</head>
+<body>
+<div id="chart-tip"></div>
+
+<!-- ══════════ INFO MODAL ══════════ -->
+<div class="info-overlay" id="info_overlay" onclick="if(event.target===this){closeInfoModal();}">
+  <div class="info-box">
+    <div class="info-hdr">
+      <div>
+        <div class="info-hdr-title">Berechnungsgrundlagen</div>
+        <div class="info-hdr-sub">&sect;3 Abs. 1 Z 15 lit. a EStG &middot; &Ouml;sterreich 2026</div>
+      </div>
+      <button class="info-close" onclick="closeInfoModal()">&#x2715;</button>
+    </div>
+    <div class="info-body">
+
+      <!-- §3(1)15 Erklärung -->
+      <div class="info-section">
+        <div class="info-section-title">Rechtsgrundlage</div>
+        <div style="font-size:12px;color:var(--tp);line-height:1.7">
+          Arbeitgeberbeitr&auml;ge bis <b style="color:var(--ac)">300 &euro;/Jahr</b> (25 &euro;/Monat) an eine Pensionskasse oder betriebliche Kollektivversicherung sind gem&auml;&szlig; &sect;3 Abs. 1 Z 15 lit. a EStG <b style="color:var(--ac)">lohnsteuerfrei</b>.
+        </div>
+        <div class="info-note" style="margin-top:6px">
+          Die 25 &euro; werden ohne Lohnsteuer investiert. <b style="color:var(--tp)">SV-Beitr&auml;ge sind weiterhin f&auml;llig</b> (ASVG &sect;49 &mdash; die Steuerbefreiung gilt nicht f&uuml;r Sozialversicherung).
+          W&uuml;rde der gleiche Betrag als Gehalt ausgezahlt, w&uuml;rde zus&auml;tzlich Lohnsteuer anfallen.
+        </div>
+      </div>
+
+      <!-- Lohnsteuertabelle -->
+      <div class="info-section">
+        <div class="info-section-title">Einkommensteuer &sect;33 EStG &mdash; Tarifstufen</div>
+        <table class="info-table" id="info_tax_table">
+          <thead><tr><th>Jahresbezug</th><th>Monatlich</th><th>Grenzsteuersatz</th><th></th></tr></thead>
+          <tbody>
+            <tr><td>bis 13.539 &euro;</td><td style="color:var(--ts)">bis 1.128 &euro;</td><td style="font-weight:700;color:var(--ac)">0 %</td><td><div class="info-rate-bar" style="width:0px;background:var(--ac)"></div></td></tr>
+            <tr><td>13.540 &ndash; 21.992 &euro;</td><td style="color:var(--ts)">1.128 &ndash; 1.833 &euro;</td><td style="font-weight:700;color:#4ade80">20 %</td><td><div class="info-rate-bar" style="width:24px;background:#4ade80"></div></td></tr>
+            <tr><td>21.993 &ndash; 36.458 &euro;</td><td style="color:var(--ts)">1.833 &ndash; 3.038 &euro;</td><td style="font-weight:700;color:#86efac">30 %</td><td><div class="info-rate-bar" style="width:36px;background:#86efac"></div></td></tr>
+            <tr><td>36.459 &ndash; 70.365 &euro;</td><td style="color:var(--ts)">3.038 &ndash; 5.864 &euro;</td><td style="font-weight:700;color:var(--y)">40 %</td><td><div class="info-rate-bar" style="width:48px;background:var(--y)"></div></td></tr>
+            <tr><td>70.366 &ndash; 104.859 &euro;</td><td style="color:var(--ts)">5.864 &ndash; 8.738 &euro;</td><td style="font-weight:700;color:#f97316">48 %</td><td><div class="info-rate-bar" style="width:58px;background:#f97316"></div></td></tr>
+            <tr><td>&uuml;ber 104.859 &euro;</td><td style="color:var(--ts)">&uuml;ber 8.738 &euro;</td><td style="font-weight:700;color:var(--r)">50 %</td><td><div class="info-rate-bar" style="width:60px;background:var(--r)"></div></td></tr>
+          </tbody>
+        </table>
+        <div class="info-note">
+          SV-Beitrag Arbeitnehmer: <b style="color:var(--tp)">18,07 %</b> (H&ouml;chstbeitragsgrundlage: 6.930 &euro;/Mo.)
+        </div>
+      </div>
+
+      <!-- Dein Beispiel -->
+      <div class="info-section">
+        <div class="info-section-title">Dein Einkommen &mdash; Aufschl&uuml;sselung</div>
+        <div class="info-example">
+          <div class="ie-row"><span class="ie-label">Bruttogehalt / Monat</span><span class="ie-val" id="ie-brutto">&mdash;</span></div>
+          <div class="ie-row"><span class="ie-label" id="ie-sv-label">SV-Abzug (18,07 %)</span><span class="ie-val red" id="ie-sv">&mdash;</span></div>
+          <div class="ie-row"><span class="ie-label" style="font-size:10px;color:var(--tm)">Steuerpflichtiges Einkommen / Jahr</span><span class="ie-val" style="font-size:11px" id="ie-taxable">&mdash;</span></div>
+          <div class="ie-divider"></div>
+          <div class="ie-row"><span class="ie-label">Grenzsteuersatz</span><span class="ie-val" id="ie-rate">&mdash;</span></div>
+          <div class="ie-divider"></div>
+          <div class="ie-row"><span class="ie-label"><b>BAV-Beitrag brutto</b></span><span class="ie-val green">25,00 &euro;</span></div>
+          <div class="ie-row"><span class="ie-label">Steuerersparnis (lohnsteuerfrei)</span><span class="ie-val green" id="ie-txsav">&mdash;</span></div>
+          <div class="ie-row"><span class="ie-label">SV-Beitrag (weiterhin f&auml;llig)</span><span class="ie-val red" id="ie-svsav">&mdash;</span></div>
+          <div class="ie-divider"></div>
+          <div class="ie-row"><span class="ie-label"><b>Netto-Kosten f&uuml;r dich</b></span><span class="ie-val" id="ie-net">&mdash;</span></div>
+        </div>
+      </div>
+
+      <!-- Kostenstruktur -->
+      <div class="info-section">
+        <div class="info-section-title">Beispiel-Kostenstruktur der Versicherung</div>
+        <div class="info-example">
+          <div class="ie-row"><span class="ie-label">Sparbeitrag</span><span class="ie-val green">76,25 %</span></div>
+          <div class="ie-row"><span class="ie-label">Versicherungssteuer (VersStG)</span><span class="ie-val">3,84 %</span></div>
+          <div class="ie-row"><span class="ie-label">Risikobeitrag</span><span class="ie-val">1,83 %</span></div>
+          <div class="ie-row"><span class="ie-label">Versicherungskosten</span><span class="ie-val">18,08 %</span></div>
+          <div class="ie-divider"></div>
+          <div class="ie-row"><span class="ie-label">Zinsminderung (Gesamtkosten)</span><span class="ie-val">~1,3 % p.a.</span></div>
+          <div class="ie-row"><span class="ie-label">R&uuml;ckkaufsabschlag (erste 10 J.)</span><span class="ie-val">2 %</span></div>
+          <div class="ie-row"><span class="ie-label">KESt auf BAV</span><span class="ie-val green">0 % (steuerfrei)</span></div>
+          <div class="ie-row"><span class="ie-label">KESt auf private Anlage</span><span class="ie-val red">27,5 %</span></div>
+        </div>
+        <div class="info-note" style="margin-top:8px">
+          Die dargestellte Kostenstruktur dient als Beispiel und kann je nach Versicherungsanbieter und Tarif abweichen. Die tats&auml;chlichen Kosten entnehmen Sie bitte Ihrem individuellen Angebot.
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div class="calc-layout">
+
+  <!-- ══════════ LEFT: PARAMS ══════════ -->
+  <aside class="params-panel">
+    <div class="ps">
+      <div class="sl">Deine Situation</div>
+      <div class="f">
+        <label>Geburtsdatum</label>
+        <input type="date" id="gebdat" value="2000-06-15">
+      </div>
+      <div class="f">
+        <label>Startdatum der BAV</label>
+        <input type="date" id="startdat" value="">
+      </div>
+      <div class="f">
+        <label id="eink_label" style="display:flex;align-items:center;gap:5px">Monatliches Nettoeinkommen
+          <span class="info-icon" onclick="openInfoModal()">i<span class="info-tip">Berechnungsgrundlagen</span></span>
+        </label>
+        <div class="bn-toggle">
+          <button class="bn-btn active" id="btn_netto" onclick="setIncomeType('netto')">NETTO</button>
+          <button class="bn-btn" id="btn_brutto" onclick="setIncomeType('brutto')">BRUTTO</button>
+        </div>
+        <div class="fu"><input type="number" id="einkommen" value="1800" min="0" step="50"><span class="ub">&euro; / Mo.</span></div>
+        <div class="hint-sub" id="eink_convert_hint" style="margin-top:4px"></div>
+      </div>
+      <div class="auto-info">
+        <div class="ai-row"><span>Alter</span><span class="ai-val" id="ai-alter">&mdash;</span></div>
+        <div class="ai-row"><span>Grenzsteuersatz</span><span class="ai-val" id="ai-tax">&mdash;</span></div>
+        <div class="ai-row"><span>Laufzeit</span><span class="ai-val" id="ai-laufzeit">&mdash;</span></div>
+      </div>
+    </div>
+    <div class="ct" onclick="toggleSection(this)">
+      <div class="sl">Pension</div>
+      <span class="ca">&#9660;</span>
+    </div>
+    <div class="cb">
+      <div class="f">
+        <label>Pensionsantritt</label>
+        <div class="fu"><input type="number" id="pension" value="65" min="55" max="70" step="1"><span class="ub">Jahre</span></div>
+      </div>
+    </div>
+    <div class="ct" onclick="toggleSection(this)">
+      <div class="sl">Veranlagung</div>
+      <span class="ca">&#9660;</span>
+    </div>
+    <div class="cb">
+      <div class="f">
+        <label>Depotanbieter (Privatvergleich)</label>
+        <select id="bav_anbieter" onchange="setBAVAnbieter()">
+          <option value="manuell">Manuell</option>
+        </select>
+      </div>
+      <div class="f">
+        <label>Fondsperformance p.a.</label>
+        <div class="fu"><input type="number" id="perf" value="6" min="-5" max="15" step="0.5"><span class="ub">%</span></div>
+      </div>
+      <div class="f">
+        <label>Versicherungskosten (Zinsminderung)</label>
+        <div class="fu"><input type="number" id="zmind" value="1.3" min="0" max="5" step="0.1"><span class="ub">% p.a.</span></div>
+      </div>
+      <div class="f">
+        <label>KESt privat</label>
+        <div class="fu"><input type="number" id="kest" value="27.5" min="0" max="50" step="0.5"><span class="ub">%</span></div>
+      </div>
+      <div id="anbieter-note" style="display:none;font-size:10.5px;color:var(--ts);line-height:1.5;margin-top:4px;padding:8px 10px;background:var(--adim);border-radius:8px;"></div>
+    </div>
+    <div class="ps ps-sticky">
+      <button class="btn-calc" onclick="calculate()">Berechnen</button>
+    </div>
+  </aside>
+
+  <!-- ══════════ RIGHT: RESULTS ══════════ -->
+  <div class="rp">
+
+    <!-- Beitrag Visual Bar -->
+    <div class="beitrag-vis" id="bv">
+      <div class="bv-bar">
+        <div class="ml">Dein 25 &euro; Brutto-Beitrag</div>
+        <div class="bv-track">
+          <div class="bv-seg tax" id="bv-tax" style="width:30%">Steuer</div>
+          <div class="bv-seg sv" id="bv-sv" style="width:18%">SV</div>
+          <div class="bv-seg net" id="bv-net" style="width:52%">Netto</div>
+        </div>
+        <div class="bv-labels">
+          <span><b id="bv-save-val">12,03 &euro;</b> Steuerersparnis</span>
+          <span>Kostet dich nur <b id="bv-net-val">12,97 &euro;</b></span>
+        </div>
+        <button class="detail-toggle" id="dt-btn" onclick="toggleDetails()">
+          <span class="dt-arrow">&#9660;</span> <span id="dt-text">Bestandteile anzeigen</span>
+        </button>
+        <div class="detail-body" id="dt-body">
+          <div class="db-row"><span class="db-label">Brutto-Beitrag (AG)</span><span class="db-val">25,00 &euro;</span></div>
+          <div class="db-sep"></div>
+          <div class="db-row"><span class="db-label">Steuerersparnis (lohnsteuerfrei)</span><span class="db-val green" id="db-tax">&mdash;</span></div>
+          <div class="db-row"><span class="db-label">SV-Beitrag (weiterhin f&auml;llig)</span><span class="db-val" style="color:var(--r)" id="db-sv">&mdash;</span></div>
+          <div class="db-sep"></div>
+          <div class="db-row"><span class="db-label">Netto-Kosten f&uuml;r dich</span><span class="db-val" id="db-net">&mdash;</span></div>
+        </div>
+      </div>
+      <div class="bv-stat">
+        <div class="bv-big" id="bv-pct">48 %</div>
+        <div class="bv-sub">Steuerersparnis</div>
+      </div>
+    </div>
+
+    <!-- Endwert + Vorteil (redesigned) -->
+    <div class="endwert-card" id="ew-card">
+      <div class="ml">BAV-Endwert bei Pensionsantritt</div>
+      <div class="ew-big" id="ew-val">&mdash;</div>
+      <div class="ew-label" id="ew-label">nach 40 Jahren Laufzeit</div>
+      <div class="ew-vorteil" id="ew-vorteil">
+        <span id="ew-vorteil-text">+0,00 &euro; Vorteil vs. Privat (+0 %)</span>
+      </div>
+      <div class="ew-sub">Mehr durch Brutto-Investition &amp; KESt-Befreiung</div>
+      <button class="ew-details-toggle" id="ew-dt-btn" onclick="toggleEwDetails()">
+        <span class="dt-arrow">&#9660;</span> <span id="ew-dt-text">Eingezahlt &amp; Endwerte anzeigen</span>
+      </button>
+      <div class="ew-detail-body" id="ew-dt-body">
+        <div class="db-row"><span class="db-label">Eingezahlt (brutto gesamt)</span><span class="db-val" id="ew-ein-brutto">&mdash;</span></div>
+        <div class="db-row"><span class="db-label">Eingezahlt (netto gesamt)</span><span class="db-val" id="ew-ein-netto">&mdash;</span></div>
+        <div class="db-sep"></div>
+        <div class="db-row"><span class="db-label">BAV-Endwert</span><span class="db-val green" id="ew-bav">&mdash;</span></div>
+        <div class="db-row"><span class="db-label">R&uuml;ckkaufswert</span><span class="db-val" id="ew-rk">&mdash;</span></div>
+        <div class="db-sep"></div>
+        <div class="db-row"><span class="db-label">Privat-Endwert (nach KESt)</span><span class="db-val" id="ew-privat">&mdash;</span></div>
+        <div class="db-sep"></div>
+        <div class="db-row"><span class="db-label"><b>BAV-Vorteil</b></span><span class="db-val green" id="ew-diff">&mdash;</span></div>
+      </div>
+    </div>
+
+    <!-- Line Chart -->
+    <div class="card">
+      <div class="ch"><span class="ct-title">Verm&ouml;gensentwicklung</span></div>
+      <div class="legend" id="chart-legend"></div>
+      <div class="cb2">
+        <div class="chart-box"><canvas id="lineChart"></canvas></div>
+      </div>
+    </div>
+
+    <!-- Table -->
+    <div class="card">
+      <div class="ch"><span class="ct-title">Jahres&uuml;bersicht</span></div>
+      <div class="tw">
+        <table>
+          <thead><tr><th>Alter</th><th>Eingezahlt</th><th>BAV-Guthaben</th><th>R&uuml;ckkaufswert</th><th>Privat</th><th>Vorteil</th></tr></thead>
+          <tbody id="tbl"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+/* ══════════ ACCESS PROTECTION ══════════ */
+(function(){
+  const isLocal = ['localhost','127.0.0.1',''].includes(location.hostname);
+  const validRef = document.referrer.includes('jasonschreiber.at');
+  const ACCESS_KEY = 'bav2026';
+  const urlKey = new URLSearchParams(location.search).get('access');
+  if(!isLocal && !validRef && urlKey !== ACCESS_KEY){
+    document.body.style.cssText = 'margin:0;background:#0F0F0F;display:flex;align-items:center;justify-content:center;height:100vh;font-family:Inter,sans-serif;';
+    document.body.innerHTML = '<div style="color:#555;font-size:14px;text-align:center"><div style="font-size:32px;margin-bottom:12px">&#128274;</div>Zugriff nicht gestattet.</div>';
+    throw new Error('Access denied');
+  }
+})();
+
+/* ══════════ CONSTANTS (Fallback, overwritten by config.json) ══════════ */
+let TAX_BRACKETS = [
+  { limit: 13539, rate: 0 }, { limit: 21992, rate: 0.20 },
+  { limit: 36458, rate: 0.30 }, { limit: 70365, rate: 0.40 },
+  { limit: 104859, rate: 0.48 }, { limit: 1000000, rate: 0.50 }
+];
+let SV_RATE = 0.1807, SV_HBGL = 6930, BAV = 25;
+let ABSETZBETRAG = 1542;
+let SONDER_SATZ = 0.06, SONDER_FREIBETRAG = 620;
+let BAV_ZMIND = 1.3, BAV_PERF = 6.0, BAV_KEST = 27.5, BAV_PENSION = 65;
+let BAV_KOSTEN = { spar: 76.25, versstg: 3.84, risiko: 1.83, kosten: 18.08 };
+let BAV_RK_ABSCHLAG = 2.0, BAV_RK_JAHRE = 10;
+let CFG = null;
+let DEPOTANBIETER = { manuell: { name: 'Manuell', etf: null, fonds: null } };
+
+async function loadConfig() {
+  try {
+    const r = await fetch('config.json?v=' + Date.now());
+    CFG = await r.json();
+    const st = CFG.steuern || {};
+    const sv = CFG.sozialversicherung || {};
+    const bav = CFG.bav || {};
+
+    // Tarifstufen
+    if (st.lohnsteuer_tarifstufen) {
+      TAX_BRACKETS = st.lohnsteuer_tarifstufen.map((s, i, a) =>
+        ({ limit: s.bis, rate: s.satz })
+      );
+    }
+    if (st.arbeitnehmer_absetzbetrag_eur) ABSETZBETRAG = st.arbeitnehmer_absetzbetrag_eur;
+    if (st.sonderzahlung_pauschalsatz_pct) SONDER_SATZ = st.sonderzahlung_pauschalsatz_pct / 100;
+
+    // SV
+    if (sv.an_sv_rate) SV_RATE = sv.an_sv_rate;
+    if (sv.hbgg_asvg_monat_eur) SV_HBGL = sv.hbgg_asvg_monat_eur;
+
+    // BAV
+    if (bav.beitrag_monatlich_eur) BAV = bav.beitrag_monatlich_eur;
+    if (bav.zinsminderung_pa_pct != null) BAV_ZMIND = bav.zinsminderung_pa_pct;
+    if (bav.default_fondsperformance_pct != null) BAV_PERF = bav.default_fondsperformance_pct;
+    if (bav.default_kest_privat_pct != null) BAV_KEST = bav.default_kest_privat_pct;
+    if (bav.default_pensionsantritt != null) BAV_PENSION = bav.default_pensionsantritt;
+    if (bav.rueckkaufsabschlag_pct != null) BAV_RK_ABSCHLAG = bav.rueckkaufsabschlag_pct;
+    if (bav.rueckkaufsabschlag_jahre != null) BAV_RK_JAHRE = bav.rueckkaufsabschlag_jahre;
+    if (bav.kostenstruktur) {
+      BAV_KOSTEN = {
+        spar: bav.kostenstruktur.sparbeitrag_pct || 76.25,
+        versstg: bav.kostenstruktur.versicherungssteuer_pct || 3.84,
+        risiko: bav.kostenstruktur.risikobeitrag_pct || 1.83,
+        kosten: bav.kostenstruktur.kosten_pct || 18.08
+      };
+    }
+
+    // Depot-Anbieter aus Config laden
+    if (CFG.depot_anbieter) {
+      const da = {};
+      for (const [k, v] of Object.entries(CFG.depot_anbieter)) {
+        if (k.startsWith('_')) continue;
+        da[k] = v;
+      }
+      da.manuell = { name: 'Manuell', etf: null, fonds: null };
+      DEPOTANBIETER = da;
+    }
+  } catch (e) { console.warn('config.json nicht geladen, Fallback-Werte aktiv.', e); }
+}
+
+/* ══════════ HELPERS ══════════ */
+const vv = id => parseFloat(document.getElementById(id).value) || 0;
+const fmt = n => n.toLocaleString('de-AT', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const fE = n => fmt(n) + ' \u20AC';
+const fP = n => (n * 100).toFixed(1).replace('.', ',') + ' %';
+const eurN = v => { if (v >= 1e6) return (v / 1e6).toFixed(1) + ' M'; if (v >= 1e3) return (v / 1e3).toFixed(0) + ' K'; return v.toFixed(0); };
+
+/* ══════════ NETTO/BRUTTO CONVERSION ══════════ */
+function calcLohnsteuer(taxableAnn) {
+  let tax = 0, prev = 0;
+  for (const b of TAX_BRACKETS) {
+    const chunk = Math.min(taxableAnn, b.limit) - prev;
+    if (chunk <= 0) break;
+    tax += chunk * b.rate;
+    prev = b.limit;
+  }
+  return tax;
+}
+
+function netFromGross(grossMonthly) {
+  const svBase = Math.min(grossMonthly, SV_HBGL);
+  const svMonthly = svBase * SV_RATE;
+  const svAnn = svMonthly * 14;
+  const taxable12 = Math.max(0, (grossMonthly - svMonthly) * 12);
+  const rawTax12 = calcLohnsteuer(taxable12);
+  const lst12 = Math.max(0, rawTax12 - ABSETZBETRAG);
+  const sonderzahlung = Math.max(0, (grossMonthly - svMonthly) * 2);
+  const lstSonder = Math.max(0, sonderzahlung - SONDER_FREIBETRAG) * SONDER_SATZ;
+  const netAnn = grossMonthly * 14 - svAnn - lst12 - lstSonder;
+  return netAnn / 14;
+}
+
+function grossFromNet(netMonthly) {
+  if (netMonthly <= 0) return 0;
+  let g = netMonthly / 0.70;
+  for (let i = 0; i < 60; i++) {
+    const err = netFromGross(g) - netMonthly;
+    if (Math.abs(err) < 0.05) break;
+    g -= err * 0.6;
+    if (g < 1) g = 1;
+  }
+  return g;
+}
+
+/* ══════════ INCOME TYPE TOGGLE ══════════ */
+let incomeType = 'netto';
+
+function setIncomeType(type) {
+  if (incomeType === type) return;
+  const cur = parseFloat(document.getElementById('einkommen').value) || 0;
+  const newVal = type === 'brutto'
+    ? Math.round(grossFromNet(cur) / 10) * 10
+    : Math.round(netFromGross(cur) / 10) * 10;
+  document.getElementById('einkommen').value = newVal;
+  incomeType = type;
+  document.getElementById('btn_netto').classList.toggle('active', type === 'netto');
+  document.getElementById('btn_brutto').classList.toggle('active', type === 'brutto');
+  const lbl = document.getElementById('eink_label');
+  lbl.firstChild.textContent = type === 'netto' ? 'Monatliches Nettoeinkommen ' : 'Monatliches Bruttoeinkommen ';
+  calculate();
+}
+
+function getEffectiveGross() {
+  const val = parseFloat(document.getElementById('einkommen').value) || 1800;
+  return incomeType === 'brutto' ? val : grossFromNet(val);
+}
+
+function getEffectiveNet() {
+  const val = parseFloat(document.getElementById('einkommen').value) || 1800;
+  return incomeType === 'netto' ? val : netFromGross(val);
+}
+
+/* ══════════ DEPOT ANBIETER ══════════ */
+function buildAnbieterSelect() {
+  if (!CFG?.depot_anbieter) return;
+  const sel = document.getElementById('bav_anbieter');
+  if (!sel) return;
+  sel.innerHTML = '';
+  const mo = document.createElement('option'); mo.value = 'manuell'; mo.textContent = 'Manuell'; sel.appendChild(mo);
+  for (const [k, v] of Object.entries(DEPOTANBIETER)) {
+    if (k === 'manuell' || k.startsWith('_')) continue;
+    const o = document.createElement('option'); o.value = k; o.textContent = v.name; sel.appendChild(o);
+  }
+}
+
+function setBAVAnbieter() {
+  const key = document.getElementById('bav_anbieter').value;
+  const p = DEPOTANBIETER[key];
+  const noteEl = document.getElementById('anbieter-note');
+  if (key === 'manuell' || !p) {
+    if (noteEl) noteEl.style.display = 'none';
+    return;
+  }
+  // Use ETF costs as default for private comparison (most common for BAV comparison)
+  const costs = p.etf || p.fonds;
+  if (costs) {
+    // Map depot costs to a private comparison cost reduction
+    // agio = one-time buy cost %, dg = depot fee %/pa, sp = service fee/mo
+    const totalAnnCost = (costs.dg || 0) + ((costs.sp || 0) * 12 / (BAV * 12) * 100);
+    // Don't override zmind (insurance costs), but note in display
+    if (noteEl) {
+      noteEl.innerHTML = '<b>' + p.name + '</b>: Agio ' + (costs.agio || 0).toFixed(1) + ' %, Depotgeb\u00fchr ' + (costs.dg || 0).toFixed(2) + ' % p.a.' + (costs.sp ? ', Service ' + fmt(costs.sp) + ' \u20AC/Mo.' : '');
+      noteEl.style.display = 'block';
+    }
+  }
+}
+
+/* ══════════ TAX CALC ══════════ */
+function getAge(d) {
+  const bd = new Date(d), t = new Date();
+  let a = t.getFullYear() - bd.getFullYear();
+  if (t.getMonth() < bd.getMonth() || (t.getMonth() === bd.getMonth() && t.getDate() < bd.getDate())) a--;
+  return Math.max(0, a);
+}
+function getMargRate(mg) {
+  const sv = Math.min(mg, SV_HBGL) * SV_RATE;
+  const taxable = Math.max(0, mg * 12 - sv * 12);
+  for (const b of TAX_BRACKETS) if (taxable <= b.limit) return b.rate;
+  return 0.5;
+}
+function calcTax(mg) {
+  const r = getMargRate(mg), abv = mg >= SV_HBGL;
+  const svDue = abv ? 0 : BAV * SV_RATE;
+  const txSav = BAV * r;
+  const privNet = BAV - txSav - svDue;
+  return { rate: r, abv, svDue, txSav, total: txSav, net: BAV - txSav, privNet };
+}
+
+/* ══════════ CHART HELPERS ══════════ */
+let lineChartInst = null;
+const chartVis = { bav: true, privat: true, eingez: true, rk: false };
+
+function tc() {
+  const d = window.matchMedia('(prefers-color-scheme:dark)').matches;
+  return {
+    grid: d ? 'rgba(255,255,255,.12)' : 'rgba(0,0,0,.28)',
+    ticks: d ? '#666B78' : '#777777',
+    bg: d ? '#16171B' : '#F7F2EA', st: d ? '#282930' : '#FFFEFC',
+    bdr: d ? '#282930' : '#DEDAD3', tt: d ? '#F0EDE8' : '#1A1A1A',
+    ts: '#969696', ac: d ? '#38D9A3' : '#039F6B',
+    acFill: d ? 'rgba(56,217,163,.07)' : 'rgba(3,159,107,.07)'
+  };
+}
+
+function externalTooltip({ chart, tooltip }) {
+  const el = document.getElementById('chart-tip');
+  if (!el) return;
+  if (!tooltip.opacity) { el.style.display = 'none'; return; }
+  const t = tc();
+  const title = tooltip.title?.[0] || '';
+  let html = `<div class="ctt" style="color:${t.tt}">${title}</div>`;
+  (tooltip.body || []).forEach((b, i) => {
+    const col = (tooltip.labelColors?.[i]?.backgroundColor) || '#888';
+    const line = (b.lines?.[0] || '').trim();
+    html += `<div class="cti" style="color:${t.ts}"><span class="ctd" style="background:${col}"></span>${line}</div>`;
+  });
+  el.innerHTML = html;
+  el.style.display = 'block';
+  const r = chart.canvas.getBoundingClientRect();
+  let x = r.left + tooltip.caretX + 14;
+  let y = r.top + tooltip.caretY - el.offsetHeight / 2;
+  const w = el.offsetWidth, h = el.offsetHeight;
+  if (x + w > window.innerWidth - 8) x = r.left + tooltip.caretX - w - 14;
+  if (x < 8) x = 8;
+  if (y < 8) y = 8;
+  if (y + h > window.innerHeight - 8) y = window.innerHeight - h - 8;
+  el.style.left = x + 'px';
+  el.style.top = y + 'px';
+}
+
+const crosshairPlugin = {
+  id: 'crosshair',
+  afterDraw(chart) {
+    if (!chart.tooltip._active || !chart.tooltip._active.length) return;
+    const { ctx, chartArea: { top, bottom } } = chart;
+    const x = chart.tooltip._active[0].element.x;
+    const d = window.matchMedia('(prefers-color-scheme:dark)').matches;
+    ctx.save(); ctx.beginPath(); ctx.moveTo(x, top); ctx.lineTo(x, bottom);
+    ctx.lineWidth = 1; ctx.strokeStyle = d ? 'rgba(255,255,255,.2)' : 'rgba(0,0,0,.12)';
+    ctx.setLineDash([4, 3]); ctx.stroke(); ctx.restore();
+  }
+};
+
+const LC = { bav: 'rgb(56,217,163)', privat: 'rgb(167,139,250)', eingez: '#555860', rk: '#fbbf24' };
+const LL = { bav: 'BAV-Guthaben', privat: 'Privat (nach KESt)', eingez: 'Eingezahlt', rk: 'R\u00FCckkaufswert' };
+
+function buildLegend() {
+  const el = document.getElementById('chart-legend');
+  el.innerHTML = '';
+  for (const k of ['bav', 'privat', 'eingez', 'rk']) {
+    const btn = document.createElement('span');
+    btn.className = 'li ' + (chartVis[k] ? 'on' : 'off');
+    btn.innerHTML = `<span class="ld" style="background:${LC[k]}"></span>${LL[k]}`;
+    btn.onclick = () => {
+      chartVis[k] = !chartVis[k];
+      btn.className = 'li ' + (chartVis[k] ? 'on' : 'off');
+      if (lineChartInst) {
+        const idx = ['bav', 'privat', 'eingez', 'rk'].indexOf(k);
+        lineChartInst.data.datasets[idx].hidden = !chartVis[k];
+        lineChartInst.update('none');
+      }
+    };
+    el.appendChild(btn);
+  }
+}
+
+/* ══════════ INFO MODAL ══════════ */
+function openInfoModal() {
+  updateInfoExample();
+  document.getElementById('info_overlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeInfoModal() {
+  document.getElementById('info_overlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+function updateInfoExample() {
+  const gross = getEffectiveGross();
+  const tax = calcTax(gross);
+  const svM = Math.min(gross, SV_HBGL) * SV_RATE;
+  const taxableAnn = Math.max(0, (gross - svM) * 12);
+
+  document.getElementById('ie-brutto').textContent = fE(gross);
+  document.getElementById('ie-sv-label').textContent = `SV-Abzug (${(SV_RATE * 100).toFixed(2).replace('.', ',')} %)`;
+  document.getElementById('ie-sv').textContent = '-' + fE(svM);
+  document.getElementById('ie-taxable').textContent = fE(taxableAnn);
+  document.getElementById('ie-rate').textContent = fP(tax.rate);
+  document.getElementById('ie-txsav').textContent = '-' + fE(tax.txSav);
+  document.getElementById('ie-svsav').textContent = fE(tax.svDue);
+  document.getElementById('ie-net').textContent = fE(tax.net);
+}
+
+/* ══════════ MAIN CALCULATION ══════════ */
+function calculate() {
+  const gebdat = document.getElementById('gebdat').value;
+  const startdat = document.getElementById('startdat').value;
+  const gross = getEffectiveGross();
+  const pension = Math.min(70, Math.max(56, vv('pension')));
+  const perf = vv('perf') / 100, zmind = vv('zmind') / 100, kest = vv('kest') / 100;
+  const alter = getAge(gebdat);
+  if (alter < 15 || alter >= pension) return;
+  let lz;
+  if (startdat) {
+    const start = new Date(startdat);
+    const gebD = new Date(gebdat);
+    const pensionDate = new Date(gebD.getFullYear() + pension, gebD.getMonth(), gebD.getDate());
+    lz = Math.max(1, Math.round((pensionDate - start) / (365.25 * 86400000)));
+  } else {
+    lz = pension - alter;
+  }
+  const tax = calcTax(gross), privNet = tax.privNet;
+  const rBAV = (perf - zmind) / 12, rP = perf / 12;
+
+  // Convert hint
+  const hintEl = document.getElementById('eink_convert_hint');
+  if (incomeType === 'netto') {
+    hintEl.textContent = '\u2248 Brutto: ' + fE(gross);
+  } else {
+    hintEl.textContent = '\u2248 Netto: ' + fE(getEffectiveNet());
+  }
+
+  let bG = 0, pG = 0;
+  const yrs = [];
+  for (let y = 1; y <= lz; y++) {
+    for (let m = 0; m < 12; m++) { bG = bG * (1 + rBAV) + BAV; pG = pG * (1 + rP) + privNet; }
+    const ein = BAV * 12 * y, nEin = privNet * 12 * y;
+    const pGew = pG - nEin, pKest = nEin + pGew * (1 - kest);
+    yrs.push({ y, age: alter + y, ein, bG, rk: y < BAV_RK_JAHRE ? bG * (1 - BAV_RK_ABSCHLAG / 100) : bG, pKest, vt: bG - pKest, nEin });
+  }
+  const L = yrs[yrs.length - 1];
+  const vtPct = L.pKest > 0 ? ((L.bG / L.pKest - 1) * 100) : 0;
+
+  // Auto-info
+  document.getElementById('ai-alter').textContent = alter + ' Jahre';
+  document.getElementById('ai-tax').textContent = fP(tax.rate);
+  document.getElementById('ai-laufzeit').textContent = lz + ' Jahre';
+
+  // Beitrag bar
+  const txPct = (tax.txSav / BAV * 100);
+  const svPct = (tax.svDue / BAV * 100);
+  const investPct = 100 - txPct - svPct;
+  document.getElementById('bv-tax').style.width = txPct + '%';
+  document.getElementById('bv-tax').textContent = txPct >= 12 ? 'Steuer' : '';
+  document.getElementById('bv-sv').style.width = svPct + '%';
+  document.getElementById('bv-sv').textContent = svPct >= 8 ? 'SV' : '';
+  document.getElementById('bv-net').style.width = investPct + '%';
+  document.getElementById('bv-net').textContent = investPct >= 15 ? 'Netto' : '';
+  document.getElementById('bv-save-val').textContent = fE(tax.txSav);
+  document.getElementById('bv-net-val').textContent = fE(tax.net);
+  document.getElementById('bv-pct').textContent = Math.round(tax.txSav / BAV * 100) + ' %';
+
+  // Expandable cost details
+  document.getElementById('db-tax').textContent = '-' + fE(tax.txSav);
+  document.getElementById('db-sv').textContent = fE(tax.svDue);
+  document.getElementById('db-net').textContent = fE(tax.net);
+
+  // Endwert card (redesigned)
+  document.getElementById('ew-val').textContent = fE(L.bG);
+  document.getElementById('ew-label').textContent = `mit ${pension}, nach ${lz} Jahren Laufzeit`;
+  const ewVorteil = document.getElementById('ew-vorteil');
+  const vtSign = L.vt >= 0 ? '+' : '';
+  document.getElementById('ew-vorteil-text').textContent = `${vtSign}${fE(L.vt)} Vorteil vs. Privat (${vtSign}${vtPct.toFixed(0)} %)`;
+  ewVorteil.className = 'ew-vorteil' + (L.vt < 0 ? ' neg' : '');
+
+  // Expandable eingezahlt details
+  document.getElementById('ew-ein-brutto').textContent = fE(L.ein);
+  document.getElementById('ew-ein-netto').textContent = fE(L.nEin);
+  document.getElementById('ew-bav').textContent = fE(L.bG);
+  document.getElementById('ew-rk').textContent = fE(L.rk);
+  document.getElementById('ew-privat').textContent = fE(L.pKest);
+  const ewDiff = document.getElementById('ew-diff');
+  ewDiff.textContent = vtSign + fE(L.vt);
+  ewDiff.className = 'db-val' + (L.vt >= 0 ? ' green' : '');
+
+  // Line chart
+  const t = tc();
+  const labels = yrs.map(r => r.y);
+  const ds = [
+    { label: LL.bav, data: yrs.map(r => r.bG), borderColor: LC.bav, backgroundColor: t.acFill, borderWidth: 2.5, tension: .4, pointRadius: 0, fill: true, hidden: !chartVis.bav },
+    { label: LL.privat, data: yrs.map(r => r.pKest), borderColor: LC.privat, backgroundColor: 'rgba(167,139,250,.06)', borderWidth: 2.5, tension: .4, pointRadius: 0, fill: false, hidden: !chartVis.privat },
+    { label: LL.eingez, data: yrs.map(r => r.ein), borderColor: LC.eingez, borderDash: [5, 3], borderWidth: 1.5, tension: 0, pointRadius: 0, fill: false, hidden: !chartVis.eingez },
+    { label: LL.rk, data: yrs.map(r => r.rk), borderColor: LC.rk, borderDash: [4, 2], borderWidth: 2, tension: .4, pointRadius: 0, fill: false, hidden: !chartVis.rk }
+  ];
+  if (lineChartInst) { lineChartInst.destroy(); lineChartInst = null; }
+  lineChartInst = new Chart(document.getElementById('lineChart').getContext('2d'), {
+    type: 'line', data: { labels, datasets: ds }, plugins: [crosshairPlugin],
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: { enabled: false, mode: 'index', intersect: false, external: externalTooltip,
+          callbacks: {
+            title: items => { const n = +items[0].label; return n === 1 ? '1 Jahr' : `${n} Jahre`; },
+            labelColor: c => ({ borderColor: 'transparent', backgroundColor: c.dataset.borderColor, borderWidth: 0, borderRadius: 4 }),
+            label: c => ` ${c.dataset.label}: ${fE(c.parsed.y)}`
+          }
+        }
+      },
+      scales: {
+        x: { grid: { color: t.grid, drawTicks: false }, ticks: { color: t.ticks, font: { size: 10 } }, border: { color: 'transparent' }, title: { display: true, text: '(Jahre)', align: 'end', color: t.ticks, font: { size: 10 } } },
+        y: { grid: { color: t.grid, drawTicks: false }, ticks: { color: t.ticks, font: { size: 10 }, callback: v => eurN(v) }, border: { color: 'transparent' }, title: { display: true, text: '(\u20AC)', align: 'end', color: t.ticks, font: { size: 10 } } }
+      },
+      interaction: { mode: 'index', intersect: false }, hover: { mode: 'index', intersect: false }
+    }
+  });
+
+  // Table
+  document.getElementById('tbl').innerHTML = yrs.map(r =>
+    `<tr><td>${r.age}</td><td>${fE(r.ein)}</td><td class="hl">${fE(r.bG)}</td><td>${fE(r.rk)}</td><td>${fE(r.pKest)}</td><td class="${r.vt >= 0 ? 'hl' : ''}">${r.vt >= 0 ? '+' : ''}${fE(r.vt)}</td></tr>`
+  ).join('');
+}
+
+/* ══════════ UI TOGGLES ══════════ */
+function toggleSection(ct) {
+  ct.classList.toggle('open');
+  const cb = ct.nextElementSibling;
+  if (cb && cb.classList.contains('cb')) cb.classList.toggle('open');
+}
+function toggleDetails() {
+  const btn = document.getElementById('dt-btn');
+  const body = document.getElementById('dt-body');
+  btn.classList.toggle('open');
+  body.classList.toggle('open');
+  document.getElementById('dt-text').textContent =
+    body.classList.contains('open') ? 'Bestandteile ausblenden' : 'Bestandteile anzeigen';
+}
+function toggleEwDetails() {
+  const btn = document.getElementById('ew-dt-btn');
+  const body = document.getElementById('ew-dt-body');
+  btn.classList.toggle('open');
+  body.classList.toggle('open');
+  document.getElementById('ew-dt-text').textContent =
+    body.classList.contains('open') ? 'Details ausblenden' : 'Eingezahlt & Endwerte anzeigen';
+}
+
+/* ══════════ INIT ══════════ */
+document.addEventListener('DOMContentLoaded', async () => {
+  await loadConfig();
+  // Apply defaults from config
+  document.getElementById('perf').value = BAV_PERF;
+  document.getElementById('zmind').value = BAV_ZMIND;
+  document.getElementById('kest').value = BAV_KEST;
+  document.getElementById('pension').value = BAV_PENSION;
+  // Update static labels with config values
+  document.querySelector('.ml').textContent = `Dein ${BAV} \u20AC Brutto-Beitrag`;
+  // Default dates
+  const d = new Date(); d.setFullYear(d.getFullYear() - 25);
+  document.getElementById('gebdat').value = d.toISOString().split('T')[0];
+  document.getElementById('startdat').value = new Date().toISOString().split('T')[0];
+  // Build depot anbieter select
+  buildAnbieterSelect();
+  buildLegend();
+  calculate();
+});
+</script>
+</body>
+</html>

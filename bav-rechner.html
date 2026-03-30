@@ -962,6 +962,9 @@ function calculate() {
   document.getElementById('tbl').innerHTML = yrs.map(r =>
     `<tr><td>${r.age}</td><td>${fE(r.ein)}</td><td class="hl">${fE(r.bG)}</td><td>${fE(r.rk)}</td><td>${fE(r.pKest)}</td><td class="${r.vt >= 0 ? 'hl' : ''}">${r.vt >= 0 ? '+' : ''}${fE(r.vt)}</td></tr>`
   ).join('');
+
+  // Update iframe height after calculation
+  setTimeout(sendHeight, 100);
 }
 
 /* ══════════ UI TOGGLES ══════════ */
@@ -969,6 +972,7 @@ function toggleSection(ct) {
   ct.classList.toggle('open');
   const cb = ct.nextElementSibling;
   if (cb && cb.classList.contains('cb')) cb.classList.toggle('open');
+  setTimeout(sendHeight, 50);
 }
 function toggleDetails() {
   const btn = document.getElementById('dt-btn');
@@ -977,6 +981,7 @@ function toggleDetails() {
   body.classList.toggle('open');
   document.getElementById('dt-text').textContent =
     body.classList.contains('open') ? 'Bestandteile ausblenden' : 'Bestandteile anzeigen';
+  setTimeout(sendHeight, 50);
 }
 function toggleEwDetails() {
   const btn = document.getElementById('ew-dt-btn');
@@ -985,6 +990,19 @@ function toggleEwDetails() {
   body.classList.toggle('open');
   document.getElementById('ew-dt-text').textContent =
     body.classList.contains('open') ? 'Details ausblenden' : 'Eingezahlt & Endwerte anzeigen';
+  setTimeout(sendHeight, 50);
+}
+
+/* ══════════ IFRAME HEIGHT (postMessage) ══════════ */
+function sendHeight() {
+  if (window.parent === window) return;
+  const h = Math.max(document.body.scrollHeight, document.documentElement.scrollHeight);
+  window.parent.postMessage({ type: 'resize', height: h }, '*');
+}
+window.addEventListener('resize', sendHeight);
+if (typeof ResizeObserver !== 'undefined') {
+  const _hObs = new ResizeObserver(sendHeight);
+  _hObs.observe(document.body);
 }
 
 /* ══════════ INIT ══════════ */
@@ -1005,6 +1023,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   buildAnbieterSelect();
   buildLegend();
   calculate();
+  // Initial iframe height
+  setTimeout(sendHeight, 200);
 });
 </script>
 </body>

@@ -68,6 +68,30 @@
     "korridor_mindest_versicherungsjahre": 40,
     "default_inflation_pct": 2.1
   },
+  "ifb": {
+    "_hinweis": "Gewinnfreibetrag §10 EStG + ESt-Tarif §33 EStG für Selbständige — bei Gesetzesänderung hier anpassen",
+    "est_stufen_selbstaendig": [
+      { "bis": 13308,   "satz": 0.00 },
+      { "bis": 21617,   "satz": 0.20 },
+      { "bis": 35836,   "satz": 0.30 },
+      { "bis": 69166,   "satz": 0.40 },
+      { "bis": 103072,  "satz": 0.48 },
+      { "bis": 1000000, "satz": 0.50 },
+      { "bis": null,     "satz": 0.55 }
+    ],
+    "_hinweis_est": "ESt-Tarif 2025 für Selbständige (§33 EStG). bis=null bedeutet unbegrenzt (>1 Mio).",
+    "gfb_stufen": [
+      { "name": "Grundfreibetrag",       "von": 0,      "bis": 33000,  "satz": 0.15, "invest": false, "color": "var(--y)"  },
+      { "name": "Stufe 1",               "von": 33000,  "bis": 178000, "satz": 0.13, "invest": true,  "color": "var(--ac)" },
+      { "name": "Stufe 2",               "von": 178000, "bis": 353000, "satz": 0.07, "invest": true,  "color": "var(--b)"  },
+      { "name": "Stufe 3",               "von": 353000, "bis": 583000, "satz": 0.045,"invest": true,  "color": "var(--v)"  }
+    ],
+    "_hinweis_gfb": "GFB-Staffelung §10 EStG. Max GFB = 4.950 + 18.850 + 12.250 + 10.350 = 46.400 €.",
+    "svs_pensionsversicherung_pct": 18.50,
+    "svs_krankenversicherung_pct": 6.80,
+    "svs_hbgl_jahr_eur": 97020,
+    "svs_mbgl_jahr_eur": 6613
+  },
   "bav": {
     "_hinweis": "Betriebliche Altersvorsorge §3(1)15a EStG — ÖBV ZukunftSicherung Tarif ZUSH-M",
     "rechtsgrundlage": "§3 Abs. 1 Z 15 lit. a EStG",

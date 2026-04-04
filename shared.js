@@ -1,65 +1,104 @@
-/* ══════════════════════════════════════════════
-   SHARED.JS — Gemeinsame Funktionen für alle Rechner
-   Jason Schreiber · jasonschreiber.at
-══════════════════════════════════════════════════ */
+/* ══════════════════════════════════════════════════════
+   SHARED.JS — Gemeinsame Utilities fuer alle Rechner
+   FLV-Depot · Jason Schreiber
+   ══════════════════════════════════════════════════════ */
 
-/* ══════════ ZUGRIFFSSCHUTZ ══════════ */
-function checkAccess(accessKey) {
-  const isLocal = ['localhost','127.0.0.1',''].includes(location.hostname);
-  const validRef = document.referrer.includes('jasonschreiber.at');
-  const urlKey = new URLSearchParams(location.search).get('access');
-  if (!isLocal && !validRef && urlKey !== accessKey) {
-    document.body.style.cssText = 'margin:0;background:#0F0F0F;display:flex;align-items:center;justify-content:center;height:100vh;font-family:Inter,sans-serif;';
-    document.body.innerHTML = '<div style="color:#555;font-size:14px;text-align:center"><div style="font-size:32px;margin-bottom:12px">&#128274;</div>Zugriff nicht gestattet.</div>';
-    throw new Error('Access denied');
+/* ══════════ CONFIG LOADER ══════════ */
+let CONFIG = null;
+
+async function loadConfig() {
+  try {
+    const r = await fetch('config.json?v=' + Date.now());
+    CONFIG = await r.json();
+  } catch (e) {
+    console.warn('config.json nicht geladen, Fallback-Werte aktiv.', e);
   }
+  return CONFIG;
+}
+
+/* ══════════ FORMATTERS ══════════ */
+
+/** "€ 1.234" (0 Nachkommastellen, de-AT Waehrungsformat) */
+function eur(v) {
+  return v.toLocaleString('de-AT', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 });
+}
+
+/** "1.234,56 €" (2 Nachkommastellen) */
+function eurFull(v) {
+  return v.toLocaleString('de-AT', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' \u20AC';
+}
+
+/** "12,5 %" (Dezimalzahl 0.125 → "12,5 %") */
+function pct(v) {
+  return (v * 100).toFixed(1).replace('.', ',') + ' %';
+}
+
+/** Kurzformat fuer Chart-Achsen: 1.2M / 45K / 123 */
+function eurShort(v) {
+  if (v >= 1e6) return (v / 1e6).toFixed(1) + ' M';
+  if (v >= 1e3) return (v / 1e3).toFixed(0) + ' K';
+  return v.toFixed(0);
 }
 
 /* ══════════ IFRAME HEIGHT (postMessage) ══════════ */
 function sendHeight() {
   if (window.parent === window) return;
-  const h = Math.max(document.body.scrollHeight, document.documentElement.scrollHeight);
+  // Fuer Multi-View-Seiten (index.html) die aktive View messen
+  const view = document.querySelector('.view.active');
+  const h = view
+    ? view.scrollHeight
+    : Math.max(document.body.scrollHeight, document.documentElement.scrollHeight);
   window.parent.postMessage({ type: 'resize', height: h }, '*');
 }
-window.addEventListener('resize', () => sendHeight());
+window.addEventListener('resize', sendHeight);
 if (typeof ResizeObserver !== 'undefined') {
-  new ResizeObserver(() => sendHeight()).observe(document.body);
+  new ResizeObserver(sendHeight).observe(document.body);
 }
 
-/* ══════════ NUMBER FORMATTING ══════════ */
-const fmt = n => n.toLocaleString('de-AT', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-const fE = n => fmt(n) + ' \u20AC';
-const fP = n => (n * 100).toFixed(1).replace('.', ',') + ' %';
-const eurN = v => { if (v >= 1e6) return (v / 1e6).toFixed(1) + ' M'; if (v >= 1e3) return (v / 1e3).toFixed(0) + ' K'; return v.toFixed(0); };
-const vv = id => parseFloat(document.getElementById(id).value) || 0;
-
-/* ══════════ CONFIG LOADER ══════════ */
-var CFG = null;
-async function loadConfig() {
-  try {
-    const r = await fetch('config.json?v=' + Date.now());
-    CFG = await r.json();
-  } catch (e) { console.warn('config.json nicht geladen, Fallback-Werte aktiv.', e); }
-  return CFG;
-}
-
-/* ══════════ COLLAPSIBLE SECTIONS ══════════ */
-function toggleColl(t) {
-  t.classList.toggle('open');
-  document.getElementById(t.id.replace('ct-', 'cb-')).classList.toggle('open');
-}
-
-/* ══════════ PANEL HEIGHT LIMITER ══════════ */
+/* ══════════ PANEL HEIGHT SYNC ══════════ */
 function updatePanelMaxHeight() {
-  const panel = document.querySelector('.params-panel');
-  const rp = document.querySelector('.rp');
-  if (!panel || !rp) return;
-  if (window.innerWidth < 720) { panel.style.maxHeight = ''; return; }
-  const rpH = rp.offsetHeight;
-  if (rpH > 0) panel.style.maxHeight = rpH + 'px';
+  if (window.innerWidth < 720) {
+    document.querySelectorAll('.params-panel').forEach(p => { p.style.maxHeight = ''; });
+    return;
+  }
+  document.querySelectorAll('.calc-layout').forEach(layout => {
+    const panel = layout.querySelector('.params-panel');
+    const rp = layout.querySelector('.rp');
+    if (!panel || !rp) return;
+    const h = rp.offsetHeight;
+    if (h > 0) panel.style.maxHeight = h + 'px';
+  });
 }
-window.addEventListener('resize', () => updatePanelMaxHeight());
+window.addEventListener('resize', updatePanelMaxHeight);
 if (typeof ResizeObserver !== 'undefined') {
-  const _rp = document.querySelector('.rp');
-  if (_rp) new ResizeObserver(() => updatePanelMaxHeight()).observe(_rp);
+  const _rpObs = new ResizeObserver(updatePanelMaxHeight);
+  document.querySelectorAll('.rp').forEach(el => _rpObs.observe(el));
 }
+
+/* ══════════ INPUT SANITIZATION ══════════ */
+document.addEventListener('blur', e => {
+  if (e.target.matches('input[type="number"]')) {
+    let v = parseFloat(e.target.value);
+    const min = e.target.min !== '' ? parseFloat(e.target.min) : null;
+    const max = e.target.max !== '' ? parseFloat(e.target.max) : null;
+    if (isNaN(v)) { v = min != null ? min : 0; }
+    if (min != null && v < min) v = min;
+    if (max != null && v > max) v = max;
+    // Step-aware rounding: step=0.1 → 1 decimal, step=1 → integer
+    const step = parseFloat(e.target.step) || 1;
+    const decimals = step < 1 ? Math.max(0, Math.ceil(-Math.log10(step))) : 0;
+    v = parseFloat(v.toFixed(decimals));
+    e.target.value = v;
+  }
+}, true);
+
+/* ══════════ AXION CRM BRIDGE ══════════ */
+(function () {
+  if (!window.__axionToolbar) return;
+
+  window.__axionSendResult = function (data) {
+    // data = { type: "3saeulen"|"pensionsluecke"|"bav"|"ifb", inputs: {...}, results: {...} }
+    window.__AXION_RESULT = data;
+    window.dispatchEvent(new CustomEvent('axion-calculator-result', { detail: data }));
+  };
+})();

@@ -7,25 +7,14 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Inter+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="shared.css">
 <style>
-/* ══════════ Pensionslücke Light-Mode Overrides ══════════ */
-@media(prefers-color-scheme:light){
-  :root{
-    --st:#FFFCF8;
-    --bp:#028856; --bh:#016B44; --bpr:#028856;
-    --brd:#D8D3C9; --ts:#767676;
-    --ac:#028856; --adim:rgba(2,136,86,0.08); --adim2:rgba(2,136,86,0.15);
-    --sh:rgba(0,0,0,0.08); --sh-ac:rgba(2,136,86,.20);
-  }
-}
+/* ══════════ PENSIONSLUECKE-SPECIFIC OVERRIDES ══════════ */
 
-/* ══════════ LAYOUT OVERRIDES ══════════ */
-html{-webkit-text-size-adjust:100%;}
-.calc-layout{padding:20px 16px 80px;}
-.params-panel{border-radius:20px;position:sticky;top:20px;max-height:calc(100vh - 40px);}
+.params-panel{border-radius:20px; position:sticky; top:20px; max-height:calc(100vh - 40px);}
 .card{border-radius:20px;}
 .met{border-radius:20px;}
+.calc-layout{padding:20px 16px 80px;}
 
-/* ══════════ ACCORDION ══════════ */
+/* ── Accordion sections ── */
 .acc-hdr{
   display:flex;align-items:center;justify-content:space-between;
   cursor:pointer;user-select:none;padding:10px 0;
@@ -45,7 +34,7 @@ html{-webkit-text-size-adjust:100%;}
 }
 .acc-body.open{max-height:700px;opacity:1;}
 
-/* ══════════ AGE SLIDER ══════════ */
+/* ── Age slider ── */
 .age-display{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
 .age-val{font-size:30px;font-weight:700;letter-spacing:-.03em;color:var(--tp);}
 .age-badge{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:5px 11px;border-radius:100px;}
@@ -76,33 +65,17 @@ input[type="range"]::-moz-range-thumb{
 .age-note.abschlag{background:var(--rdim);color:var(--red);}
 .age-note.zuschlag{background:var(--gdim);color:var(--grn);}
 
-/* ══════════ TOGGLE PILL ══════════ */
-.tog-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
-.tog-label{font-size:11.5px;font-weight:500;color:var(--ts);}
-.pill{
-  position:relative;width:36px;height:20px;border-radius:100px;
-  background:var(--st);border:1px solid var(--brd);
-  transition:background .2s,border-color .2s;flex-shrink:0;cursor:pointer;
-}
-.pill::after{
-  content:'';position:absolute;top:2px;left:2px;
-  width:14px;height:14px;border-radius:50%;background:var(--tm);
-  transition:transform .2s,background .2s;
-}
-.pill.on{background:var(--adim2);border-color:var(--ac);}
-.pill.on::after{transform:translateX(16px);background:var(--ac);}
-
-/* Radio options */
+/* ── Radio options ── */
 .radio-opt{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--ts);cursor:pointer;padding:5px 10px;border-radius:8px;border:1px solid var(--brd);}
 .radio-opt:has(input:checked){border-color:var(--ac);color:var(--tp);}
 
-/* ══════════ PS divider override ══════════ */
-.ps:not(.ps-sticky)::after{
-  content:''; position:absolute; bottom:0;
-  left:18px; right:18px; height:1px; background:var(--brd);
-}
+/* ── Scrollbar override ── */
+.params-panel::-webkit-scrollbar{width:3px;}
+.params-panel::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:3px;}
 
-/* ══════════ ANIMATIONS ══════════ */
+/* ══════════ DONUT / WIRKUNG ══════════ */
+
+/* ── Animations ── */
 @keyframes donut-float{
   0%,100%{transform:translateY(0px) rotate(0deg);}
   40%    {transform:translateY(-4px) rotate(.2deg);}
@@ -124,13 +97,15 @@ input[type="range"]::-moz-range-thumb{
   50%    {opacity:.92;}
 }
 
-/* ══════════ HERO CARD ══════════ */
+/* ── Hero Card background ── */
 .wirkung-card{
   background:
     radial-gradient(ellipse 60% 80% at 15% 50%, rgba(248,113,113,.06) 0%, transparent 70%),
     radial-gradient(ellipse 60% 80% at 85% 50%, rgba(56,217,163,.06) 0%, transparent 70%),
     var(--ss);
 }
+
+/* ── Hero body layout ── */
 .wirkung-body{
   display:grid;
   grid-template-columns:1fr auto 1fr;
@@ -138,6 +113,8 @@ input[type="range"]::-moz-range-thumb{
   gap:16px;
   padding:28px 20px 24px;
 }
+
+/* ── Side glass cards ── */
 .wside{
   padding:26px 20px;border-radius:18px;text-align:center;
   position:relative;overflow:hidden;
@@ -162,6 +139,14 @@ input[type="range"]::-moz-range-thumb{
   box-shadow:inset 0 1px 0 rgba(56,217,163,.12),0 0 28px rgba(56,217,163,.07);
   animation:side-pulse 7s ease-in-out infinite;
 }
+.wside-label{font-size:9.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ts);margin-bottom:12px;}
+.wside-val{font-size:clamp(24px,3.2vw,36px);font-weight:700;letter-spacing:-.04em;line-height:1;margin-bottom:9px;position:relative;}
+.wside-val.ac{color:var(--ac);}
+.wside-val.red{color:var(--red);}
+.wside-sub{font-size:11px;color:var(--tm);line-height:1.4;position:relative;}
+.wside-detail{font-size:10px;color:var(--ts);margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,.07);line-height:1.5;position:relative;}
+
+/* ── Light Mode: wside-Karten ── */
 @media(prefers-color-scheme:light){
   .wside::before{background:linear-gradient(180deg,rgba(255,255,255,.55) 0%,transparent 100%);}
   .wside-luecke{
@@ -181,14 +166,8 @@ input[type="range"]::-moz-range-thumb{
       var(--ss);
   }
 }
-.wside-label{font-size:9.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ts);margin-bottom:12px;}
-.wside-val{font-size:clamp(24px,3.2vw,36px);font-weight:700;letter-spacing:-.04em;line-height:1;margin-bottom:9px;position:relative;}
-.wside-val.ac{color:var(--ac);}
-.wside-val.red{color:var(--red);}
-.wside-sub{font-size:11px;color:var(--tm);line-height:1.4;position:relative;}
-.wside-detail{font-size:10px;color:var(--ts);margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,.07);line-height:1.5;position:relative;}
 
-/* ══════════ DONUT ══════════ */
+/* ── Donut center column ── */
 .wirkung-donut-col{
   display:flex;flex-direction:column;align-items:center;gap:10px;
   animation:donut-float 8s ease-in-out infinite;
@@ -208,7 +187,9 @@ input[type="range"]::-moz-range-thumb{
   pointer-events:none;
 }
 @media(prefers-color-scheme:light){
-  .wirkung-donut::before{box-shadow:inset 0 2px 0 rgba(255,255,255,.6);}
+  .wirkung-donut::before{
+    box-shadow:inset 0 2px 0 rgba(255,255,255,.6);
+  }
 }
 .wirkung-inner{
   width:196px;height:196px;border-radius:50%;
@@ -229,6 +210,7 @@ input[type="range"]::-moz-range-thumb{
   background:linear-gradient(180deg,rgba(255,255,255,.10) 0%,rgba(255,255,255,.02) 55%,transparent 100%);
   pointer-events:none;
 }
+/* ── Light Mode: weißes Glas ── */
 @media(prefers-color-scheme:light){
   .wirkung-inner{
     background:rgba(255,254,250,.72);
@@ -245,7 +227,11 @@ input[type="range"]::-moz-range-thumb{
 }
 .wirkung-pct{font-size:52px;font-weight:700;letter-spacing:-.04em;line-height:1;transition:color .3s;position:relative;}
 .wirkung-lbl{font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--ts);position:relative;}
-.wirkung-subtitle{font-size:9.5px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:var(--tm);}
+.wirkung-subtitle{
+  font-size:9.5px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:var(--tm);
+}
+
+/* ── Wunscheinkommen bottom row ── */
 .wirkung-bottom{
   display:flex;align-items:center;justify-content:space-between;
   padding:14px 20px;
@@ -257,12 +243,13 @@ input[type="range"]::-moz-range-thumb{
 .wirkung-bottom-val{font-size:18px;font-weight:700;letter-spacing:-.02em;color:var(--tp);}
 .wirkung-bottom-sub{font-size:10px;color:var(--tm);}
 
+/* ── wnum-val ── */
 .wnum-val{font-size:clamp(17px,2.6vw,24px);font-weight:700;letter-spacing:-.03em;line-height:1;}
 .wnum-val.ac{color:var(--ac);}
 .wnum-val.red{color:var(--red);}
 .wnum-val.vio{color:var(--vio);}
 
-/* ══════════ INFO STRIP ══════════ */
+/* ══════════ INFO STRIP OVERRIDE ══════════ */
 .info-strip{
   display:grid;grid-template-columns:repeat(3,1fr);
   gap:1px;background:var(--brd);border-top:1px solid var(--brd);
@@ -298,11 +285,18 @@ input[type="range"]::-moz-range-thumb{
 
 /* ══════════ KAUFKRAFT ══════════ */
 .kk-row{padding:14px 20px 16px;border-top:1px solid var(--brd);}
-.kk-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
-.kk-track{height:20px;border-radius:100px;background:var(--st);overflow:hidden;margin-bottom:6px;}
+.kk-header{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:10px;
+}
+.kk-track{
+  height:20px;border-radius:100px;background:var(--st);overflow:hidden;margin-bottom:6px;
+}
 .kk-seg{background:var(--vio);border-radius:100px;transition:width .5s ease;height:100%;}
 .kk-labels{display:flex;justify-content:space-between;align-items:baseline;margin-top:4px;}
 .kk-cards{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+
+/* ── Overrides for met/mv in vio context ── */
 .met.vio-dim{background:var(--vdim);}
 .mv.vio{color:var(--vio);}
 
@@ -367,19 +361,9 @@ input[type="range"]::-moz-range-thumb{
 .tex-total .tex-label{font-size:13px;font-weight:700;color:var(--tp);}
 .tex-total .tex-val{font-size:16px;font-weight:800;color:var(--ac);}
 
-/* ══════════ SCROLLBAR ══════════ */
-.params-panel::-webkit-scrollbar{width:3px;}
-.params-panel::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:3px;}
-
-/* ══════════ RESPONSIVE ══════════ */
-@media(min-width:720px) and (max-width:1023px){
-  .calc-layout{grid-template-columns:300px 1fr;gap:16px;}
-}
+/* ══════════ RESPONSIVE OVERRIDES (pensionsluecke-specific) ══════════ */
 @media(max-width:719px){
-  .calc-layout{grid-template-columns:1fr;gap:14px;padding:14px 12px 60px;}
-  .params-panel{position:static;max-height:none;overflow-y:visible;}
-}
-@media(max-width:719px){
+  .calc-layout{padding:14px 12px 60px;}
   .wirkung-body{
     grid-template-columns:1fr;
     grid-template-rows:auto auto auto;
@@ -436,6 +420,7 @@ input[type="range"]::-moz-range-thumb{
           <option value="gsvg">Selbständig / Gewerbetreibend (GSVG)</option>
         </select>
       </div>
+      <!-- GSVG basis — only visible for Selbständige -->
       <div id="gsvg_basis_wrap" class="hidden" style="margin-top:10px">
         <div class="f" style="margin-bottom:0">
           <label>SVS-Beitragsgrundlage (monatlich brutto)</label>
@@ -615,11 +600,15 @@ input[type="range"]::-moz-range-thumb{
     <!-- ═══ HERO: Wirkungsgrad ═══ -->
     <div class="card wirkung-card">
       <div class="wirkung-body">
+
+        <!-- Links: Monatliche Lücke -->
         <div class="wside wside-luecke">
           <div class="wside-label">Monatliche Lücke</div>
           <div class="wside-val red" id="wn_luecke">—</div>
           <div class="wside-sub" id="wn_luecke_sub">Fehlt monatlich</div>
         </div>
+
+        <!-- Mitte: Donut -->
         <div class="wirkung-donut-col">
           <div class="wirkung-donut" id="wirkung_donut">
             <div class="wirkung-inner">
@@ -629,12 +618,18 @@ input[type="range"]::-moz-range-thumb{
           </div>
           <div class="wirkung-subtitle">Pensionswirkungsgrad</div>
         </div>
+
+        <!-- Rechts: Staatliche Pension -->
         <div class="wside wside-pension">
           <div class="wside-label">Staatliche Pension</div>
           <div class="wside-val ac" id="wn_pension">—</div>
           <div class="wside-sub" id="wn_pension_sub">Schätzwert netto/Mo.</div>
         </div>
+
+
       </div>
+
+      <!-- Wunscheinkommen -->
       <div class="wirkung-bottom">
         <span class="wirkung-bottom-lbl">Wunscheinkommen bei Pensionsantritt</span>
         <div class="wirkung-bottom-right">
@@ -642,6 +637,8 @@ input[type="range"]::-moz-range-thumb{
           <span class="wirkung-bottom-sub" id="wn_wunsch_sub">100 % des Einkommens</span>
         </div>
       </div>
+
+      <!-- Info strip -->
       <div class="info-strip">
         <div class="is-item">
           <div class="is-label">Pensionsantritt</div>
@@ -704,7 +701,7 @@ input[type="range"]::-moz-range-thumb{
       </div>
     </div>
 
-    <!-- Kaufkraft-Zeile -->
+    <!-- Kaufkraft-Zeile (nur wenn Inflation an) -->
     <div id="kk_row" class="card kk-row hidden">
       <div class="kk-header">
         <span style="font-size:11px;font-weight:600;color:var(--vio)">Kaufkraft der Pension (real, heute)</span>
@@ -719,7 +716,7 @@ input[type="range"]::-moz-range-thumb{
       </div>
     </div>
 
-    <!-- ═══ KAUFKRAFT CARDS ═══ -->
+    <!-- ═══ KAUFKRAFT CARDS (wenn Inflation an) ═══ -->
     <div id="r_infl_cards" class="kk-cards hidden">
       <div class="met vio-dim">
         <div class="ml">Reale Pension (Kaufkraft heute)</div>
@@ -738,36 +735,67 @@ input[type="range"]::-moz-range-thumb{
 
 <script src="shared.js"></script>
 <script>
-checkAccess('flv2025');
+/* ══════════════════════════════════
+   ZUGRIFFSSCHUTZ
+══════════════════════════════════ */
+(function(){
+  const isLocal  = ['localhost','127.0.0.1',''].includes(location.hostname);
+  const validRef = document.referrer.includes('jasonschreiber.at');
+  const ACCESS_KEY = 'flv2025';
+  const urlKey   = new URLSearchParams(location.search).get('access');
+  if(!isLocal && !validRef && urlKey !== ACCESS_KEY){
+    document.body.style.cssText = 'margin:0;background:#0F0F0F;display:flex;align-items:center;justify-content:center;height:100vh;font-family:Inter,sans-serif;';
+    document.body.innerHTML = '<div style="color:#555;font-size:14px;text-align:center"><div style="font-size:32px;margin-bottom:12px">🔒</div>Zugriff nicht gestattet.</div>';
+    throw new Error('Access denied');
+  }
+})();
 
-/* ══════════ STATE ══════════ */
+// ─── State ────────────────────────────────────
 let inflAn        = false;
 let pkStandManual = false;
+
 const TODAY = new Date('2026-03-16');
 
-/* Override shared fmt — pension uses integer formatting */
-function fmt(n) {
-  return Math.round(n).toLocaleString('de-AT');
+// ─── Österreichisches Steuer- & SV-Modell 2024 ───────────────────────────────
+//
+// Quellen: §33 EStG 2024, ASVG §108a, GSVG §25, Sozialministerium.at
+//
+let SV_AN_RATE   = 0.1832;   // AN-SV: PV 10,25 % + KV 3,87 % + UV 1,2 % + AV 3,0 %
+let HBGG_ASVG    = 6270;     // ASVG Höchstbeitragsgrundlage 2024 (€/Monat)
+let HBGG_GSVG    = 6930;     // GSVG Höchstbeitragsgrundlage 2024 (€/Monat)
+let MINDEST_GSVG = 518.44;   // GSVG Mindestbeitragsgrundlage 2024 (€/Monat)
+let KEZ_BASIS    = 2055.47;  // Kindererziehungszeiten-Beitragsgrundlage 2024 (€/Monat)
+let AUFWERTUNG   = 1.022;    // Durchschn. jährlicher PK-Aufwertungsfaktor (~2,2 %)
+
+// ─── Config integration ──────────────────────
+function applyPensionConfig() {
+  if (!CONFIG) return;
+  const p = CONFIG.pension || CONFIG;
+  if (p.SV_AN_RATE   !== undefined) SV_AN_RATE   = p.SV_AN_RATE;
+  if (p.HBGG_ASVG    !== undefined) HBGG_ASVG    = p.HBGG_ASVG;
+  if (p.HBGG_GSVG    !== undefined) HBGG_GSVG    = p.HBGG_GSVG;
+  if (p.MINDEST_GSVG !== undefined) MINDEST_GSVG = p.MINDEST_GSVG;
+  if (p.KEZ_BASIS    !== undefined) KEZ_BASIS    = p.KEZ_BASIS;
+  if (p.AUFWERTUNG   !== undefined) AUFWERTUNG   = p.AUFWERTUNG;
 }
 
-/* ══════════ BOOT ══════════ */
-window.addEventListener('DOMContentLoaded', () => {
+// ─── Boot ─────────────────────────────────────
+window.addEventListener('DOMContentLoaded', async () => {
+  await loadConfig();
+  applyPensionConfig();
   updateAge();
   updateAgeSlider();
   berechne();
-  const rp = document.querySelector('.rp');
-  if (rp && window.ResizeObserver) {
-    new ResizeObserver(() => { updatePanelMaxHeight(); sendHeight(); }).observe(rp);
-  }
   setTimeout(updatePanelMaxHeight, 100);
   setTimeout(sendHeight, 150);
 });
 
-/* ══════════ INPUT HANDLERS ══════════ */
+// ─── Input handlers ───────────────────────────
 function onInput() { updateAgeSlider(); updateAge(); berechne(); }
 function onAgeSlider() { updateAgeSlider(); updateAge(); berechne(); }
 function onBeschaeft() { updateBeschaeftUI(); berechne(); }
 
+// ─── Accordion toggle ─────────────────────────
 function toggleAcc(bodyId, arrowId) {
   const body = document.getElementById(bodyId);
   const isOpen = body.classList.toggle('open');
@@ -775,19 +803,22 @@ function toggleAcc(bodyId, arrowId) {
   if (arrow) arrow.classList.toggle('open', isOpen);
 }
 
+// ─── Beschäftigungsart UI ─────────────────────
 function getBeschaeft() {
-  return document.getElementById('p_beschaeft').value;
+  return document.getElementById('p_beschaeft').value; // 'asvg' | 'gsvg'
 }
 function updateBeschaeftUI() {
   const isGSVG = getBeschaeft() === 'gsvg';
   document.getElementById('gsvg_basis_wrap').classList.toggle('hidden', !isGSVG);
 }
+
+// ─── Gehälter helper ──────────────────────────
 function getAnzahlGehaelter() {
   const el = document.querySelector('input[name="gehaelter"]:checked');
   return el ? parseInt(el.value) : 14;
 }
 
-/* ══════════ AGE ══════════ */
+// ─── Age & BJ ─────────────────────────────────
 function getAge() {
   const v = document.getElementById('p_geburt').value;
   if (!v) return 26;
@@ -803,11 +834,14 @@ function updateAge() {
   const ytp = Math.max(0, antritt - age);
   document.getElementById('p_age_disp').textContent = age + ' J.';
   document.getElementById('p_years_disp').textContent = ytp + ' J.';
+  // Update total BJ display (inkl. KEZ)
   const existingMonate = parseFloat(document.getElementById('p_vm').value) || 0;
   const { kezMonate, kezPK } = getKEZGutschrift();
   const totalBJ = ((existingMonate + kezMonate) / 12 + ytp).toFixed(1);
   document.getElementById('bj_total_disp').textContent = totalBJ + ' J.';
+  // KEZ PK display
   document.getElementById('kez_pk_disp').textContent = fmt(kezPK) + ' €';
+  // Update vm_hint
   const vmHint = document.getElementById('vm_hint');
   if (existingMonate <= 0) {
     vmHint.textContent = '0 Monate → noch keine Versicherungszeiten';
@@ -830,14 +864,16 @@ function getBJ() {
   return (existingMonate + kezMonate) / 12 + ytp;
 }
 
-/* ══════════ AGE SLIDER ══════════ */
+// ─── Age slider badge ─────────────────────────
 function updateAgeSlider() {
   const a  = parseInt(document.getElementById('p_antritt').value);
-  const ra = getRegelPensionsalter();
+  const ra = getRegelPensionsalter();  // individuelle RA (ggf. < 65 für Frauen)
   document.getElementById('age_disp').textContent = a;
   const badge = document.getElementById('age_badge');
   const note  = document.getElementById('age_note');
   const atRA  = Math.abs(a - ra) < 0.5;
+
+  // Hint unter Geschlecht
   const hintEl = document.getElementById('gender_ra_hint');
   if (hintEl) {
     const g = document.getElementById('p_geschlecht').value;
@@ -845,9 +881,11 @@ function updateAgeSlider() {
       hintEl.innerHTML = '⚠ Übergangsregelung: Regelpensionsalter <b>' + fmtRA(ra) + '</b>';
       hintEl.style.color = 'var(--ora)';
     } else {
+      // Männer oder gleichgestellte Frauen (RA=65): kein Hint nötig
       hintEl.textContent = '';
     }
   }
+
   if (atRA) {
     badge.textContent = ra === 65 ? 'Regelpension' : 'Regelpension (' + fmtRA(ra) + ')';
     badge.className = 'age-badge badge-regel';
@@ -875,7 +913,8 @@ function updateAgeSlider() {
   }
 }
 
-/* ══════════ KARRIERE ══════════ */
+// ─── Karriere helper ──────────────────────────
+// Always applies growth to BRUTTO regardless of input mode
 function getKarriereEink(ytp) {
   const r = (parseFloat(document.getElementById('p_karriere').value) || 0) / 100;
   const grossCurrent = getEffectiveGross();
@@ -889,14 +928,7 @@ function getKarriereEink(ytp) {
   return { finalEink: netFinal, grossAvg, grossCurrent, grossFinal };
 }
 
-/* ══════════ STEUER / SV (Pensionslücke-spezifisch) ══════════ */
-const SV_AN_RATE   = 0.1832;
-const HBGG_ASVG    = 6270;
-const HBGG_GSVG    = 6930;
-const MINDEST_GSVG = 518.44;
-const KEZ_BASIS    = 2055.47;
-const AUFWERTUNG   = 1.022;
-
+// ─── Progressiver Lohnsteuertarif §33 EStG (Jahresbetrag) ──────────────
 function calcLohnsteuer(taxableAnnual) {
   if (taxableAnnual <=  11693) return 0;
   if (taxableAnnual <=  19134) return (taxableAnnual -  11693) * 0.20;
@@ -906,29 +938,40 @@ function calcLohnsteuer(taxableAnnual) {
   return 32291.40 + (taxableAnnual - 93120) * 0.50;
 }
 
+// Netto aus Brutto (monatlich, AN, Einzelveranlagung, Standardabzüge)
+// Berücksichtigt: SV-Deckelung bei HBGG, Jahressechstel-Begünstigung (13./14.)
 function netFromGross(grossMonthly) {
   const hbgg     = getBeschaeft() === 'gsvg' ? HBGG_GSVG : HBGG_ASVG;
   const anzahlG  = getAnzahlGehaelter();
   const svBase   = Math.min(grossMonthly, hbgg);
+
+  // ── SV auf alle Gehälter (12 oder 14) ──
   const svMonthly = svBase * SV_AN_RATE;
   const svAnn     = svMonthly * anzahlG;
+
+  // ── Lohnsteuer auf 12 reguläre Monatsgehälter ──
   const taxable12 = (grossMonthly - svMonthly) * 12;
   const rawTax12  = calcLohnsteuer(taxable12);
+  // Allgemeiner Absetzbetrag €1.121 + Arbeitnehmerabsetzbetrag €421 = €1.542
   const lst12     = Math.max(0, rawTax12 - 1542);
+
+  // ── Jahressechstel (13./14. Gehalt): begünstigte Besteuerung ──
   let lstSonderzahlung = 0;
   if (anzahlG === 14) {
-    const sonderzahlungBrutto = (grossMonthly - svMonthly) * 2;
+    const sonderzahlungBrutto = (grossMonthly - svMonthly) * 2;  // 2 Sonderzahlungen
     const freibetrag = 620;
     const steuerpflichtig = Math.max(0, sonderzahlungBrutto - freibetrag);
-    lstSonderzahlung = steuerpflichtig * 0.06;
+    lstSonderzahlung = steuerpflichtig * 0.06;  // Pauschal 6 %
   }
+
   const netAnn = grossMonthly * anzahlG - svAnn - lst12 - lstSonderzahlung;
   return netAnn / anzahlG;
 }
 
+// Brutto aus Netto – Iterative Inversion (konvergiert i.d.R. nach 15–20 Schritten)
 function grossFromNet(netMonthly) {
   if (netMonthly <= 0) return 0;
-  let g = netMonthly / 0.70;
+  let g = netMonthly / 0.70; // Startschätzung
   for (let i = 0; i < 60; i++) {
     const err = netFromGross(g) - netMonthly;
     if (Math.abs(err) < 0.05) break;
@@ -938,30 +981,38 @@ function grossFromNet(netMonthly) {
   return g;
 }
 
+// Netto-Pension aus Brutto-Pension (monatlich, Pensionist ASVG/GSVG)
+//   Pensionist zahlt KV-Beitrag 5,1 % an PVA
+//   Lohnsteuer mit Allg. Absetzbetrag + Pensionistenabsetzbetrag (max €954,
+//   Einschleifregelung €25.000–€29.500 Jahrespension)
 function pensionNetFromGross(grossMonthly) {
-  const grossAnn = grossMonthly * 14;
+  const grossAnn = grossMonthly * 14;   // 14 Bezüge/Jahr
   const kv       = grossAnn * 0.051;
   const taxable  = grossAnn - kv;
   const rawTax   = calcLohnsteuer(taxable);
+  // Pensionistenabsetzbetrag (Einschleifregelung)
   let pab;
   if      (grossAnn <= 25000)  pab = 954;
   else if (grossAnn <= 29500)  pab = 954 * (29500 - grossAnn) / 4500;
   else                          pab = 0;
-  const lst = Math.max(0, rawTax - 1121 - pab);
+  const lst = Math.max(0, rawTax - 1121 - pab); // nur Allg. AB + Pensionisten-AB
   return (grossAnn - kv - lst) / 14;
 }
 
-/* ══════════ KEZ ══════════ */
+// ─── KEZ (Kindererziehungszeiten) ─────────────────────────────────────────────
 function getKEZGutschrift() {
   const kinder = parseInt(document.getElementById('p_kinder').value) || 0;
   const moProKind = Math.min(parseInt(document.getElementById('p_karenz_monate').value) || 0, 48);
   if (kinder <= 0 || moProKind <= 0) return { kezMonate: 0, kezPK: 0 };
   const kezMonate = kinder * moProKind;
+  // Gutschrift: KEZ_BASIS × 12 × 1,78% pro Jahr → pro Monat: KEZ_BASIS × 12 × 0.0178 / 12
   const kezPK = (kezMonate / 12) * KEZ_BASIS * 12 * 0.0178;
   return { kezMonate, kezPK };
 }
 
-/* ══════════ PENSIONSKONTO ══════════ */
+// ─── Pensionskonto helpers ─────────────────────────────────────────────────────
+
+// Existing Pensionskonto balance (inkl. KEZ + Aufwertung)
 function getPKVorhandene(grossCurrent, anzahlG) {
   if (pkStandManual) {
     return parseFloat(document.getElementById('p_pk_stand').value) || 0;
@@ -971,11 +1022,14 @@ function getPKVorhandene(grossCurrent, anzahlG) {
   if (monate <= 0 && kezPK <= 0) return 0;
   const hbgg = getBeschaeft() === 'gsvg' ? HBGG_GSVG : HBGG_ASVG;
   const yearsWorked = monate / 12;
+  // Rohbeitrag aus Erwerbstätigkeit
   const rawPK = yearsWorked * Math.min(grossCurrent, hbgg) * anzahlG * 0.0178;
+  // Aufwertung: durchschnittlich halbe Dauer (mittlerer Beitrag wird halb so lange aufgewertet)
   const aufwertungFaktor = Math.pow(AUFWERTUNG, yearsWorked / 2);
   return (rawPK + kezPK) * aufwertungFaktor;
 }
 
+// Year-by-year future PK data (mit Aufwertung)
 function calcPKData(grossCurrent, anzahlG, ytp, karriereR) {
   const hbgg = getBeschaeft() === 'gsvg' ? HBGG_GSVG : HBGG_ASVG;
   const pkPast = getPKVorhandene(grossCurrent, anzahlG);
@@ -985,11 +1039,13 @@ function calcPKData(grossCurrent, anzahlG, ytp, karriereR) {
     const grossY = grossCurrent * Math.pow(1 + karriereR, i);
     const capped = Math.min(grossY, hbgg);
     const rawTK = capped * anzahlG * 0.0178;
+    // Aufwertung: Beitrag aus Jahr i wird (ytp - i - 1) Jahre aufgewertet
     const yearsToRetire = ytp - i - 1;
     const tk = rawTK * Math.pow(AUFWERTUNG, Math.max(0, yearsToRetire));
     contribPerYear.push(tk);
     pkFuture += tk;
   }
+  // Auch den bestehenden PK-Stand bis Pension aufwerten
   const pkPastAufgewertet = pkPast * Math.pow(AUFWERTUNG, ytp);
   const pkTotal = pkPastAufgewertet + pkFuture;
   const contribNow   = contribPerYear[0] || 0;
@@ -997,10 +1053,13 @@ function calcPKData(grossCurrent, anzahlG, ytp, karriereR) {
   return { pkPast: pkPastAufgewertet, pkFuture, pkTotal, contribNow, contribLast };
 }
 
+// ─── Pension calculation ──────────────────────────────────────────────────────
 function calcPension(antritt, grossCurrent, anzahlG, ytp) {
   const beschaeft = getBeschaeft();
   const karriereR = (parseFloat(document.getElementById('p_karriere').value) || 0) / 100;
+
   let pensionGross;
+
   if (beschaeft === 'gsvg') {
     const svsBasis = parseFloat(document.getElementById('p_svs_basis').value) || MINDEST_GSVG;
     const pkData = calcPKData(Math.min(svsBasis, HBGG_GSVG), anzahlG, ytp, karriereR);
@@ -1009,29 +1068,46 @@ function calcPension(antritt, grossCurrent, anzahlG, ytp) {
     const pkData = calcPKData(grossCurrent, anzahlG, ytp, karriereR);
     pensionGross = pkData.pkTotal / 14;
   }
+
+  // Abschlag/Zuschlag relativ zur individuellen RA (APG §5 Abs. 2)
   const ra = getRegelPensionsalter();
   if (antritt < ra)      pensionGross *= (1 - (ra - antritt) * 0.042);
   else if (antritt > ra) pensionGross *= (1 + (antritt - ra) * 0.042);
+
   return Math.max(pensionNetFromGross(pensionGross), 0);
 }
 
+// Zeigt ob HBGG erreicht wird (für UI-Hinweis)
+function isHBGGReached(grossCurrent, ytp) {
+  const karriereR = (parseFloat(document.getElementById('p_karriere').value) || 0) / 100;
+  const grossPeak = (ytp > 0 && karriereR > 0)
+    ? grossCurrent * Math.pow(1 + karriereR, ytp)
+    : grossCurrent;
+  const hbgg = getBeschaeft() === 'gsvg' ? HBGG_GSVG : HBGG_ASVG;
+  return grossPeak >= hbgg * 0.95; // 95%-Näherung = Warnung
+}
+
+// ─── Pensionskonto display update ─────────────────────────────────────────────
 function updatePKDisplay(pkData, grossCurrent, antritt, anzahlG) {
   const { pkPast, pkFuture, pkTotal, contribNow } = pkData;
   const pkTotalMax = pkTotal || 1;
+
   const ra = getRegelPensionsalter();
   const modifier = antritt < ra ? (1 - (ra-antritt)*0.042) : (1 + (antritt-ra)*0.042);
   const pgross = (pkTotal / 14) * modifier;
   const pnet   = pensionNetFromGross(pgross);
+
   document.getElementById('pk_now_val').textContent     = fmt(pkPast) + ' €';
   document.getElementById('pk_contrib_val').textContent = fmt(contribNow) + ' €';
   document.getElementById('pk_final_val').textContent   = fmt(pkTotal) + ' €';
   document.getElementById('pk_gross_val').textContent   = fmt(pgross) + ' €/Mo.';
   document.getElementById('pk_net_val').textContent     = fmt(pnet) + ' €/Mo.';
+
   document.getElementById('pk_bar_past').style.width   = (pkPast / pkTotalMax * 100).toFixed(1) + '%';
   document.getElementById('pk_bar_future').style.width = (pkFuture / pkTotalMax * 100).toFixed(1) + '%';
 }
 
-/* ══════════ LIVE DISPLAYS ══════════ */
+// ─── Live param displays ──────────────────────
 function updateAutoDisplays() {
   const einkRaw  = parseFloat(document.getElementById('p_eink').value) || 2050;
   const wunschPct = parseFloat(document.getElementById('p_wunsch_pct').value) || 100;
@@ -1040,17 +1116,23 @@ function updateAutoDisplays() {
   const ytp      = Math.max(0, antritt - age);
   const anzahlG  = getAnzahlGehaelter();
   const { finalEink, grossAvg, grossCurrent, grossFinal } = getKarriereEink(ytp);
+  const karriereR = (parseFloat(document.getElementById('p_karriere').value) || 0) / 100;
 
+  // Brutto/Netto conversion hint
   const convertHint = document.getElementById('eink_convert_hint');
   if (incomeType === 'netto') {
     convertHint.textContent = '≈ Brutto: ' + fmt(grossCurrent) + ' €/Mo.';
   } else {
     convertHint.textContent = '≈ Netto: ' + fmt(getEffectiveNet()) + ' €/Mo.';
   }
+
+  // Karriereleiter: show both gross final and net final
   document.getElementById('karriere_final').textContent     = fmt(grossFinal) + ' €';
   document.getElementById('karriere_final_net').textContent = fmt(finalEink) + ' €';
+
   document.getElementById('wunsch_eur_hint').textContent =
     '= ' + fmt(finalEink * wunschPct / 100) + ' €/Mo. (bei Pensionsantritt)';
+
   const einkForHint = incomeType === 'netto' ? einkRaw : getEffectiveNet();
   document.getElementById('eink_hint').textContent =
     Math.round(einkForHint) === 2050
@@ -1058,7 +1140,7 @@ function updateAutoDisplays() {
       : '';
 }
 
-/* ══════════ TOGGLES ══════════ */
+// ─── Toggles ──────────────────────────────────
 function togglePKStand() {
   pkStandManual = !pkStandManual;
   document.getElementById('pk_pill').classList.toggle('on', pkStandManual);
@@ -1074,9 +1156,10 @@ function toggleInflation() {
   berechne();
 }
 
-/* ══════════ MAIN CALCULATION ══════════ */
+// ─── Main calculation ─────────────────────────
 function berechne() {
   updateAutoDisplays();
+
   const eink      = parseFloat(document.getElementById('p_eink').value) || 2050;
   const wunschPct = parseFloat(document.getElementById('p_wunsch_pct').value) || 100;
   const antritt   = parseInt(document.getElementById('p_antritt').value);
@@ -1087,18 +1170,23 @@ function berechne() {
   const { finalEink, grossAvg, grossCurrent, grossFinal } = getKarriereEink(ytp);
   const ra_mod    = getRegelPensionsalter();
   const modifier  = antritt < ra_mod ? -(ra_mod - antritt) * 4.2 : (antritt - ra_mod) * 4.2;
+
   const wunsch  = finalEink * wunschPct / 100;
   const pension = calcPension(antritt, grossCurrent, anzahlG, ytp);
+
   const lueckeMo = Math.max(wunsch - pension, 0);
   const deckung  = wunsch > 0 ? Math.min(pension / wunsch, 1) : 0;
   const deckPct  = Math.round(deckung * 100);
   const lueckePct = Math.max(0, 100 - deckPct);
+
+  // Inflation / Kaufkraft
   const inflRate = inflAn ? (parseFloat(document.getElementById('p_inflation').value) || 2.1) / 100 : 0;
   const kkFaktor = ytp > 0 && inflAn ? Math.pow(1 + inflRate, ytp) : 1;
   const kkPension = pension / kkFaktor;
   const kkLuecke  = Math.max(wunsch / kkFaktor - kkPension, 0);
   const kkPct     = wunsch > 0 ? Math.min(kkPension / wunsch, 1) * 100 : 0;
 
+  // ── Donut ──
   const gaugeColor = deckung >= 1 ? 'var(--ac)' : deckung >= 0.8 ? 'var(--ora)' : 'var(--red)';
   const dp = deckPct;
   document.getElementById('wirkung_donut').style.background =
@@ -1106,19 +1194,23 @@ function berechne() {
   document.getElementById('wirkung_pct').textContent  = dp + '%';
   document.getElementById('wirkung_pct').style.color  = gaugeColor;
 
+  // ── 3 Zahlen ──
   document.getElementById('wn_pension').textContent = fmt(pension) + ' €';
   document.getElementById('wn_pension_sub').textContent = getBeschaeft() === 'gsvg'
     ? 'GSVG-Schätzwert netto/Monat'
     : Math.round((pension / wunsch) * 100) + ' % des Wunscheinkommens';
+
   document.getElementById('wn_luecke').textContent = lueckeMo > 0 ? '−' + fmt(lueckeMo) + ' €' : '0 €';
   document.getElementById('wn_luecke').className   = 'wside-val ' + (lueckeMo > 0 ? 'red' : 'ac');
   document.getElementById('wn_luecke_sub').textContent = lueckeMo > 0
     ? lueckePct + ' % des Wunscheinkommens fehlt'
     : 'Pension deckt das Wunscheinkommen';
+
   document.getElementById('wn_wunsch').textContent = fmt(wunsch) + ' €';
   document.getElementById('wn_wunsch_sub').textContent =
     Math.round(wunschPct) + ' % des Einkommens bei Pensionsantritt';
 
+  // ── Info strip ──
   const totalBJ = ((parseFloat(document.getElementById('p_vm').value)||0)/12 + ytp).toFixed(1);
   document.getElementById('is_antritt').textContent = antritt + '. LJ';
   document.getElementById('is_bj').textContent = totalBJ + ' J.';
@@ -1127,11 +1219,14 @@ function berechne() {
   modEl.textContent = modStr;
   modEl.className   = 'is-val ' + (modifier < 0 ? 'red' : modifier > 0 ? 'grn' : 'ac');
 
+  // ── Pensionskonto display ──
   const pkData = calcPKData(getBeschaeft() === 'gsvg'
     ? Math.min(parseFloat(document.getElementById('p_svs_basis').value) || MINDEST_GSVG, HBGG_GSVG)
     : grossCurrent, anzahlG, ytp, karriereR);
   updatePKDisplay(pkData, grossCurrent, antritt, anzahlG);
 
+
+  // ── Kaufkraft row ──
   const kkRow = document.getElementById('kk_row');
   kkRow.classList.toggle('hidden', !inflAn);
   if (inflAn) {
@@ -1142,6 +1237,8 @@ function berechne() {
     document.getElementById('kk_luecke_val').textContent =
       kkLuecke > 0 ? 'Reale Lücke: −' + fmt(kkLuecke) + ' €' : 'Keine reale Lücke';
   }
+
+  // ── Kaufkraft detail cards ──
   const inflCards = document.getElementById('r_infl_cards');
   inflCards.classList.toggle('hidden', !inflAn);
   if (inflAn) {
@@ -1150,12 +1247,40 @@ function berechne() {
       'Kaufkraft nach ' + ytp + ' J. Inflation (' + (inflRate * 100).toFixed(1) + ' %)';
     document.getElementById('r_kk_luecke').textContent = kkLuecke > 0 ? '−' + fmt(kkLuecke) + ' €' : '0 €';
   }
+
+  // Axion Bridge
+  if (window.__axionSendResult) window.__axionSendResult({
+    type: 'pensionsluecke',
+    inputs: {
+      einkommen: eink,
+      wunsch_pct: wunschPct,
+      pensionsantritt: antritt,
+      alter: age
+    },
+    results: {
+      pension_netto: pension,
+      luecke_monatlich: lueckeMo,
+      deckung_pct: deckPct,
+      kaufkraft_pension: kkPension,
+      kaufkraft_luecke: kkLuecke
+    }
+  });
+
   setTimeout(updatePanelMaxHeight, 50);
   setTimeout(sendHeight, 100);
 }
 
-/* ══════════ REGELPENSIONSALTER ══════════ */
+// ─── Formatter ────────────────────────────────
+function fmt(n) {
+  return Math.round(n).toLocaleString('de-AT');
+}
+
+// ─── Regelpensionsalter (geschlechts- und geburtsjahrabhängig) ───────────────
+// Quelle: BGBl. I Nr. 105/2020, ASVG §253, APG §4,5
+// Abschlag relativ zur individuellen RA (nicht immer 65!) — APG §5 Abs. 2
 const FRAUEN_RA = [
+  // [fromDate, toDate_inclusive, regelAlter]
+  // Frauen vor 1964-06-02 → RA 60 (bereits in Pension)
   ['1964-06-02', '1964-12-01', 60.5],
   ['1964-12-02', '1965-06-01', 61.0],
   ['1965-06-02', '1965-12-01', 61.5],
@@ -1165,6 +1290,7 @@ const FRAUEN_RA = [
   ['1967-06-02', '1967-12-01', 63.5],
   ['1967-12-02', '1968-06-01', 64.0],
   ['1968-06-02', '1968-12-01', 64.5],
+  // ab 1968-12-02 → 65 (Gleichstellung)
 ];
 
 function getRegelPensionsalter() {
@@ -1173,18 +1299,34 @@ function getRegelPensionsalter() {
   const geburt = document.getElementById('p_geburt').value;
   if (!geburt) return 65;
   const b = new Date(geburt);
-  if (b < new Date('1964-06-02')) return 60;
-  if (b >= new Date('1968-12-02')) return 65;
+  if (b < new Date('1964-06-02')) return 60;   // alte Regelung, bereits in Pension
+  if (b >= new Date('1968-12-02')) return 65;  // Gleichstellung vollständig
   for (const [from, to, ra] of FRAUEN_RA) {
     if (b >= new Date(from) && b <= new Date(to)) return ra;
   }
   return 65;
 }
 
+// Frühestmöglicher Pensionsantritt (Korridorpension): RA - 3 Jahre, mind. 62 für ASVG-Standard
+// Für Frauen mit RA < 62: Korridorpension faktisch deckungsgleich mit RA
 function getKorridorMin() {
   const ra = getRegelPensionsalter();
-  if (ra <= 62) return ra;
+  if (ra <= 62) return ra;          // RA selbst ist der früheste Zeitpunkt
   return Math.max(62, ra - 3);
+}
+
+// ─── Gender Modal ─────────────────────────────
+function openGenderModal() {
+  updateGenderModal();
+  document.getElementById('gender_overlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeGenderModal() {
+  document.getElementById('gender_overlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+function genderOverlayClick(e) {
+  if (e.target === document.getElementById('gender_overlay')) closeGenderModal();
 }
 
 function fmtRA(ra) {
@@ -1192,12 +1334,60 @@ function fmtRA(ra) {
   return Math.floor(ra) + ' Jahre ' + ((ra % 1) * 12) + ' Monate';
 }
 
-/* ══════════ BRUTTO/NETTO TOGGLE ══════════ */
-let incomeType = 'netto';
+function updateGenderModal() {
+  const geschlecht = document.getElementById('p_geschlecht').value;
+  const geburt     = document.getElementById('p_geburt').value;
+  const ra         = getRegelPensionsalter();
+  const korr       = getKorridorMin();
+
+  document.getElementById('gm_geschlecht').textContent = geschlecht === 'm' ? 'Männlich' : 'Weiblich';
+  document.getElementById('gm_geburt').textContent     = geburt ? new Date(geburt).toLocaleDateString('de-AT') : '—';
+  document.getElementById('gm_ra').textContent         = fmtRA(ra);
+  document.getElementById('gm_korridor').textContent   = fmtRA(korr) + ' (mind. 40 Vers.-Jahre)';
+
+  // Note text
+  const noteEl = document.getElementById('gm_note');
+  if (geschlecht === 'm') {
+    noteEl.textContent = 'Für Männer gilt unverändert das Regelpensionsalter von 65 Jahren.';
+  } else if (ra === 65) {
+    noteEl.textContent = '✓ Vollständige Gleichstellung: Für Frauen dieses Jahrgangs gilt bereits das Regelpensionsalter von 65 Jahren (wie Männer).';
+    noteEl.style.color = 'var(--ac)';
+  } else if (ra < 62) {
+    noteEl.textContent = `Ältere Übergangsregelung: Regelpensionsalter ${fmtRA(ra)}. Der Rechner-Slider beginnt bei 62 J. — diese Person könnte bereits früher in Pension gehen.`;
+    noteEl.style.color = 'var(--ora)';
+  } else {
+    noteEl.innerHTML = `Übergangsregelung (BGBl. I Nr. 105/2020): Regelpensionsalter <b>${fmtRA(ra)}</b>.<br>Abschlag von 4,2 %/Jahr gilt relativ zu diesem individuellen Regelpensionsalter — nicht zu 65.`;
+    noteEl.style.color = 'var(--ts)';
+  }
+
+  // Highlight active row in table (only for women)
+  for (let i = 0; i <= 10; i++) {
+    const row = document.getElementById('gr' + i);
+    if (row) row.classList.remove('active-bracket');
+  }
+  if (geschlecht === 'f' && geburt) {
+    const b = new Date(geburt);
+    if (b < new Date('1964-06-02'))       document.getElementById('gr0')?.classList.add('active-bracket');
+    else if (ra === 60.5)                  document.getElementById('gr1')?.classList.add('active-bracket');
+    else if (ra === 61.0)                  document.getElementById('gr2')?.classList.add('active-bracket');
+    else if (ra === 61.5)                  document.getElementById('gr3')?.classList.add('active-bracket');
+    else if (ra === 62.0)                  document.getElementById('gr4')?.classList.add('active-bracket');
+    else if (ra === 62.5)                  document.getElementById('gr5')?.classList.add('active-bracket');
+    else if (ra === 63.0)                  document.getElementById('gr6')?.classList.add('active-bracket');
+    else if (ra === 63.5)                  document.getElementById('gr7')?.classList.add('active-bracket');
+    else if (ra === 64.0)                  document.getElementById('gr8')?.classList.add('active-bracket');
+    else if (ra === 64.5)                  document.getElementById('gr9')?.classList.add('active-bracket');
+    else if (ra === 65.0)                  document.getElementById('gr10')?.classList.add('active-bracket');
+  }
+}
+
+// ─── Brutto / Netto Toggle ────────────────────
+let incomeType = 'netto'; // 'netto' | 'brutto'
 
 function setIncomeType(type) {
   if (incomeType === type) return;
   const cur = parseFloat(document.getElementById('p_eink').value) || 0;
+  // Convert the current value to the new mode
   const newVal = type === 'brutto'
     ? Math.round(grossFromNet(cur) / 10) * 10
     : Math.round(netFromGross(cur) / 10) * 10;
@@ -1210,17 +1400,19 @@ function setIncomeType(type) {
   onInput();
 }
 
+// Returns current gross regardless of input mode
 function getEffectiveGross() {
   const val = parseFloat(document.getElementById('p_eink').value) || 2050;
   return incomeType === 'brutto' ? val : grossFromNet(val);
 }
 
+// Returns current net regardless of input mode
 function getEffectiveNet() {
   const val = parseFloat(document.getElementById('p_eink').value) || 2050;
   return incomeType === 'netto' ? val : netFromGross(val);
 }
 
-/* ══════════ TAX MODAL ══════════ */
+// ─── Tax Modal ────────────────────────────────
 function openTaxModal() {
   updateTaxExample();
   document.getElementById('tax_overlay').classList.add('open');
@@ -1243,12 +1435,15 @@ function updateTaxExample() {
   const lst = Math.max(0, rawTax - 1542);
   const net = (grossAnn - sv - lst) / 12;
   const effAbzug = gross > 0 ? (1 - net / gross) * 100 : 0;
+
+  // Determine marginal bracket
   let marginalRate = 0;
   if      (taxable >  93120) marginalRate = 50;
   else if (taxable >  62080) marginalRate = 48;
   else if (taxable >  32075) marginalRate = 40;
   else if (taxable >  19134) marginalRate = 30;
   else if (taxable >  11693) marginalRate = 20;
+
   document.getElementById('tex_gross').textContent   = fmt(gross) + ' €';
   document.getElementById('tex_sv').textContent      = '−' + fmt(sv / 12) + ' €/Mo.';
   document.getElementById('tex_taxable').textContent = fmt(taxable) + ' €/Jahr';
@@ -1256,85 +1451,35 @@ function updateTaxExample() {
   document.getElementById('tex_lst').textContent     = '−' + fmt(lst / 12) + ' €/Mo.';
   document.getElementById('tex_net').textContent     = fmt(net) + ' €/Mo.';
   document.getElementById('tex_eff').textContent     = effAbzug.toFixed(1) + ' %';
+
+  // Highlight active bracket row
   ['tb0','tb1','tb2','tb3','tb4','tb5'].forEach((id, i) => {
     const rates = [0, 20, 30, 40, 48, 50];
     document.getElementById(id).classList.toggle('active-bracket', rates[i] === marginalRate);
   });
 }
 
-/* ══════════ GENDER MODAL ══════════ */
-function openGenderModal() {
-  updateGenderModal();
-  document.getElementById('gender_overlay').classList.add('open');
-  document.body.style.overflow = 'hidden';
-}
-function closeGenderModal() {
-  document.getElementById('gender_overlay').classList.remove('open');
-  document.body.style.overflow = '';
-}
-function genderOverlayClick(e) {
-  if (e.target === document.getElementById('gender_overlay')) closeGenderModal();
-}
-
-function updateGenderModal() {
-  const geschlecht = document.getElementById('p_geschlecht').value;
-  const geburt     = document.getElementById('p_geburt').value;
-  const ra         = getRegelPensionsalter();
-  const korr       = getKorridorMin();
-  document.getElementById('gm_geschlecht').textContent = geschlecht === 'm' ? 'Männlich' : 'Weiblich';
-  document.getElementById('gm_geburt').textContent     = geburt ? new Date(geburt).toLocaleDateString('de-AT') : '—';
-  document.getElementById('gm_ra').textContent         = fmtRA(ra);
-  document.getElementById('gm_korridor').textContent   = fmtRA(korr) + ' (mind. 40 Vers.-Jahre)';
-  const noteEl = document.getElementById('gm_note');
-  if (geschlecht === 'm') {
-    noteEl.textContent = 'Für Männer gilt unverändert das Regelpensionsalter von 65 Jahren.';
-  } else if (ra === 65) {
-    noteEl.textContent = '✓ Vollständige Gleichstellung: Für Frauen dieses Jahrgangs gilt bereits das Regelpensionsalter von 65 Jahren (wie Männer).';
-    noteEl.style.color = 'var(--ac)';
-  } else if (ra < 62) {
-    noteEl.textContent = `Ältere Übergangsregelung: Regelpensionsalter ${fmtRA(ra)}. Der Rechner-Slider beginnt bei 62 J. — diese Person könnte bereits früher in Pension gehen.`;
-    noteEl.style.color = 'var(--ora)';
-  } else {
-    noteEl.innerHTML = `Übergangsregelung (BGBl. I Nr. 105/2020): Regelpensionsalter <b>${fmtRA(ra)}</b>.<br>Abschlag von 4,2 %/Jahr gilt relativ zu diesem individuellen Regelpensionsalter — nicht zu 65.`;
-    noteEl.style.color = 'var(--ts)';
-  }
-  for (let i = 0; i <= 10; i++) {
-    const row = document.getElementById('gr' + i);
-    if (row) row.classList.remove('active-bracket');
-  }
-  if (geschlecht === 'f' && geburt) {
-    const b = new Date(geburt);
-    if (b < new Date('1964-06-02'))       document.getElementById('gr0')?.classList.add('active-bracket');
-    else if (ra === 60.5)                  document.getElementById('gr1')?.classList.add('active-bracket');
-    else if (ra === 61.0)                  document.getElementById('gr2')?.classList.add('active-bracket');
-    else if (ra === 61.5)                  document.getElementById('gr3')?.classList.add('active-bracket');
-    else if (ra === 62.0)                  document.getElementById('gr4')?.classList.add('active-bracket');
-    else if (ra === 62.5)                  document.getElementById('gr5')?.classList.add('active-bracket');
-    else if (ra === 63.0)                  document.getElementById('gr6')?.classList.add('active-bracket');
-    else if (ra === 63.5)                  document.getElementById('gr7')?.classList.add('active-bracket');
-    else if (ra === 64.0)                  document.getElementById('gr8')?.classList.add('active-bracket');
-    else if (ra === 64.5)                  document.getElementById('gr9')?.classList.add('active-bracket');
-    else if (ra === 65.0)                  document.getElementById('gr10')?.classList.add('active-bracket');
-  }
-}
-
+// Close modal on Escape key
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') closeTaxModal();
 });
 
-/* ══════════ DONUT REPULSION ══════════ */
+// ─── Donut Repulsion on Hover ─────────────────
 (function initRepulsion() {
   const card   = document.querySelector('.wirkung-card');
   const donut  = document.getElementById('wirkung_donut');
   const col    = document.querySelector('.wirkung-donut-col');
   if (!card || !donut) return;
+
   let rafId = null;
   let targetX = 0, targetY = 0;
   let currentX = 0, currentY = 0;
   let hovering = false;
-  const MAX = 22;
-  const FACTOR = 0.22;
+  const MAX = 22;      // max px displacement
+  const FACTOR = 0.22; // sensitivity
+
   function lerp(a, b, t) { return a + (b - a) * t; }
+
   function animate() {
     currentX = lerp(currentX, targetX, 0.1);
     currentY = lerp(currentY, targetY, 0.1);
@@ -1346,12 +1491,15 @@ document.addEventListener('keydown', e => {
       rafId = null;
     }
   }
+
   card.addEventListener('mouseenter', () => {
     hovering = true;
     col.style.animationPlayState = 'paused';
     if (!rafId) rafId = requestAnimationFrame(animate);
   });
-  const PROXIMITY = 140;
+
+  const PROXIMITY = 140; // px – only repel within this radius
+
   card.addEventListener('mousemove', (e) => {
     const rect = donut.getBoundingClientRect();
     const cx = rect.left + rect.width  / 2;
@@ -1360,15 +1508,18 @@ document.addEventListener('keydown', e => {
     const dy = e.clientY - cy;
     const dist = Math.hypot(dx, dy) || 1;
     if (dist > PROXIMITY) {
+      // Outside proximity zone — smoothly return to center
       targetX = 0;
       targetY = 0;
       return;
     }
-    const falloff = 1 - dist / PROXIMITY;
+    // Repulsion: move AWAY from cursor, strength grows as mouse gets closer
+    const falloff = 1 - dist / PROXIMITY; // 1 at center, 0 at edge
     const strength = falloff * MAX;
     targetX = -(dx / dist) * strength;
     targetY = -(dy / dist) * strength;
   });
+
   card.addEventListener('mouseleave', () => {
     hovering = false;
     targetX = 0;
@@ -1392,6 +1543,8 @@ document.addEventListener('keydown', e => {
       <button class="tax-close" onclick="closeGenderModal()">✕</button>
     </div>
     <div class="tax-body">
+
+      <!-- Dein Regelpensionsalter -->
       <div class="tax-section">
         <div class="tax-section-title">Dein Regelpensionsalter</div>
         <div class="tax-example-box" id="gender_personal_box">
@@ -1403,6 +1556,8 @@ document.addEventListener('keydown', e => {
           <div style="margin-top:8px;font-size:10.5px;color:var(--ts);line-height:1.6" id="gm_note"></div>
         </div>
       </div>
+
+      <!-- Rechtliche Regelung -->
       <div class="tax-section">
         <div class="tax-section-title">Regelung Männer</div>
         <div style="font-size:12px;color:var(--ts);line-height:1.7;padding:2px 0">
@@ -1411,6 +1566,8 @@ document.addEventListener('keydown', e => {
           Abschlag: <b style="color:var(--red)">4,2 % pro Jahr</b> vor dem individuellen Regelpensionsalter (dauerhaft)
         </div>
       </div>
+
+      <!-- Angleichungsplan Frauen -->
       <div class="tax-section">
         <div class="tax-section-title">Angleichungsplan Frauen (BGBl. I Nr. 105/2020)</div>
         <table class="tax-table" id="gender_table">
@@ -1434,6 +1591,7 @@ document.addEventListener('keydown', e => {
           <b style="color:var(--tp)">Gleichstellung vollständig</b> ab Jänner 2033 für Jahrgänge ab 02.12.1968
         </div>
       </div>
+
     </div>
   </div>
 </div>
@@ -1451,6 +1609,8 @@ document.addEventListener('keydown', e => {
       <button class="tax-close" onclick="closeTaxModal()">✕</button>
     </div>
     <div class="tax-body">
+
+      <!-- SV-Beiträge -->
       <div class="tax-section">
         <div class="tax-section-title">Sozialversicherung (Arbeitnehmer)</div>
         <table class="tax-table">
@@ -1464,6 +1624,8 @@ document.addEventListener('keydown', e => {
           </tbody>
         </table>
       </div>
+
+      <!-- Einkommensteuer -->
       <div class="tax-section">
         <div class="tax-section-title">Einkommensteuer §33 EStG — Tarifstufen</div>
         <table class="tax-table" id="tax_bracket_table">
@@ -1481,6 +1643,8 @@ document.addEventListener('keydown', e => {
           Absetzbeträge: Allg. Absetzbetrag <b style="color:var(--tp)">1.121 €</b> + Arbeitnehmer-AB <b style="color:var(--tp)">421 €</b> = <b style="color:var(--tp)">1.542 €/Jahr</b>
         </div>
       </div>
+
+      <!-- Live Beispiel -->
       <div class="tax-section">
         <div class="tax-section-title">Dein Einkommen — Aufschlüsselung</div>
         <div class="tax-example-box">
@@ -1500,6 +1664,7 @@ document.addEventListener('keydown', e => {
           </div>
         </div>
       </div>
+
     </div>
   </div>
 </div>

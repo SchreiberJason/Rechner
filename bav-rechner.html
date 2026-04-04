@@ -9,45 +9,7 @@
 <link rel="stylesheet" href="shared.css">
 <style>
 body{padding:0 5px;}
-@media(min-width:1024px){
-  .params-panel{max-height:calc(100vh - 48px);position:sticky;top:24px;}
-}
-.auto-info .ai-row{display:flex;justify-content:space-between;align-items:center;gap:8px;}
-.auto-info .ai-row+.ai-row{margin-top:3px;}
-.auto-info .ai-val{font-weight:700;color:var(--ac);text-align:right;}
-
-/* ══════════ INFO MODAL ══════════ */
-.info-overlay{position:fixed;inset:0;background:rgba(0,0,0,.72);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);z-index:1000;display:flex;align-items:center;justify-content:center;padding:16px;opacity:0;pointer-events:none;transition:opacity .22s;}
-.info-overlay.open{opacity:1;pointer-events:all;}
-.info-box{
-  background:var(--ss);border:1px solid rgba(255,255,255,.09);border-radius:20px;
-  width:min(560px,96vw);max-height:88vh;overflow-y:auto;
-  box-shadow:0 32px 80px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.07);
-  transform:translateY(12px) scale(.97);transition:transform .22s cubic-bezier(.23,1,.32,1);
-}
-.info-overlay.open .info-box{transform:translateY(0) scale(1);}
-.info-hdr{display:flex;align-items:center;justify-content:space-between;padding:18px 20px 14px;border-bottom:1px solid var(--brd);position:sticky;top:0;background:var(--ss);z-index:2;border-radius:20px 20px 0 0;}
-.info-hdr-title{font-size:14px;font-weight:700;color:var(--tp);}
-.info-hdr-sub{font-size:10px;color:var(--ts);margin-top:2px;}
-.info-close{width:28px;height:28px;border-radius:8px;background:rgba(255,255,255,.06);border:1px solid var(--brd);color:var(--ts);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;transition:background .15s;font-family:inherit;}
-.info-close:hover{background:rgba(255,255,255,.12);color:var(--tp);}
-.info-body{padding:18px 20px 20px;}
-.info-section{margin-bottom:20px;}
-.info-section:last-child{margin-bottom:0;}
-.info-section-title{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ts);margin-bottom:10px;}
-.info-table{width:100%;border-collapse:collapse;font-size:12px;}
-.info-table th{font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--tm);padding:0 8px 7px;text-align:left;border-bottom:1px solid var(--brd);}
-.info-table td{padding:7px 8px;border-bottom:1px solid rgba(255,255,255,.04);color:var(--tp);vertical-align:middle;}
-.info-table tr:last-child td{border-bottom:none;}
-.info-rate-bar{height:6px;border-radius:3px;display:inline-block;}
-.info-note{font-size:10px;color:var(--ts);margin-top:8px;line-height:1.6;}
-.info-example{background:var(--st);border-radius:12px;padding:14px 16px;}
-.ie-row{display:flex;justify-content:space-between;align-items:center;font-size:12px;padding:3px 0;}
-.ie-row .ie-label{color:var(--ts);}
-.ie-row .ie-val{font-weight:600;color:var(--tp);font-variant-numeric:tabular-nums;}
-.ie-row .ie-val.green{color:var(--ac);}
-.ie-row .ie-val.red{color:var(--red);}
-.ie-divider{height:1px;background:var(--brd);margin:6px 0;}
+@media(min-width:1024px){.params-panel{max-height:calc(100vh - 48px);position:sticky;top:24px;}}
 
 /* ══════════ BEITRAG VISUAL ══════════ */
 .beitrag-vis{
@@ -71,29 +33,6 @@ body{padding:0 5px;}
 .bv-big{font-weight:700;font-size:28px;color:var(--ac);letter-spacing:-.02em;line-height:1;}
 .bv-sub{font-size:11px;color:var(--ts);margin-top:4px;}
 
-/* ══════════ EXPANDABLE DETAILS ══════════ */
-.detail-toggle{
-  display:flex;align-items:center;gap:6px;
-  background:none;border:none;cursor:pointer;
-  font-family:inherit;font-size:11px;font-weight:600;
-  color:var(--ac);padding:0;margin-top:10px;
-  -webkit-tap-highlight-color:transparent;
-}
-.detail-toggle .dt-arrow{font-size:8px;transition:transform .2s;color:var(--tm);}
-.detail-toggle.open .dt-arrow{transform:rotate(180deg);}
-.detail-body{
-  display:none;margin-top:10px;
-  padding:12px 14px;background:var(--adim);border-radius:12px;
-  font-size:12px;color:var(--ts);line-height:1.7;
-}
-.detail-body.open{display:block;}
-.db-row{display:flex;justify-content:space-between;align-items:center;gap:8px;}
-.db-row+.db-row{margin-top:2px;}
-.db-row .db-label{color:var(--ts);}
-.db-row .db-val{font-weight:600;color:var(--tp);font-variant-numeric:tabular-nums;text-align:right;}
-.db-row .db-val.green{color:var(--ac);}
-.db-sep{height:1px;background:var(--brd);margin:6px 0;}
-
 /* ══════════ ENDWERT CARD ══════════ */
 .endwert-card{
   background:var(--ss);border-radius:32px;overflow:hidden;
@@ -108,7 +47,7 @@ body{padding:0 5px;}
   border-radius:100px;padding:6px 16px;
   font-size:13px;font-weight:600;color:#4ade80;
 }
-.ew-vorteil.neg{color:var(--red);background:rgba(248,113,113,.08);border-color:rgba(248,113,113,.18);}
+.ew-vorteil.neg{color:var(--r);background:rgba(248,113,113,.08);border-color:rgba(248,113,113,.18);}
 @media(prefers-color-scheme:light){
   .ew-vorteil{background:rgba(3,159,107,.08);border-color:rgba(3,159,107,.18);color:#039F6B;}
   .ew-vorteil.neg{background:rgba(239,68,68,.08);border-color:rgba(239,68,68,.18);color:#ef4444;}
@@ -130,12 +69,7 @@ body{padding:0 5px;}
 }
 .ew-detail-body.open{display:block;}
 
-/* Table highlight */
-td.hl{color:var(--ac);font-weight:600;}
-.tw{max-height:320px;overflow-y:auto;}
-.legend{padding:0 18px;}
-
-/* ══════════ RESPONSIVE ══════════ */
+/* ══════════ BAV RESPONSIVE ══════════ */
 @media(max-width:599px){
   .beitrag-vis{flex-direction:column;gap:16px;}
   .bv-stat{text-align:center;}
@@ -181,7 +115,7 @@ td.hl{color:var(--ac);font-weight:600;}
             <tr><td>21.993 &ndash; 36.458 &euro;</td><td style="color:var(--ts)">1.833 &ndash; 3.038 &euro;</td><td style="font-weight:700;color:#86efac">30 %</td><td><div class="info-rate-bar" style="width:36px;background:#86efac"></div></td></tr>
             <tr><td>36.459 &ndash; 70.365 &euro;</td><td style="color:var(--ts)">3.038 &ndash; 5.864 &euro;</td><td style="font-weight:700;color:var(--y)">40 %</td><td><div class="info-rate-bar" style="width:48px;background:var(--y)"></div></td></tr>
             <tr><td>70.366 &ndash; 104.859 &euro;</td><td style="color:var(--ts)">5.864 &ndash; 8.738 &euro;</td><td style="font-weight:700;color:#f97316">48 %</td><td><div class="info-rate-bar" style="width:58px;background:#f97316"></div></td></tr>
-            <tr><td>&uuml;ber 104.859 &euro;</td><td style="color:var(--ts)">&uuml;ber 8.738 &euro;</td><td style="font-weight:700;color:var(--red)">50 %</td><td><div class="info-rate-bar" style="width:60px;background:var(--red)"></div></td></tr>
+            <tr><td>&uuml;ber 104.859 &euro;</td><td style="color:var(--ts)">&uuml;ber 8.738 &euro;</td><td style="font-weight:700;color:var(--r)">50 %</td><td><div class="info-rate-bar" style="width:60px;background:var(--r)"></div></td></tr>
           </tbody>
         </table>
         <div class="info-note">
@@ -324,7 +258,7 @@ td.hl{color:var(--ac);font-weight:600;}
           <div class="db-row"><span class="db-label">Brutto-Beitrag (AG)</span><span class="db-val">25,00 &euro;</span></div>
           <div class="db-sep"></div>
           <div class="db-row"><span class="db-label">Steuerersparnis (lohnsteuerfrei)</span><span class="db-val green" id="db-tax">&mdash;</span></div>
-          <div class="db-row"><span class="db-label">SV-Beitrag (weiterhin f&auml;llig)</span><span class="db-val" style="color:var(--red)" id="db-sv">&mdash;</span></div>
+          <div class="db-row"><span class="db-label">SV-Beitrag (weiterhin f&auml;llig)</span><span class="db-val" style="color:var(--r)" id="db-sv">&mdash;</span></div>
           <div class="db-sep"></div>
           <div class="db-row"><span class="db-label">Netto-Kosten f&uuml;r dich</span><span class="db-val" id="db-net">&mdash;</span></div>
         </div>
@@ -335,7 +269,7 @@ td.hl{color:var(--ac);font-weight:600;}
       </div>
     </div>
 
-    <!-- Endwert + Vorteil -->
+    <!-- Endwert + Vorteil (redesigned) -->
     <div class="endwert-card" id="ew-card">
       <div class="ml">BAV-Endwert bei Pensionsantritt</div>
       <div class="ew-big" id="ew-val">&mdash;</div>
@@ -385,64 +319,88 @@ td.hl{color:var(--ac);font-weight:600;}
 
 <script src="shared.js"></script>
 <script>
-checkAccess('bav2026');
+/* ══════════ ACCESS PROTECTION ══════════ */
+(function(){
+  const isLocal = ['localhost','127.0.0.1',''].includes(location.hostname);
+  const validRef = document.referrer.includes('jasonschreiber.at');
+  const ACCESS_KEY = 'bav2026';
+  const urlKey = new URLSearchParams(location.search).get('access');
+  if(!isLocal && !validRef && urlKey !== ACCESS_KEY){
+    document.body.style.cssText = 'margin:0;background:#0F0F0F;display:flex;align-items:center;justify-content:center;height:100vh;font-family:Inter,sans-serif;';
+    document.body.innerHTML = '<div style="color:#555;font-size:14px;text-align:center"><div style="font-size:32px;margin-bottom:12px">&#128274;</div>Zugriff nicht gestattet.</div>';
+    throw new Error('Access denied');
+  }
+})();
 
 /* ══════════ CONSTANTS (Fallback, overwritten by config.json) ══════════ */
-var TAX_BRACKETS = [
+let TAX_BRACKETS = [
   { limit: 13539, rate: 0 }, { limit: 21992, rate: 0.20 },
   { limit: 36458, rate: 0.30 }, { limit: 70365, rate: 0.40 },
   { limit: 104859, rate: 0.48 }, { limit: 1000000, rate: 0.50 }
 ];
-var SV_RATE = 0.1807, SV_HBGL = 6930, BAV = 25;
-var ABSETZBETRAG = 1542;
-var SONDER_SATZ = 0.06, SONDER_FREIBETRAG = 620;
-var BAV_ZMIND = 1.3, BAV_PERF = 6.0, BAV_KEST = 27.5, BAV_PENSION = 65;
-var BAV_KOSTEN = { spar: 76.25, versstg: 3.84, risiko: 1.83, kosten: 18.08 };
-var BAV_RK_ABSCHLAG = 2.0, BAV_RK_JAHRE = 10;
-var DEPOTANBIETER = { manuell: { name: 'Manuell', etf: null, fonds: null } };
+let SV_RATE = 0.1807, SV_HBGL = 6930, BAV = 25;
+let ABSETZBETRAG = 1542;
+let SONDER_SATZ = 0.06, SONDER_FREIBETRAG = 620;
+let BAV_ZMIND = 1.3, BAV_PERF = 6.0, BAV_KEST = 27.5, BAV_PENSION = 65;
+let BAV_KOSTEN = { spar: 76.25, versstg: 3.84, risiko: 1.83, kosten: 18.08 };
+let BAV_RK_ABSCHLAG = 2.0, BAV_RK_JAHRE = 10;
+let DEPOTANBIETER = { manuell: { name: 'Manuell', etf: null, fonds: null } };
 
-/* Override shared loadConfig with BAV-specific version */
-loadConfig = async function() {
-  try {
-    const r = await fetch('config.json?v=' + Date.now());
-    CFG = await r.json();
-    const st = CFG.steuern || {};
-    const sv = CFG.sozialversicherung || {};
-    const bav = CFG.bav || {};
+function applyBavConfig() {
+  if (!CONFIG) return;
+  const CFG = CONFIG;
+  const st = CFG.steuern || {};
+  const sv = CFG.sozialversicherung || {};
+  const bav = CFG.bav || {};
 
-    if (st.lohnsteuer_tarifstufen) {
-      TAX_BRACKETS = st.lohnsteuer_tarifstufen.map(s => ({ limit: s.bis, rate: s.satz }));
+  // Tarifstufen
+  if (st.lohnsteuer_tarifstufen) {
+    TAX_BRACKETS = st.lohnsteuer_tarifstufen.map((s, i, a) =>
+      ({ limit: s.bis, rate: s.satz })
+    );
+  }
+  if (st.arbeitnehmer_absetzbetrag_eur) ABSETZBETRAG = st.arbeitnehmer_absetzbetrag_eur;
+  if (st.sonderzahlung_pauschalsatz_pct) SONDER_SATZ = st.sonderzahlung_pauschalsatz_pct / 100;
+
+  // SV
+  if (sv.an_sv_rate) SV_RATE = sv.an_sv_rate;
+  if (sv.hbgg_asvg_monat_eur) SV_HBGL = sv.hbgg_asvg_monat_eur;
+
+  // BAV
+  if (bav.beitrag_monatlich_eur) BAV = bav.beitrag_monatlich_eur;
+  if (bav.zinsminderung_pa_pct != null) BAV_ZMIND = bav.zinsminderung_pa_pct;
+  if (bav.default_fondsperformance_pct != null) BAV_PERF = bav.default_fondsperformance_pct;
+  if (bav.default_kest_privat_pct != null) BAV_KEST = bav.default_kest_privat_pct;
+  if (bav.default_pensionsantritt != null) BAV_PENSION = bav.default_pensionsantritt;
+  if (bav.rueckkaufsabschlag_pct != null) BAV_RK_ABSCHLAG = bav.rueckkaufsabschlag_pct;
+  if (bav.rueckkaufsabschlag_jahre != null) BAV_RK_JAHRE = bav.rueckkaufsabschlag_jahre;
+  if (bav.kostenstruktur) {
+    BAV_KOSTEN = {
+      spar: bav.kostenstruktur.sparbeitrag_pct || 76.25,
+      versstg: bav.kostenstruktur.versicherungssteuer_pct || 3.84,
+      risiko: bav.kostenstruktur.risikobeitrag_pct || 1.83,
+      kosten: bav.kostenstruktur.kosten_pct || 18.08
+    };
+  }
+
+  // Depot-Anbieter aus Config laden
+  if (CFG.depot_anbieter) {
+    const da = {};
+    for (const [k, v] of Object.entries(CFG.depot_anbieter)) {
+      if (k.startsWith('_')) continue;
+      da[k] = v;
     }
-    if (st.arbeitnehmer_absetzbetrag_eur) ABSETZBETRAG = st.arbeitnehmer_absetzbetrag_eur;
-    if (st.sonderzahlung_pauschalsatz_pct) SONDER_SATZ = st.sonderzahlung_pauschalsatz_pct / 100;
-    if (sv.an_sv_rate) SV_RATE = sv.an_sv_rate;
-    if (sv.hbgg_asvg_monat_eur) SV_HBGL = sv.hbgg_asvg_monat_eur;
-    if (bav.beitrag_monatlich_eur) BAV = bav.beitrag_monatlich_eur;
-    if (bav.zinsminderung_pa_pct != null) BAV_ZMIND = bav.zinsminderung_pa_pct;
-    if (bav.default_fondsperformance_pct != null) BAV_PERF = bav.default_fondsperformance_pct;
-    if (bav.default_kest_privat_pct != null) BAV_KEST = bav.default_kest_privat_pct;
-    if (bav.default_pensionsantritt != null) BAV_PENSION = bav.default_pensionsantritt;
-    if (bav.rueckkaufsabschlag_pct != null) BAV_RK_ABSCHLAG = bav.rueckkaufsabschlag_pct;
-    if (bav.rueckkaufsabschlag_jahre != null) BAV_RK_JAHRE = bav.rueckkaufsabschlag_jahre;
-    if (bav.kostenstruktur) {
-      BAV_KOSTEN = {
-        spar: bav.kostenstruktur.sparbeitrag_pct || 76.25,
-        versstg: bav.kostenstruktur.versicherungssteuer_pct || 3.84,
-        risiko: bav.kostenstruktur.risikobeitrag_pct || 1.83,
-        kosten: bav.kostenstruktur.kosten_pct || 18.08
-      };
-    }
-    if (CFG.depot_anbieter) {
-      const da = {};
-      for (const [k, v] of Object.entries(CFG.depot_anbieter)) {
-        if (k.startsWith('_')) continue;
-        da[k] = v;
-      }
-      da.manuell = { name: 'Manuell', etf: null, fonds: null };
-      DEPOTANBIETER = da;
-    }
-  } catch (e) { console.warn('config.json nicht geladen, Fallback-Werte aktiv.', e); }
-};
+    da.manuell = { name: 'Manuell', etf: null, fonds: null };
+    DEPOTANBIETER = da;
+  }
+}
+
+/* ══════════ HELPERS ══════════ */
+const vv = id => parseFloat(document.getElementById(id).value) || 0;
+const fmt = n => n.toLocaleString('de-AT', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const fE = n => fmt(n) + ' \u20AC';
+const fP = n => (n * 100).toFixed(1).replace('.', ',') + ' %';
+const eurN = v => { if (v >= 1e6) return (v / 1e6).toFixed(1) + ' M'; if (v >= 1e3) return (v / 1e3).toFixed(0) + ' K'; return v.toFixed(0); };
 
 /* ══════════ NETTO/BRUTTO CONVERSION ══════════ */
 function calcLohnsteuer(taxableAnn) {
@@ -511,7 +469,7 @@ function getEffectiveNet() {
 
 /* ══════════ DEPOT ANBIETER ══════════ */
 function buildAnbieterSelect() {
-  if (!CFG?.depot_anbieter) return;
+  if (!CONFIG?.depot_anbieter) return;
   const sel = document.getElementById('bav_anbieter');
   if (!sel) return;
   sel.innerHTML = '';
@@ -530,8 +488,13 @@ function setBAVAnbieter() {
     if (noteEl) noteEl.style.display = 'none';
     return;
   }
+  // Use ETF costs as default for private comparison (most common for BAV comparison)
   const costs = p.etf || p.fonds;
   if (costs) {
+    // Map depot costs to a private comparison cost reduction
+    // agio = one-time buy cost %, dg = depot fee %/pa, sp = service fee/mo
+    const totalAnnCost = (costs.dg || 0) + ((costs.sp || 0) * 12 / (BAV * 12) * 100);
+    // Don't override zmind (insurance costs), but note in display
     if (noteEl) {
       noteEl.innerHTML = '<b>' + p.name + '</b>: Agio ' + (costs.agio || 0).toFixed(1) + ' %, Depotgeb\u00fchr ' + (costs.dg || 0).toFixed(2) + ' % p.a.' + (costs.sp ? ', Service ' + fmt(costs.sp) + ' \u20AC/Mo.' : '');
       noteEl.style.display = 'block';
@@ -653,6 +616,7 @@ function updateInfoExample() {
   const tax = calcTax(gross);
   const svM = Math.min(gross, SV_HBGL) * SV_RATE;
   const taxableAnn = Math.max(0, (gross - svM) * 12);
+
   document.getElementById('ie-brutto').textContent = fE(gross);
   document.getElementById('ie-sv-label').textContent = `SV-Abzug (${(SV_RATE * 100).toFixed(2).replace('.', ',')} %)`;
   document.getElementById('ie-sv').textContent = '-' + fE(svM);
@@ -684,6 +648,7 @@ function calculate() {
   const tax = calcTax(gross), privNet = tax.privNet;
   const rBAV = (perf - zmind) / 12, rP = perf / 12;
 
+  // Convert hint
   const hintEl = document.getElementById('eink_convert_hint');
   if (incomeType === 'netto') {
     hintEl.textContent = '\u2248 Brutto: ' + fE(gross);
@@ -702,10 +667,12 @@ function calculate() {
   const L = yrs[yrs.length - 1];
   const vtPct = L.pKest > 0 ? ((L.bG / L.pKest - 1) * 100) : 0;
 
+  // Auto-info
   document.getElementById('ai-alter').textContent = alter + ' Jahre';
   document.getElementById('ai-tax').textContent = fP(tax.rate);
   document.getElementById('ai-laufzeit').textContent = lz + ' Jahre';
 
+  // Beitrag bar
   const txPct = (tax.txSav / BAV * 100);
   const svPct = (tax.svDue / BAV * 100);
   const investPct = 100 - txPct - svPct;
@@ -719,10 +686,12 @@ function calculate() {
   document.getElementById('bv-net-val').textContent = fE(tax.net);
   document.getElementById('bv-pct').textContent = Math.round(tax.txSav / BAV * 100) + ' %';
 
+  // Expandable cost details
   document.getElementById('db-tax').textContent = '-' + fE(tax.txSav);
   document.getElementById('db-sv').textContent = fE(tax.svDue);
   document.getElementById('db-net').textContent = fE(tax.net);
 
+  // Endwert card (redesigned)
   document.getElementById('ew-val').textContent = fE(L.bG);
   document.getElementById('ew-label').textContent = `mit ${pension}, nach ${lz} Jahren Laufzeit`;
   const ewVorteil = document.getElementById('ew-vorteil');
@@ -730,6 +699,7 @@ function calculate() {
   document.getElementById('ew-vorteil-text').textContent = `${vtSign}${fE(L.vt)} Vorteil vs. Privat (${vtSign}${vtPct.toFixed(0)} %)`;
   ewVorteil.className = 'ew-vorteil' + (L.vt < 0 ? ' neg' : '');
 
+  // Expandable eingezahlt details
   document.getElementById('ew-ein-brutto').textContent = fE(L.ein);
   document.getElementById('ew-ein-netto').textContent = fE(L.nEin);
   document.getElementById('ew-bav').textContent = fE(L.bG);
@@ -739,6 +709,7 @@ function calculate() {
   ewDiff.textContent = vtSign + fE(L.vt);
   ewDiff.className = 'db-val' + (L.vt >= 0 ? ' green' : '');
 
+  // Line chart
   const t = tc();
   const labels = yrs.map(r => r.y);
   const ds = [
@@ -770,10 +741,19 @@ function calculate() {
     }
   });
 
+  // Table
   document.getElementById('tbl').innerHTML = yrs.map(r =>
     `<tr><td>${r.age}</td><td>${fE(r.ein)}</td><td class="hl">${fE(r.bG)}</td><td>${fE(r.rk)}</td><td>${fE(r.pKest)}</td><td class="${r.vt >= 0 ? 'hl' : ''}">${r.vt >= 0 ? '+' : ''}${fE(r.vt)}</td></tr>`
   ).join('');
 
+  // Axion Bridge
+  if (window.__axionSendResult) window.__axionSendResult({
+    type: 'bav',
+    inputs: { einkommen: gross, geburtsdatum: gebdat, pensionsantritt: pension, performance_pct: perf * 100, zinsminderung_pct: zmind * 100 },
+    results: { endwert: L.bG, rueckkaufswert: L.rk, privat_endwert: L.pKest, vorteil: L.vt, vorteil_pct: vtPct, laufzeit: lz, steuerersparnis_monat: tax.txSav }
+  });
+
+  // Update iframe height after calculation
   setTimeout(sendHeight, 100);
 }
 
@@ -806,17 +786,23 @@ function toggleEwDetails() {
 /* ══════════ INIT ══════════ */
 document.addEventListener('DOMContentLoaded', async () => {
   await loadConfig();
+  applyBavConfig();
+  // Apply defaults from config
   document.getElementById('perf').value = BAV_PERF;
   document.getElementById('zmind').value = BAV_ZMIND;
   document.getElementById('kest').value = BAV_KEST;
   document.getElementById('pension').value = BAV_PENSION;
+  // Update static labels with config values
   document.querySelector('.ml').textContent = `Dein ${BAV} \u20AC Brutto-Beitrag`;
+  // Default dates
   const d = new Date(); d.setFullYear(d.getFullYear() - 25);
   document.getElementById('gebdat').value = d.toISOString().split('T')[0];
   document.getElementById('startdat').value = new Date().toISOString().split('T')[0];
+  // Build depot anbieter select
   buildAnbieterSelect();
   buildLegend();
   calculate();
+  // Initial iframe height
   setTimeout(sendHeight, 200);
 });
 </script>

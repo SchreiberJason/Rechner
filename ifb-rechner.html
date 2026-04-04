@@ -6,51 +6,6 @@
 <title>Gewinnfreibetrag-Rechner | Jason Schreiber</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Inter+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="shared.css">
-<style>
-/* Stacked bar */
-.stacked-bar{display:flex;height:28px;border-radius:100px;overflow:hidden;margin:8px 0 12px;background:var(--st);}
-.sb-seg{transition:width .4s ease;min-width:0;}
-
-/* Legend */
-.bd-legend{display:flex;flex-wrap:wrap;gap:8px 14px;}
-.bd-item{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--ts);}
-.bd-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
-
-/* Table overrides */
-thead th:first-child{text-align:left;}
-tbody td:first-child{text-align:left;color:var(--tp);font-weight:500;}
-tbody tr.total td{font-weight:700;color:var(--tp);border-top:2px solid var(--brd);background:var(--adim);}
-tbody tr.total td.ac-val{color:var(--ac);}
-@media(hover:hover){tbody tr:not(.total):hover td{background:var(--adim);color:var(--tp);}}
-
-/* Advantage comparison */
-.adv-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1px;background:var(--brd);border-radius:16px;overflow:hidden;}
-.adv-cell{background:var(--st);padding:14px;text-align:center;}
-.adv-cell.head{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ts);}
-.adv-cell .av{font-size:16px;font-weight:700;margin-top:6px;}
-.adv-cell .av.green{color:#4ade80;}
-.adv-cell .av.blue{color:var(--b);}
-.adv-cell .av.violet{color:var(--v);}
-.adv-cell .as{font-size:10px;color:var(--tm);margin-top:3px;}
-
-/* Info box */
-.info-strip{
-  background:var(--adim);border:1px solid rgba(56,217,163,.18);
-  border-radius:16px;padding:12px 14px;font-size:12px;color:var(--ts);line-height:1.6;
-}
-.info-strip b{color:var(--ac);}
-
-/* Responsive overrides */
-@media(min-width:720px) and (max-width:1023px){
-  .adv-grid{grid-template-columns:1fr 1fr 1fr;}
-}
-@media(max-width:599px){
-  .adv-grid{grid-template-columns:1fr 1fr 1fr;}
-}
-@media(max-width:399px){
-  .adv-grid{grid-template-columns:1fr;}
-}
-</style>
 </head>
 <body>
 
@@ -139,101 +94,116 @@ tbody tr.total td.ac-val{color:var(--ac);}
 
 <script src="shared.js"></script>
 <script>
-/* ══════════ FORMATTER (0 Dezimalstellen) ══════════ */
-function eur(v){ return v.toLocaleString('de-AT',{style:'currency',currency:'EUR',maximumFractionDigits:0}); }
+/* ══════════════════════════════════
+   IFB/GFB-RECHNER — Berechnungslogik
+   Laedt EST-Stufen, GFB-Stufen und SVS-Saetze aus config.json
+══════════════════════════════════ */
 
-/* ══════════ ESt TARIF 2025 (§33 EStG) ══════════ */
-const EST_STUFEN = [
-  { bis: 13308,   satz: 0.00 },
-  { bis: 21617,   satz: 0.20 },
-  { bis: 35836,   satz: 0.30 },
-  { bis: 69166,   satz: 0.40 },
-  { bis: 103072,  satz: 0.48 },
-  { bis: 1000000, satz: 0.50 },
-  { bis: Infinity,satz: 0.55 },
+/* Fallback-Konstanten (ueberschrieben durch config.json) */
+let EST_STUFEN = [
+  { bis: 13308, satz: 0.00 }, { bis: 21617, satz: 0.20 },
+  { bis: 35836, satz: 0.30 }, { bis: 69166, satz: 0.40 },
+  { bis: 103072, satz: 0.48 }, { bis: 1000000, satz: 0.50 },
+  { bis: Infinity, satz: 0.55 }
 ];
-
-function berechneESt(einkommen){
-  let steuer = 0, prev = 0;
-  for(const s of EST_STUFEN){
-    const band = Math.max(0, Math.min(einkommen, s.bis) - prev);
-    steuer += band * s.satz;
-    prev = s.bis;
-    if(einkommen <= s.bis) break;
-  }
-  return steuer;
-}
-
-function getGrenzsteuersatz(einkommen){
-  for(const s of EST_STUFEN){
-    if(einkommen <= s.bis) return s.satz;
-  }
-  return 0.55;
-}
-
-/* ══════════ SVS BEITRÄGE 2025 ══════════ */
-const SVS_PV   = 0.1850;
-const SVS_KV   = 0.0680;
-const SVS_RATE = SVS_PV + SVS_KV;
-const SVS_HBGL = 97020;
-const SVS_MBGL = 6613;
-
-function berechneSVS(einkommen){
-  const basis = Math.max(SVS_MBGL, Math.min(einkommen, SVS_HBGL));
-  return basis * SVS_RATE;
-}
-
-/* ══════════ GFB STAFFELUNG (§10 EStG) ══════════ */
-const GFB_STUFEN = [
+let GFB_STUFEN = [
   { name:'Grundfreibetrag',  von:0,      bis:33000,  satz:0.15, color:'var(--y)',  invest:false },
   { name:'Stufe 1',          von:33000,  bis:178000, satz:0.13, color:'var(--ac)', invest:true  },
   { name:'Stufe 2',          von:178000, bis:353000, satz:0.07, color:'var(--b)',  invest:true  },
   { name:'Stufe 3',          von:353000, bis:583000, satz:0.045,color:'var(--v)',  invest:true  },
 ];
+let SVS_PV   = 0.1850;
+let SVS_KV   = 0.0680;
+let SVS_RATE = SVS_PV + SVS_KV;
+let SVS_HBGL = 97020;
+let SVS_MBGL = 6613;
 
-/* ══════════ BERECHNUNG ══════════ */
-function berechneGFB(){
+function applyConfig() {
+  if (!CONFIG || !CONFIG.ifb) return;
+  const ifb = CONFIG.ifb;
+  if (ifb.est_stufen_selbstaendig) {
+    EST_STUFEN = ifb.est_stufen_selbstaendig.map(s => ({
+      bis: s.bis === null ? Infinity : s.bis,
+      satz: s.satz
+    }));
+  }
+  if (ifb.gfb_stufen) {
+    GFB_STUFEN = ifb.gfb_stufen;
+  }
+  if (ifb.svs_pensionsversicherung_pct != null) SVS_PV = ifb.svs_pensionsversicherung_pct / 100;
+  if (ifb.svs_krankenversicherung_pct != null) SVS_KV = ifb.svs_krankenversicherung_pct / 100;
+  SVS_RATE = SVS_PV + SVS_KV;
+  if (ifb.svs_hbgl_jahr_eur) SVS_HBGL = ifb.svs_hbgl_jahr_eur;
+  if (ifb.svs_mbgl_jahr_eur) SVS_MBGL = ifb.svs_mbgl_jahr_eur;
+}
+
+/* ── ESt Berechnung ── */
+function berechneESt(einkommen) {
+  let steuer = 0, prev = 0;
+  for (const s of EST_STUFEN) {
+    const band = Math.max(0, Math.min(einkommen, s.bis) - prev);
+    steuer += band * s.satz;
+    prev = s.bis;
+    if (einkommen <= s.bis) break;
+  }
+  return steuer;
+}
+
+function getGrenzsteuersatz(einkommen) {
+  for (const s of EST_STUFEN) {
+    if (einkommen <= s.bis) return s.satz;
+  }
+  return 0.55;
+}
+
+/* ── SVS Berechnung ── */
+function berechneSVS(einkommen) {
+  const basis = Math.max(SVS_MBGL, Math.min(einkommen, SVS_HBGL));
+  return basis * SVS_RATE;
+}
+
+/* ══════════════════════════════════
+   HAUPTBERECHNUNG
+══════════════════════════════════ */
+function berechneGFB() {
   const gewinn = Math.max(0, parseFloat(document.getElementById('gfb_gewinn').value) || 0);
 
   let grundFB = 0, investFB = 0;
   const details = [];
-
-  for(const s of GFB_STUFEN){
+  for (const s of GFB_STUFEN) {
     const inRange = Math.max(0, Math.min(gewinn, s.bis) - s.von);
     const fb = inRange * s.satz;
-    details.push({ ...s, basis: inRange, fb: fb });
-    if(s.invest) investFB += fb;
-    else grundFB += fb;
+    details.push({ ...s, basis: inRange, fb });
+    if (s.invest) investFB += fb; else grundFB += fb;
   }
-
   const totalFB = grundFB + investFB;
+
   const grenz = getGrenzsteuersatz(gewinn);
   document.getElementById('auto_steuer').innerHTML =
-    'Grenzsteuersatz: <b>' + (grenz*100) + ' %</b> (automatisch ermittelt)';
+    'Grenzsteuersatz: <b>' + (grenz * 100) + ' %</b> (automatisch ermittelt)';
 
   const estOhne = berechneESt(gewinn);
-  const estMit  = berechneESt(gewinn - totalFB);
+  const estMit = berechneESt(gewinn - totalFB);
   const steuerVorteil = estOhne - estMit;
 
   const svsOhne = berechneSVS(gewinn);
-  const svsMit  = berechneSVS(gewinn - totalFB);
+  const svsMit = berechneSVS(gewinn - totalFB);
   const svsVorteil = svsOhne - svsMit;
-
   const gesamtVorteil = steuerVorteil + svsVorteil;
 
-  // KPIs
+  /* ── UI UPDATE ── */
   document.getElementById('r_gfb_total').textContent = eur(totalFB);
   document.getElementById('r_gfb_total_sub').textContent =
-    totalFB >= 46400 ? 'Maximum erreicht' : ((totalFB/46400*100).toFixed(0) + ' % vom Maximum');
+    totalFB >= 46400 ? 'Maximum erreicht' : ((totalFB / 46400 * 100).toFixed(0) + ' % vom Maximum');
   document.getElementById('r_invest').textContent = eur(investFB);
   document.getElementById('r_grund').textContent = eur(grundFB);
+
   document.getElementById('r_gesamt_vorteil').textContent = eur(gesamtVorteil);
   document.getElementById('r_steuer_vorteil').textContent = eur(steuerVorteil);
-  document.getElementById('r_steuer_sub').textContent = 'bei ' + (grenz*100) + ' % Grenzsteuersatz';
+  document.getElementById('r_steuer_sub').textContent = 'bei ' + (grenz * 100) + ' % Grenzsteuersatz';
   document.getElementById('r_svs_vorteil').textContent = eur(svsVorteil);
-  document.getElementById('r_svs_sub').textContent = 'PV 18,5 % + KV 6,8 %';
+  document.getElementById('r_svs_sub').textContent = 'PV ' + (SVS_PV * 100).toFixed(1) + ' % + KV ' + (SVS_KV * 100).toFixed(1) + ' %';
 
-  // Vergleichstabelle
   document.getElementById('r_est_ohne').textContent = eur(estOhne);
   document.getElementById('r_est_mit').textContent = eur(estMit);
   document.getElementById('r_est_diff').textContent = '− ' + eur(steuerVorteil);
@@ -242,55 +212,56 @@ function berechneGFB(){
   document.getElementById('r_svs_diff').textContent = svsVorteil > 0 ? '− ' + eur(svsVorteil) : '±0';
 
   const totalOhne = estOhne + svsOhne;
-  const totalMit  = estMit + svsMit;
+  const totalMit = estMit + svsMit;
   document.getElementById('r_total_ohne').textContent = eur(totalOhne);
   document.getElementById('r_total_mit').textContent = eur(totalMit);
   document.getElementById('r_total_diff').textContent = '− ' + eur(gesamtVorteil);
 
   document.getElementById('r_max_badge').textContent =
-    totalFB >= 46400 ? 'Maximum' : (totalFB/46400*100).toFixed(0) + ' %';
+    totalFB >= 46400 ? 'Maximum' : (totalFB / 46400 * 100).toFixed(0) + ' %';
 
-  // Stacked bar
   let barHTML = '', legendHTML = '';
-  for(const d of details){
-    if(d.fb <= 0) continue;
-    const pct = totalFB > 0 ? (d.fb / totalFB * 100) : 0;
-    barHTML += '<div class="sb-seg" style="background:'+d.color+';width:'+pct+'%"></div>';
-    legendHTML += '<div class="bd-item"><div class="bd-dot" style="background:'+d.color+'"></div>'+d.name+': '+eur(d.fb)+'</div>';
+  for (const d of details) {
+    if (d.fb <= 0) continue;
+    const p = totalFB > 0 ? (d.fb / totalFB * 100) : 0;
+    barHTML += '<div class="sb-seg" style="background:' + d.color + ';width:' + p + '%"></div>';
+    legendHTML += '<div class="bd-item"><div class="bd-dot" style="background:' + d.color + '"></div>' + d.name + ': ' + eur(d.fb) + '</div>';
   }
   document.getElementById('r_bar').innerHTML = barHTML;
   document.getElementById('r_legend').innerHTML = legendHTML;
 
-  // Table
   let tbody = '';
-  for(const d of details){
+  for (const d of details) {
     const active = d.basis > 0;
     const opac = active ? '' : ' style="opacity:0.35"';
-    tbody += '<tr'+opac+'>';
-    tbody += '<td>'+d.name+(d.invest ? '' : ' *')+'</td>';
-    tbody += '<td>'+eur(d.von)+' – '+eur(d.bis)+'</td>';
-    tbody += '<td>'+(d.satz*100).toFixed(1)+' %</td>';
-    tbody += '<td>'+eur(d.fb)+'</td>';
+    tbody += '<tr' + opac + '>';
+    tbody += '<td>' + d.name + (d.invest ? '' : ' *') + '</td>';
+    tbody += '<td>' + eur(d.von) + ' – ' + eur(d.bis) + '</td>';
+    tbody += '<td>' + (d.satz * 100).toFixed(1) + ' %</td>';
+    tbody += '<td>' + eur(d.fb) + '</td>';
     tbody += '</tr>';
   }
-  tbody += '<tr class="total"><td>Gesamt</td><td></td><td></td><td class="ac-val">'+eur(totalFB)+'</td></tr>';
+  tbody += '<tr class="total"><td>Gesamt</td><td></td><td></td><td class="ac-val">' + eur(totalFB) + '</td></tr>';
   document.getElementById('r_tbody').innerHTML = tbody;
+
+  /* ── Axion Bridge ── */
+  if (window.__axionSendResult) window.__axionSendResult({
+    type: 'ifb',
+    inputs: { gewinn },
+    results: {
+      gfb_total: totalFB, invest_freibetrag: investFB, grund_freibetrag: grundFB,
+      steuer_vorteil: steuerVorteil, svs_vorteil: svsVorteil, gesamt_vorteil: gesamtVorteil,
+      grenzsteuersatz: grenz
+    }
+  });
 
   sendHeight();
 }
 
-/* ══════════ INPUT SANITIZATION ══════════ */
-document.addEventListener('blur', e => {
-  if(e.target.matches('input[type="number"]')){
-    let v = parseFloat(e.target.value);
-    if(isNaN(v)) v = 0;
-    if(v < 0) v = 0;
-    e.target.value = Math.round(v);
-  }
-}, true);
-
 /* ══════════ INIT ══════════ */
-window.addEventListener('DOMContentLoaded', () => {
+window.addEventListener('DOMContentLoaded', async () => {
+  await loadConfig();
+  applyConfig();
   berechneGFB();
   setTimeout(updatePanelMaxHeight, 0);
   setTimeout(sendHeight, 100);

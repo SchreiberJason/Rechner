@@ -96,7 +96,7 @@
 .cta-arr{font-size:13px;transition:transform .15s;}
 .pillar-card:hover .cta-arr{transform:translateX(4px);}
 
-/* Mode toggle */
+/* ══════════ MODE TOGGLE ══════════ */
 .mode-toggle{
   display:grid;grid-template-columns:1fr 1fr;
   gap:2px;background:var(--st);border-radius:14px;overflow:hidden;
@@ -111,8 +111,7 @@
 }
 .mode-btn.on{background:var(--ss);color:var(--ac);border-radius:8px;box-shadow:0 1px 4px var(--sh);}
 
-
-/* Einmal rows */
+/* ══════════ EINMAL ROWS ══════════ */
 .er{display:grid;grid-template-columns:minmax(70px,1fr) 2fr 30px;gap:6px;margin-bottom:6px;align-items:end;}
 .er .ub{min-width:30px;}
 .btn-rm{
@@ -131,37 +130,23 @@
 }
 .btn-add:active{border-color:var(--ac);color:var(--ac);background:var(--adim);}
 
-.ps-sticky{border-bottom:none;}
-
-/* Break-even footer strip inside chart card */
+/* ══════════ BREAK-EVEN FOOTER ══════════ */
 .be-row{display:flex;align-items:center;flex-wrap:wrap;gap:0;padding:0;}
 .be-item{display:flex;flex-direction:column;gap:3px;padding:11px 18px;flex:1;min-width:100px;}
 .be-label{font-size:9.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--ts);}
 .be-val{font-size:14px;font-weight:700;color:var(--ac);letter-spacing:-.01em;}
 .be-sep{width:1px;height:36px;background:var(--brd);flex-shrink:0;align-self:center;}
 
-/* Eingerückte Trennlinien (18px Abstand je Seite) */
-.ps:not(.ps-sticky),.ct,.cb,.opt-toggle,.ch,.be-row{position:relative;}
-.ps:not(:last-child)::after,.ct::after,.cb.open::after,.opt-toggle::after,.ch::after{
+/* ══════════ INSET DIVIDERS (index overrides) ══════════ */
+.opt-toggle,.ch,.be-row{position:relative;}
+.opt-toggle::after,.ch::after{
   content:'';position:absolute;bottom:0;left:18px;right:18px;height:1px;background:var(--brd);pointer-events:none;
 }
-.be-row::before,.ps-sticky::before{
+.be-row::before{
   content:'';position:absolute;top:0;left:18px;right:18px;height:1px;background:var(--brd);pointer-events:none;
 }
 
-
-/* Progress */
-.pw{background:var(--st);border-radius:100px;height:8px;overflow:hidden;margin:10px 0 4px;}
-.pf{height:100%;border-radius:100px;background:var(--ac);transition:width .4s ease;}
-
-/* Table override: max-height for scrollable tables */
-.tw{max-height:280px;overflow-y:auto;}
-
-/* Info box */
-.ib{background:var(--adim);border:1px solid rgba(56,217,163,.18);border-radius:16px;padding:11px 13px;font-size:12px;color:var(--ts);line-height:1.6;margin-top:8px;}
-.ib b,.ib strong{color:var(--ac);}
-
-/* Toggle pill for optional tagesgeld */
+/* ══════════ OPT TOGGLE (pill variant) ══════════ */
 .opt-toggle{
   display:flex;align-items:center;justify-content:space-between;
   gap:10px;padding:12px 18px;
@@ -181,9 +166,21 @@
 .opt-pill.on{background:var(--adim2);border-color:var(--ac);}
 .opt-pill.on::after{transform:translateX(16px);background:var(--ac);}
 
-/* ══════════ RESPONSIVE (Dashboard-spezifisch) ══════════ */
+/* ══════════ INFO BOX VARIANT ══════════ */
+.ib{background:var(--adim);border:1px solid rgba(56,217,163,.18);border-radius:16px;padding:11px 13px;font-size:12px;color:var(--ts);line-height:1.6;margin-top:8px;}
+.ib b,.ib strong{color:var(--ac);}
 
-/* ---- Tablet 600–1023px ---- */
+/* ══════════ TABLE OVERRIDES (index) ══════════ */
+.tw{max-height:280px;overflow-y:auto;}
+thead th:first-child{text-align:center;}
+tbody td:first-child{text-align:center;color:var(--tm);font-weight:600;}
+
+/* ══════════ STICKY OVERRIDE ══════════ */
+.ps-sticky{border-bottom:none;}
+
+/* ══════════ RESPONSIVE (index-specific) ══════════ */
+
+/* ---- Tablet 600-1023px ---- */
 @media(min-width:600px) and (max-width:1023px){
   .dash-wrap{padding:24px 5px 60px;}
   .pillar-grid{grid-template-columns:1fr 1fr;gap:12px;}
@@ -198,6 +195,7 @@
   .dash-summary .ds-item:nth-child(3){grid-column:1/-1;border-top:1px solid var(--brd);}
   .ds-item{padding:14px 12px;}
   .pillar-grid{grid-template-columns:1fr;gap:10px;}
+  /* No hover lift on mobile */
   .pillar-card:hover{transform:none;box-shadow:0 4px 20px var(--sh);}
   .opt-toggle{padding:12px 14px;}
 }
@@ -205,19 +203,11 @@
   .pc-metrics{grid-template-columns:1fr 1fr;}
 }
 
-/* ---- Large desktop ≥1024px ---- */
+/* ---- Large desktop >=1024px ---- */
 @media(min-width:1024px){
   .dash-wrap{padding:40px 5px 80px;}
   .back-nav{padding:20px 0 0;}
 }
-#chart-tip{
-  position:fixed;z-index:9999;pointer-events:none;display:none;
-  background:var(--st);border-radius:32px;padding:16px;
-  min-width:120px;box-shadow:0 4px 24px rgba(0,0,0,.25);
-}
-#chart-tip .ctt{font-weight:600;font-size:12px;margin-bottom:8px;}
-#chart-tip .cti{display:flex;align-items:center;gap:8px;font-size:12px;margin-bottom:2px;}
-#chart-tip .ctd{width:8px;height:8px;border-radius:4px;flex-shrink:0;}
 </style>
 </head>
 <body>
@@ -689,7 +679,19 @@
 
 <script src="shared.js"></script>
 <script>
-checkAccess('flv2025');
+/* ══════════════════════════════════
+   ZUGRIFFSSCHUTZ
+══════════════════════════════════ */
+(function(){
+  const isLocal=['localhost','127.0.0.1',''].includes(location.hostname);
+  const validRef=document.referrer.includes('jasonschreiber.at');
+  const ACCESS_KEY='flv2025';
+  const urlKey=new URLSearchParams(location.search).get('access');
+  if(!isLocal&&!validRef&&urlKey!==ACCESS_KEY){
+    document.body.style.cssText='margin:0;background:#0F0F0F;display:flex;align-items:center;justify-content:center;height:100vh;font-family:Inter,sans-serif;';
+    document.body.innerHTML='<div style="color:#555;font-size:14px;text-align:center"><div style="font-size:32px;margin-bottom:12px">🔒</div>Zugriff nicht gestattet.</div>';
+  }
+})();
 
 /* ══════════════════════════════════
    NAVIGATION
@@ -730,15 +732,27 @@ function syncDash(){
 }
 
 /* ══════════════════════════════════
+   COLLAPSIBLE
+══════════════════════════════════ */
+function toggleColl(t){
+  t.classList.toggle('open');
+  document.getElementById(t.id.replace('ct-','cb-')).classList.toggle('open');
+}
+
+/* ══════════════════════════════════
    CONFIG + DEPOTANBIETER
 ══════════════════════════════════ */
+let CFG=null;
 let DEPOTANBIETER={manuell:{name:'Manuell',etf:null,fonds:null}};
 
-async function loadConfigAndDepot(){
-  await loadConfig();
-  if(CFG&&CFG.depot_anbieter){
+function applyIndexConfig(){
+  if(!CONFIG)return;
+  const cfg=CONFIG;
+  CFG=cfg;
+  // Depot-Anbieter aus Config laden
+  if(cfg.depot_anbieter){
     const da={};
-    for(const[k,v]of Object.entries(CFG.depot_anbieter)){
+    for(const[k,v]of Object.entries(cfg.depot_anbieter)){
       if(k.startsWith('_'))continue;
       da[k]=v;
     }
@@ -909,7 +923,7 @@ function toggleTages(){
 }
 
 /* ══════════════════════════════════
-   FORMATTERS
+   FORMATTERS (index-specific: 2 decimal places)
 ══════════════════════════════════ */
 function eur(v){return new Intl.NumberFormat('de-AT',{style:'currency',currency:'EUR',minimumFractionDigits:2}).format(v);}
 function eurS(v){
@@ -917,7 +931,6 @@ function eurS(v){
   if(v>=1e3) return (v/1e3).toFixed(0)+' K€';
   return v.toFixed(0)+' €';
 }
-/* eurN from shared.js, override with 2 decimal M */
 function eurN(v){
   if(v>=1e6) return (v/1e6).toFixed(2)+' M';
   if(v>=1e3) return (v/1e3).toFixed(0)+' K';
@@ -1052,6 +1065,13 @@ function berechneKurz(){
       tb.appendChild(tr);
     }
   }
+
+  if (window.__axionSendResult) window.__axionSendResult({
+    type: '3saeulen_kurz',
+    inputs: { einkommen: eink, vorhandenes: vorh, sparrate: rate, monate: mo },
+    results: { ziel: ziel, monate_bis_ziel: zm || null, zinsertrag: zm ? (rows[zm-1]?.tz || 0) : (rows.at(-1)?.tz || 0) }
+  });
+
   sendHeight();
 }
 function set(id,v){const el=document.getElementById(id);if(el)el.textContent=v;}
@@ -1236,6 +1256,13 @@ function berechneMittel(){
       tb2.appendChild(tr);
     });
   }
+
+  if (window.__axionSendResult) window.__axionSendResult({
+    type: '3saeulen_mittel',
+    inputs: { startkapital: start, sparrate: rate, jahre: jahre },
+    results: { endwert_fonds: last.f, endwert_tagesgeld: last.t, zinsertrag: last.f - last.e }
+  });
+
   sendHeight();
 }
 
@@ -1472,6 +1499,13 @@ function berechneLang(){
     tr.innerHTML=`<td>${r.J}</td><td>${eur(r.E)}</td><td style="color:var(--ac)">${eur(r.FN)}</td><td style="color:#60a5fa">${eur(r.TN)}</td><td style="color:#fb923c">${eur(r.AN)}</td>${infCell}`;
     tb.appendChild(tr);
   });
+
+  if (window.__axionSendResult) window.__axionSendResult({
+    type: '3saeulen_lang',
+    inputs: { monatsbeitrag: mb, laufzeit_jahre: lj, rendite_pct: rpa * 100 },
+    results: { flv_endwert: last.FN, depot_thes_endwert: last.TN, depot_ausch_endwert: last.AN, eingezahlt: last.E, flv_vorteil: last.FN - Math.max(last.TN, last.AN) }
+  });
+
   sendHeight();
 }
 
@@ -1525,35 +1559,6 @@ function calcFLV(mb,lj,rpa,ein,flv,dep,dynamik,flvTer,flvRefTer){
     res.push({J:j,E:kumE+kum,FN,TN,AN});
   }
   return res;
-}
-
-/* ══════════════════════════════════
-   INIT
-══════════════════════════════════ */
-/* Override shared.js: multi-panel layout + view-based height */
-function updatePanelMaxHeight(){
-  if(window.innerWidth<720){
-    document.querySelectorAll('.params-panel').forEach(p=>{p.style.maxHeight='';});
-    return;
-  }
-  document.querySelectorAll('.calc-layout').forEach(layout=>{
-    const panel=layout.querySelector('.params-panel');
-    const rp=layout.querySelector('.rp');
-    if(!panel||!rp)return;
-    const h=rp.offsetHeight;
-    if(h>0)panel.style.maxHeight=h+'px';
-  });
-}
-if(typeof ResizeObserver!=='undefined'){
-  const _rpObs=new ResizeObserver(()=>updatePanelMaxHeight());
-  document.querySelectorAll('.rp').forEach(el=>_rpObs.observe(el));
-}
-
-function sendHeight(){
-  if(window.parent===window)return;
-  const view=document.querySelector('.view.active');
-  const h=view?view.scrollHeight:Math.max(document.body.scrollHeight,document.documentElement.scrollHeight);
-  window.parent.postMessage({type:'resize',height:h},'*');
 }
 
 /* ══════════════════════════════════
@@ -1611,8 +1616,12 @@ document.addEventListener('blur',e=>{
   if(e.target.matches('input[type="number"]'))sanitizeInput(e.target);
 },true);
 
+/* ══════════════════════════════════
+   INIT
+══════════════════════════════════ */
 window.addEventListener('DOMContentLoaded',async()=>{
-  await loadConfigAndDepot();
+  await loadConfig();
+  applyIndexConfig();
   applyDefaults();
   berechneKurz();
   setMittelAnbieter();

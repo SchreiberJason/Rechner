@@ -11,7 +11,6 @@
 .detail-sub{display:flex;justify-content:space-between;align-items:center;padding:2px 0 2px 16px;font-size:11px;color:var(--ts);}
 .detail-sep{height:1px;background:var(--brd);margin:8px 0;}
 .detail-total{display:flex;justify-content:space-between;align-items:center;padding:6px 0;font-weight:700;font-size:13px;color:var(--tp);}
-.mode-btn.on{background:var(--ac);color:#051a10;border-radius:8px;box-shadow:0 1px 4px var(--sh);font-weight:700;}
 </style>
 </head>
 <body>
@@ -22,17 +21,17 @@
   <aside class="params-panel">
     <div class="ps">
       <div class="sl">Einkommen</div>
-      <div class="mode-toggle" style="margin-bottom:12px;">
-        <button class="mode-btn on" id="btn_bn" onclick="setRichtung('bn')">Brutto &rarr; Netto</button>
-        <button class="mode-btn" id="btn_nb" onclick="setRichtung('nb')">Netto &rarr; Brutto</button>
+      <div class="bn-toggle" style="margin-bottom:12px;">
+        <button class="bn-btn active" id="btn_bn" onclick="setRichtung('bn')">Brutto &rarr; Netto</button>
+        <button class="bn-btn" id="btn_nb" onclick="setRichtung('nb')">Netto &rarr; Brutto</button>
       </div>
       <div class="f">
         <label id="bn_label">Monatsgehalt brutto</label>
         <div class="fu"><input type="number" id="bn_gehalt" value="3000" min="0" step="50"><span class="ub">&euro; / Mo.</span></div>
       </div>
-      <div class="mode-toggle" style="margin-top:12px;">
-        <button class="mode-btn on" id="btn_14" onclick="setGehaelter(14)">14 Geh&auml;lter</button>
-        <button class="mode-btn" id="btn_12" onclick="setGehaelter(12)">12 Geh&auml;lter</button>
+      <div class="bn-toggle" style="margin-top:12px;">
+        <button class="bn-btn active" id="btn_14" onclick="setGehaelter(14)">14 Geh&auml;lter</button>
+        <button class="bn-btn" id="btn_12" onclick="setGehaelter(12)">12 Geh&auml;lter</button>
       </div>
     </div>
 
@@ -227,16 +226,16 @@ function applyConfig() {
 // UI toggles
 function setRichtung(r) {
   richtung = r;
-  document.getElementById('btn_bn').className = 'mode-btn' + (r==='bn' ? ' on' : '');
-  document.getElementById('btn_nb').className = 'mode-btn' + (r==='nb' ? ' on' : '');
+  document.getElementById('btn_bn').className = 'bn-btn' + (r==='bn' ? ' active' : '');
+  document.getElementById('btn_nb').className = 'bn-btn' + (r==='nb' ? ' active' : '');
   document.getElementById('bn_label').textContent = r === 'bn' ? 'Monatsgehalt brutto' : 'Monatsgehalt netto';
   berechne();
 }
 
 function setGehaelter(g) {
   gehaelter = g;
-  document.getElementById('btn_14').className = 'mode-btn' + (g===14 ? ' on' : '');
-  document.getElementById('btn_12').className = 'mode-btn' + (g===12 ? ' on' : '');
+  document.getElementById('btn_14').className = 'bn-btn' + (g===14 ? ' active' : '');
+  document.getElementById('btn_12').className = 'bn-btn' + (g===12 ? ' active' : '');
   berechne();
 }
 

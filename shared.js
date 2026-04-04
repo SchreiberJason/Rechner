@@ -139,9 +139,22 @@ window.addEventListener('message', function (e) {
       var el = document.getElementById('m_name');
       if (el) { el.value = d.zielname; el.dispatchEvent(new Event('input')); }
     }
+    // 3-Säulen: zur richtigen Sub-View navigieren
+    // view = 'kurz' | 'mittel' | 'lang'
+    if (d.view && typeof goTo === 'function') {
+      goTo(d.view);
+    }
   }
   if (e.data?.type === 'axion-save-request') {
-    if (typeof berechne === 'function') berechne();
+    var view = e.data.view;
+    // 3-Säulen: zur richtigen Sub-View navigieren und berechnen
+    if (view && typeof goTo === 'function') {
+      goTo(view);
+      if (view === 'kurz' && typeof berechneKurz === 'function') berechneKurz();
+      else if (view === 'mittel' && typeof berechneMittel === 'function') berechneMittel();
+      else if (view === 'lang' && typeof berechneLang === 'function') berechneLang();
+    }
+    else if (typeof berechne === 'function') berechne();
     else if (typeof calculate === 'function') calculate();
     else if (typeof berechneGFB === 'function') berechneGFB();
     else if (typeof berechneKurz === 'function') berechneKurz();

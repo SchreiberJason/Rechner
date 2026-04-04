@@ -47,12 +47,31 @@
     ],
     "_hinweis_tarifstufen": "Tarifstufen 2026 gemäß AK Steuerwertetabelle / §33 EStG. Basis = kumulierte Steuer der Vorstufen.",
     "sonderzahlung_pauschalsatz_pct": 6.0,
+    "sonderzahlung_freibetrag_eur": 620,
     "arbeitnehmer_absetzbetrag_eur": 1542,
-    "pensionisten_absetzbetrag_eur": 1121
+    "verkehrsabsetzbetrag_eur": 496,
+    "verkehrsabsetzbetrag_erhoeht_eur": 853,
+    "zuschlag_verkehrsabsetzbetrag_eur": 804,
+    "zuschlag_einschleif_von": 19761,
+    "zuschlag_einschleif_bis": 30259,
+    "pensionisten_absetzbetrag_eur": 1121,
+    "familienbonus_bis18_eur": 2000,
+    "familienbonus_ab18_eur": 700
   },
   "sozialversicherung": {
     "_hinweis": "SV-Sätze und Beitragsgrenzen — jährlich prüfen (ASVG/GSVG). Stand: 2026 (WKO Beitragswesen DN 2026).",
     "an_sv_rate": 0.1807,
+    "an_kv_pct": 3.87,
+    "an_pv_pct": 10.25,
+    "an_av_pct": 2.95,
+    "an_iesg_pct": 0.10,
+    "an_ak_pct": 0.50,
+    "an_wbf_pct": 0.50,
+    "av_staffelung": [
+      { "bis": 2225, "satz": 0 },
+      { "bis": 2427, "satz": 1 },
+      { "bis": 2630, "satz": 2 }
+    ],
     "hbgg_asvg_monat_eur": 6930,
     "hbgg_gsvg_monat_eur": 6930,
     "mindest_bgg_gsvg_monat_eur": 518.44,

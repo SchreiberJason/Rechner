@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Brutto-Netto-Rechner | Jason Schreiber</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Inter+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="shared.css">
+<style>
+.detail-row{display:flex;justify-content:space-between;align-items:center;padding:4px 0;color:var(--tp);}
+.detail-sub{display:flex;justify-content:space-between;align-items:center;padding:2px 0 2px 16px;font-size:11px;color:var(--ts);}
+.detail-sep{height:1px;background:var(--brd);margin:8px 0;}
+.detail-total{display:flex;justify-content:space-between;align-items:center;padding:6px 0;font-weight:700;font-size:13px;color:var(--tp);}
+.mode-btn.on{background:var(--ac);color:#051a10;border-radius:8px;box-shadow:0 1px 4px var(--sh);font-weight:700;}
+</style>
+</head>
+<body>
+
+<div class="calc-layout">
+
+  <!-- ══════════ LEFT: PARAMS ══════════ -->
+  <aside class="params-panel">
+    <div class="ps">
+      <div class="sl">Einkommen</div>
+      <div class="mode-toggle" style="margin-bottom:12px;">
+        <button class="mode-btn on" id="btn_bn" onclick="setRichtung('bn')">Brutto &rarr; Netto</button>
+        <button class="mode-btn" id="btn_nb" onclick="setRichtung('nb')">Netto &rarr; Brutto</button>
+      </div>
+      <div class="f">
+        <label id="bn_label">Monatsgehalt brutto</label>
+        <div class="fu"><input type="number" id="bn_gehalt" value="3000" min="0" step="50"><span class="ub">&euro; / Mo.</span></div>
+      </div>
+      <div class="mode-toggle" style="margin-top:12px;">
+        <button class="mode-btn on" id="btn_14" onclick="setGehaelter(14)">14 Geh&auml;lter</button>
+        <button class="mode-btn" id="btn_12" onclick="setGehaelter(12)">12 Geh&auml;lter</button>
+      </div>
+    </div>
+
+    <div class="ct" onclick="toggleSection(this)">
+      <div class="sl">Pendlerpauschale</div>
+      <span class="ca">&#9660;</span>
+    </div>
+    <div class="cb">
+      <div class="f">
+        <label>Entfernung Wohnung &ndash; Arbeit</label>
+        <div class="fu"><input type="number" id="bn_km" value="0" min="0" step="1"><span class="ub">km</span></div>
+      </div>
+      <div class="tog-row">
+        <span class="tog-label">&Ouml;ffentl. Verkehr zumutbar</span>
+        <div class="pill on" id="bn_oev_pill" onclick="toggleOev()"></div>
+      </div>
+    </div>
+
+    <div class="ct" onclick="toggleSection(this)">
+      <div class="sl">Familienbonus Plus</div>
+      <span class="ca">&#9660;</span>
+    </div>
+    <div class="cb">
+      <div class="f">
+        <label>Kinder bis 18 Jahre</label>
+        <div class="fu"><input type="number" id="bn_kinder" value="0" min="0" max="10" step="1"><span class="ub">Kinder</span></div>
+      </div>
+      <div class="f">
+        <label>Kinder ab 18 Jahre</label>
+        <div class="fu"><input type="number" id="bn_kinder_ab18" value="0" min="0" max="10" step="1"><span class="ub">Kinder</span></div>
+      </div>
+    </div>
+
+    <div class="ps ps-sticky">
+      <button class="btn-calc" onclick="berechne()">Berechnen</button>
+    </div>
+  </aside>
+
+  <!-- ══════════ RIGHT: RESULTS ══════════ -->
+  <div class="rp">
+
+    <!-- Hero KPIs -->
+    <div class="g3">
+      <div class="met hi">
+        <span class="mi">&#128176;</span>
+        <div class="ml">Netto monatlich</div>
+        <div class="mv ac" id="r_netto">&mdash;</div>
+        <div class="ms" id="r_netto_sub">14&times; pro Jahr</div>
+      </div>
+      <div class="met">
+        <span class="mi">&#128203;</span>
+        <div class="ml">SV-Abzug</div>
+        <div class="mv" style="color:var(--red)" id="r_sv">&mdash;</div>
+        <div class="ms" id="r_sv_sub">&mdash;</div>
+      </div>
+      <div class="met">
+        <span class="mi">&#128200;</span>
+        <div class="ml">Lohnsteuer</div>
+        <div class="mv yellow" id="r_lst">&mdash;</div>
+        <div class="ms" id="r_lst_sub">&mdash;</div>
+      </div>
+    </div>
+
+    <!-- Detail Breakdown -->
+    <div class="card">
+      <div class="ch">
+        <span class="ct-title">Gehaltsaufschl&uuml;sselung</span>
+      </div>
+      <div class="cb2" style="font-size:12.5px;">
+        <div class="detail-row"><span>Bruttogehalt</span><span id="d_brutto" style="font-weight:700">&mdash;</span></div>
+        <div class="detail-sep"></div>
+        <div class="detail-row"><span>SV-Beitr&auml;ge gesamt</span><span id="d_sv_total" style="color:var(--red)">&mdash;</span></div>
+        <div class="detail-sub"><span>Krankenversicherung</span><span id="d_kv">&mdash;</span></div>
+        <div class="detail-sub"><span>Pensionsversicherung</span><span id="d_pv">&mdash;</span></div>
+        <div class="detail-sub"><span>Arbeitslosenversicherung</span><span id="d_av">&mdash;</span></div>
+        <div class="detail-sub"><span>AK-Umlage</span><span id="d_ak">&mdash;</span></div>
+        <div class="detail-sub"><span>Wohnbauf&ouml;rderung</span><span id="d_wbf">&mdash;</span></div>
+        <div class="detail-sep"></div>
+        <div class="detail-row"><span>SV-Bemessungsgrundlage</span><span id="d_sv_basis">&mdash;</span></div>
+        <div class="detail-row"><span>Lohnsteuer (monatlich)</span><span id="d_lst" style="color:var(--y)">&mdash;</span></div>
+        <div class="detail-sub"><span>Grenzsteuersatz</span><span id="d_grenz">&mdash;</span></div>
+        <div class="detail-sub"><span>Absetzbetr&auml;ge</span><span id="d_absetz" style="color:var(--ac)">&mdash;</span></div>
+        <div class="detail-sep"></div>
+        <div class="detail-total"><span>= Netto monatlich</span><span id="d_netto" style="color:var(--ac)">&mdash;</span></div>
+
+        <div id="sz_wrap">
+          <div class="detail-sep" style="margin:14px 0"></div>
+          <div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ts);margin-bottom:8px">Sonderzahlung (13./14.)</div>
+          <div class="detail-row"><span>Brutto (pro Zahlung)</span><span id="d_sz_brutto">&mdash;</span></div>
+          <div class="detail-row"><span>SV-Abzug</span><span id="d_sz_sv" style="color:var(--red)">&mdash;</span></div>
+          <div class="detail-row"><span>Freibetrag</span><span id="d_sz_fb">&mdash;</span></div>
+          <div class="detail-row"><span>Lohnsteuer 6 %</span><span id="d_sz_lst" style="color:var(--y)">&mdash;</span></div>
+          <div class="detail-total"><span>= Netto (pro Zahlung)</span><span id="d_sz_netto" style="color:var(--ac)">&mdash;</span></div>
+        </div>
+
+        <div class="detail-sep" style="margin:14px 0"></div>
+        <div class="detail-total" style="font-size:14px"><span>Jahresnetto gesamt</span><span id="d_jahr_netto" style="color:var(--ac)">&mdash;</span></div>
+      </div>
+    </div>
+
+    <!-- Steuerstufen -->
+    <div class="card">
+      <div class="ch">
+        <span class="ct-title">Einkommensteuerstufen</span>
+      </div>
+      <div class="cb2">
+        <div class="stacked-bar" id="r_bar"></div>
+        <div class="bd-legend" id="r_legend"></div>
+      </div>
+    </div>
+
+    <!-- Jahresuebersicht -->
+    <div class="card">
+      <div class="ch">
+        <span class="ct-title">Jahres&uuml;bersicht</span>
+      </div>
+      <div class="tw">
+        <table>
+          <thead><tr><th></th><th>Monatlich</th><th>Sonderzahlung</th><th>Jahresgesamt</th></tr></thead>
+          <tbody id="r_tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Info strip -->
+    <div class="info-strip">
+      Werte gem&auml;&szlig; <b>EStG 2026 / ASVG</b>. Ohne Gew&auml;hr.
+    </div>
+
+  </div>
+</div>
+
+<script src="shared.js"></script>
+<script>
+/* ══════════════════════════════════
+   BRUTTO-NETTO-RECHNER — Austria 2026
+   Laedt Steuerstufen + SV-Saetze aus config.json
+══════════════════════════════════ */
+
+// Access protection
+(function(){
+  const isLocal=['localhost','127.0.0.1',''].includes(location.hostname);
+  const validRef=document.referrer.includes('jasonschreiber.at');
+  const ACCESS_KEY='flv2025';
+  const urlKey=new URLSearchParams(location.search).get('access');
+  if(!isLocal&&!validRef&&urlKey!==ACCESS_KEY){
+    document.body.style.cssText='margin:0;background:#0F0F0F;display:flex;align-items:center;justify-content:center;height:100vh;font-family:Inter,sans-serif;';
+    document.body.innerHTML='<div style="color:#555;font-size:14px;text-align:center"><div style="font-size:32px;margin-bottom:12px">&#128274;</div>Zugriff nicht gestattet.</div>';
+    throw new Error('Access denied');
+  }
+})();
+
+// State
+let richtung = 'bn'; // 'bn' = brutto->netto, 'nb' = netto->brutto
+let gehaelter = 14;
+let oevZumutbar = true;
+
+// Fallback constants (overwritten by config)
+let TAX = [{bis:13539,satz:0},{bis:21992,satz:0.2},{bis:36458,satz:0.3},{bis:70365,satz:0.4},{bis:104859,satz:0.48},{bis:1000000,satz:0.5}];
+let HBGG = 6930, SV_RATE = 0.1807;
+let KV=3.87, PV=10.25, AV=2.95, AK=0.50, WBF=0.50;
+let AV_STAFF = [{bis:2225,satz:0},{bis:2427,satz:1},{bis:2630,satz:2}];
+let VERKEHR_AB = 496, ZUSCHLAG_AB = 804, ZUSCHLAG_VON = 19761, ZUSCHLAG_BIS = 30259;
+let SZ_FREIBETRAG = 620, SZ_SATZ = 0.06;
+let FBONUS_U18 = 2000, FBONUS_O18 = 700;
+const fmt = n => n.toLocaleString('de-AT', {minimumFractionDigits:2, maximumFractionDigits:2});
+const fE = n => fmt(n) + ' \u20AC';
+
+function applyConfig() {
+  if (!CONFIG) return;
+  const st = CONFIG.steuern || {};
+  const sv = CONFIG.sozialversicherung || {};
+  if (st.lohnsteuer_tarifstufen) TAX = st.lohnsteuer_tarifstufen.map(s => ({bis:s.bis, satz:s.satz}));
+  if (sv.hbgg_asvg_monat_eur) HBGG = sv.hbgg_asvg_monat_eur;
+  if (sv.an_sv_rate) SV_RATE = sv.an_sv_rate;
+  if (sv.an_kv_pct != null) KV = sv.an_kv_pct;
+  if (sv.an_pv_pct != null) PV = sv.an_pv_pct;
+  if (sv.an_av_pct != null) AV = sv.an_av_pct;
+  if (sv.an_ak_pct != null) AK = sv.an_ak_pct;
+  if (sv.an_wbf_pct != null) WBF = sv.an_wbf_pct;
+  if (sv.av_staffelung) AV_STAFF = sv.av_staffelung;
+  if (st.verkehrsabsetzbetrag_eur != null) VERKEHR_AB = st.verkehrsabsetzbetrag_eur;
+  if (st.zuschlag_verkehrsabsetzbetrag_eur != null) ZUSCHLAG_AB = st.zuschlag_verkehrsabsetzbetrag_eur;
+  if (st.zuschlag_einschleif_von != null) ZUSCHLAG_VON = st.zuschlag_einschleif_von;
+  if (st.zuschlag_einschleif_bis != null) ZUSCHLAG_BIS = st.zuschlag_einschleif_bis;
+  if (st.sonderzahlung_freibetrag_eur != null) SZ_FREIBETRAG = st.sonderzahlung_freibetrag_eur;
+  if (st.sonderzahlung_pauschalsatz_pct != null) SZ_SATZ = st.sonderzahlung_pauschalsatz_pct / 100;
+  if (st.familienbonus_bis18_eur != null) FBONUS_U18 = st.familienbonus_bis18_eur;
+  if (st.familienbonus_ab18_eur != null) FBONUS_O18 = st.familienbonus_ab18_eur;
+}
+
+// UI toggles
+function setRichtung(r) {
+  richtung = r;
+  document.getElementById('btn_bn').className = 'mode-btn' + (r==='bn' ? ' on' : '');
+  document.getElementById('btn_nb').className = 'mode-btn' + (r==='nb' ? ' on' : '');
+  document.getElementById('bn_label').textContent = r === 'bn' ? 'Monatsgehalt brutto' : 'Monatsgehalt netto';
+  berechne();
+}
+
+function setGehaelter(g) {
+  gehaelter = g;
+  document.getElementById('btn_14').className = 'mode-btn' + (g===14 ? ' on' : '');
+  document.getElementById('btn_12').className = 'mode-btn' + (g===12 ? ' on' : '');
+  berechne();
+}
+
+function toggleOev() {
+  oevZumutbar = !oevZumutbar;
+  document.getElementById('bn_oev_pill').classList.toggle('on', oevZumutbar);
+  berechne();
+}
+
+function toggleSection(ct) {
+  ct.classList.toggle('open');
+  const cb = ct.nextElementSibling;
+  if (cb && cb.classList.contains('cb')) cb.classList.toggle('open');
+  setTimeout(sendHeight, 50);
+}
+
+// SV calculation with AV-Staffelung
+function calcSV(brutto) {
+  const basis = Math.min(brutto, HBGG);
+  const kv = basis * KV / 100;
+  const pv = basis * PV / 100;
+  const ak = basis * AK / 100;
+  const wbf = basis * WBF / 100;
+
+  // AV-Staffelung: reduced rate for low incomes
+  let avRate = AV;
+  for (const s of AV_STAFF) {
+    if (brutto <= s.bis) { avRate = s.satz; break; }
+  }
+  const av = basis * avRate / 100;
+
+  return { kv, pv, av, ak, wbf, total: kv + pv + av + ak + wbf, basis, avRate };
+}
+
+// Lohnsteuer (progressive brackets)
+function calcLohnsteuer(taxableAnnual) {
+  let steuer = 0, prev = 0;
+  for (const s of TAX) {
+    const band = Math.max(0, Math.min(taxableAnnual, s.bis) - prev);
+    steuer += band * s.satz;
+    prev = s.bis;
+    if (taxableAnnual <= s.bis) break;
+  }
+  if (taxableAnnual > 1000000) {
+    steuer += (taxableAnnual - 1000000) * 0.55;
+  }
+  return steuer;
+}
+
+function getGrenzsteuersatz(taxableAnnual) {
+  if (taxableAnnual > 1000000) return 55;
+  for (const s of TAX) {
+    if (taxableAnnual <= s.bis) return s.satz * 100;
+  }
+  return 50;
+}
+
+// Pendlerpauschale (Werbungskosten — reduces taxable income)
+function getPendlerFreibetrag() {
+  const km = parseFloat(document.getElementById('bn_km')?.value) || 0;
+  if (km <= 0) return 0;
+  if (oevZumutbar) {
+    if (km >= 60) return 2301;
+    if (km >= 40) return 1536;
+    if (km >= 20) return 768;
+    return 0;
+  } else {
+    if (km >= 60) return 3996;
+    if (km >= 40) return 2796;
+    if (km >= 20) return 1596;
+    if (km >= 2) return 396;
+    return 0;
+  }
+}
+
+// Netto from Brutto (full calculation)
+function nettoFromBrutto(brutto) {
+  const sv = calcSV(brutto);
+
+  // Taxable income for 12 regular months
+  const taxable12 = Math.max(0, (brutto - sv.total) * 12 - getPendlerFreibetrag());
+  const rawTax12 = calcLohnsteuer(taxable12);
+
+  // Absetzbetraege (reduce tax directly)
+  let absetz = VERKEHR_AB;
+  // Zuschlag zum Verkehrsabsetzbetrag
+  if (taxable12 <= ZUSCHLAG_VON) absetz += ZUSCHLAG_AB;
+  else if (taxable12 < ZUSCHLAG_BIS) absetz += ZUSCHLAG_AB * (ZUSCHLAG_BIS - taxable12) / (ZUSCHLAG_BIS - ZUSCHLAG_VON);
+  // Pendlereuro
+  const km = parseFloat(document.getElementById('bn_km')?.value) || 0;
+  absetz += km * 6;
+  // Familienbonus
+  const kinderU18 = parseInt(document.getElementById('bn_kinder')?.value) || 0;
+  const kinderO18 = parseInt(document.getElementById('bn_kinder_ab18')?.value) || 0;
+  absetz += kinderU18 * FBONUS_U18 + kinderO18 * FBONUS_O18;
+
+  const lst12 = Math.max(0, rawTax12 - absetz);
+  const grenz = getGrenzsteuersatz(taxable12);
+
+  // Sonderzahlung (13./14.)
+  let szLst = 0, szNetto = 0;
+  if (gehaelter === 14) {
+    const szBrutto = brutto * 2;
+    const szSV = sv.total * 2;
+    const steuerpflichtig = Math.max(0, (szBrutto - szSV) - SZ_FREIBETRAG);
+    szLst = steuerpflichtig * SZ_SATZ;
+    szNetto = szBrutto - szSV - szLst;
+  }
+
+  const nettoMo = brutto - sv.total - lst12 / 12;
+  const jahrNetto = brutto * gehaelter - sv.total * gehaelter - lst12 - szLst;
+
+  return { brutto, sv, taxable12, rawTax12, absetz, lst12, lstMo: lst12/12, grenz, szLst, szNetto, nettoMo, jahrNetto };
+}
+
+// Brutto from Netto (iterative)
+function bruttoFromNetto(netto) {
+  if (netto <= 0) return 0;
+  let g = netto / 0.68;
+  for (let i = 0; i < 80; i++) {
+    const result = nettoFromBrutto(g);
+    const err = result.nettoMo - netto;
+    if (Math.abs(err) < 0.05) break;
+    g -= err * 0.55;
+    if (g < 1) g = 1;
+  }
+  return Math.round(g * 100) / 100;
+}
+
+// MAIN
+function berechne() {
+  const input = parseFloat(document.getElementById('bn_gehalt')?.value) || 0;
+  if (input <= 0) return;
+
+  let brutto;
+  if (richtung === 'bn') {
+    brutto = input;
+  } else {
+    brutto = bruttoFromNetto(input);
+  }
+
+  const r = nettoFromBrutto(brutto);
+
+  // Hero KPIs
+  document.getElementById('r_netto').textContent = fE(r.nettoMo);
+  document.getElementById('r_netto_sub').textContent = gehaelter === 14 ? '14\u00D7 pro Jahr' : '12\u00D7 pro Jahr';
+  document.getElementById('r_sv').textContent = '\u2212' + fE(r.sv.total);
+  document.getElementById('r_sv_sub').textContent = (r.sv.total / brutto * 100).toFixed(1).replace('.',',') + ' % vom Brutto';
+  document.getElementById('r_lst').textContent = '\u2212' + fE(r.lstMo);
+  document.getElementById('r_lst_sub').textContent = 'Grenzsteuersatz ' + r.grenz + ' %';
+
+  // If Netto->Brutto: show computed brutto
+  if (richtung === 'nb') {
+    document.getElementById('r_netto_sub').textContent = 'Brutto: ' + fE(brutto);
+  }
+
+  // Detail breakdown
+  const setD = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+  setD('d_brutto', fE(brutto));
+  setD('d_sv_total', '\u2212' + fE(r.sv.total));
+  setD('d_kv', '\u2212' + fE(r.sv.kv) + '  (' + KV.toFixed(2).replace('.',',') + ' %)');
+  setD('d_pv', '\u2212' + fE(r.sv.pv) + '  (' + PV.toFixed(2).replace('.',',') + ' %)');
+  setD('d_av', '\u2212' + fE(r.sv.av) + '  (' + r.sv.avRate.toFixed(2).replace('.',',') + ' %)');
+  setD('d_ak', '\u2212' + fE(r.sv.ak) + '  (' + AK.toFixed(2).replace('.',',') + ' %)');
+  setD('d_wbf', '\u2212' + fE(r.sv.wbf) + '  (' + WBF.toFixed(2).replace('.',',') + ' %)');
+  setD('d_sv_basis', fE(brutto - r.sv.total));
+  setD('d_lst', '\u2212' + fE(r.lstMo));
+  setD('d_grenz', r.grenz + ' %');
+  setD('d_absetz', '\u2212' + fE(r.absetz / 12) + ' /Mo.');
+  setD('d_netto', fE(r.nettoMo));
+
+  // Sonderzahlung
+  const szWrap = document.getElementById('sz_wrap');
+  if (szWrap) szWrap.classList.toggle('hidden', gehaelter !== 14);
+  if (gehaelter === 14) {
+    setD('d_sz_brutto', fE(brutto));
+    setD('d_sz_sv', '\u2212' + fE(r.sv.total));
+    setD('d_sz_fb', '\u2212' + fE(SZ_FREIBETRAG));
+    setD('d_sz_lst', '\u2212' + fE(r.szLst / 2) + '  (6 %)');
+    setD('d_sz_netto', fE(r.szNetto / 2));
+  }
+
+  setD('d_jahr_netto', fE(r.jahrNetto));
+
+  // Steuerstufen bar
+  const barEl = document.getElementById('r_bar');
+  const legEl = document.getElementById('r_legend');
+  const colors = ['var(--ac)','#4ade80','var(--y)','#f97316','var(--red)','#a855f7','#dc2626'];
+  const labels = ['0 %','20 %','30 %','40 %','48 %','50 %','55 %'];
+  let barHTML = '', legHTML = '';
+  let prev = 0;
+  TAX.forEach((s, i) => {
+    const bandStart = prev;
+    const bandEnd = Math.min(r.taxable12, s.bis);
+    const band = Math.max(0, bandEnd - bandStart);
+    prev = s.bis;
+    if (band <= 0 || r.taxable12 <= bandStart) return;
+    const pct = band / r.taxable12 * 100;
+    barHTML += '<div class="sb-seg" style="background:' + colors[i] + ';width:' + pct + '%"></div>';
+    legHTML += '<div class="bd-item"><div class="bd-dot" style="background:' + colors[i] + '"></div>' + labels[i] + ': ' + fE(band * s.satz) + '</div>';
+  });
+  if (barEl) barEl.innerHTML = barHTML;
+  if (legEl) legEl.innerHTML = legHTML;
+
+  // Jahresuebersicht table
+  const tbody = document.getElementById('r_tbody');
+  if (tbody) {
+    const szBr = gehaelter === 14 ? brutto * 2 : 0;
+    const szSv = gehaelter === 14 ? r.sv.total * 2 : 0;
+    const szLs = r.szLst;
+    const szNe = r.szNetto;
+    tbody.innerHTML =
+      '<tr><td>Brutto</td><td>' + fE(brutto) + '</td><td>' + (gehaelter===14 ? fE(szBr) : '\u2014') + '</td><td style="font-weight:700">' + fE(brutto * gehaelter) + '</td></tr>' +
+      '<tr><td>SV-Beitrag</td><td style="color:var(--red)">\u2212' + fE(r.sv.total) + '</td><td style="color:var(--red)">' + (gehaelter===14 ? '\u2212'+fE(szSv) : '\u2014') + '</td><td style="color:var(--red)">\u2212' + fE(r.sv.total * gehaelter) + '</td></tr>' +
+      '<tr><td>Lohnsteuer</td><td style="color:var(--y)">\u2212' + fE(r.lstMo) + '</td><td style="color:var(--y)">' + (gehaelter===14 ? '\u2212'+fE(szLs) : '\u2014') + '</td><td style="color:var(--y)">\u2212' + fE(r.lst12 + szLs) + '</td></tr>' +
+      '<tr><td>Absetzbetr\u00E4ge</td><td style="color:var(--ac)">\u2212' + fE(r.absetz/12) + '</td><td>\u2014</td><td style="color:var(--ac)">\u2212' + fE(r.absetz) + '</td></tr>' +
+      '<tr class="total"><td>Netto</td><td class="ac-val">' + fE(r.nettoMo) + '</td><td class="ac-val">' + (gehaelter===14 ? fE(szNe/2) : '\u2014') + '</td><td class="ac-val">' + fE(r.jahrNetto) + '</td></tr>';
+  }
+
+  // Axion Bridge
+  if (window.__axionSendResult) window.__axionSendResult({
+    type: 'brutto_netto',
+    inputs: { brutto, gehaelter, richtung },
+    results: { netto_monat: r.nettoMo, sv_monat: r.sv.total, lst_monat: r.lstMo, jahr_netto: r.jahrNetto, grenzsteuersatz: r.grenz }
+  });
+
+  setTimeout(updatePanelMaxHeight, 50);
+  setTimeout(sendHeight, 100);
+}
+
+// INIT
+window.addEventListener('DOMContentLoaded', async () => {
+  await loadConfig();
+  applyConfig();
+  berechne();
+  setTimeout(updatePanelMaxHeight, 0);
+  setTimeout(sendHeight, 100);
+});
+</script>
+</body>
+</html>

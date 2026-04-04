@@ -107,8 +107,11 @@ tbody td:first-child{text-align:center;color:var(--tm);font-weight:600;}
       </div>
     </div>
 
-    <div class="ps">
+    <div class="ct" onclick="toggleVeranlagung(this)">
       <div class="sl">Veranlagung</div>
+      <span class="ca">&#9660;</span>
+    </div>
+    <div class="cb" id="veranlagung_body">
       <div class="mode-toggle">
         <button class="mode-btn on" id="btn_flv" onclick="setMode('flv')">FLV</button>
         <button class="mode-btn" id="btn_depot" onclick="setMode('depot')">Depot</button>
@@ -253,6 +256,12 @@ function updateSlider() {
     badge.textContent = 'Zuschlag +' + ((antritt - 65) * 4.2).toFixed(1) + ' %';
     badge.className = 'age-badge badge-zuschlag';
   }
+}
+
+function toggleVeranlagung(ct) {
+  ct.classList.toggle('open');
+  document.getElementById('veranlagung_body').classList.toggle('open');
+  setTimeout(sendHeight, 50);
 }
 
 function setMode(m) {

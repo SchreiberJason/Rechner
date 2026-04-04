@@ -105,6 +105,17 @@ tbody td:first-child{text-align:center;color:var(--tm);font-weight:600;}
         <label>Rendite in der Pension</label>
         <div class="fu"><input type="number" id="ls_rendite_entn" value="3" min="0" max="10" step="0.5"><span class="ub">% p.a.</span></div>
       </div>
+      <div class="tog-row">
+        <span class="tog-label">Inflation ber&uuml;cksichtigen</span>
+        <div class="pill" id="ls_pill_infl" onclick="toggleInflation()"></div>
+      </div>
+      <div id="infl_fields" class="hidden">
+        <div class="f">
+          <label>Inflation p.a.</label>
+          <div class="fu"><input type="number" id="ls_inflation" value="2.1" min="0" max="10" step="0.1"><span class="ub">%</span></div>
+        </div>
+        <div class="auto-info">Entnahme steigt j&auml;hrlich um die Inflation, damit die Kaufkraft erhalten bleibt.</div>
+      </div>
     </div>
 
     <div class="ct" onclick="toggleVeranlagung(this)">
@@ -227,6 +238,7 @@ tbody td:first-child{text-align:center;color:var(--tm);font-weight:600;}
 
 /* ══════════ STATE ══════════ */
 let modus = 'flv';
+let inflAn = false;
 let chart = null;
 const vv = id => parseFloat(document.getElementById(id)?.value) || 0;
 const fmt = n => Math.round(n).toLocaleString('de-AT');
@@ -256,6 +268,13 @@ function updateSlider() {
     badge.textContent = 'Zuschlag +' + ((antritt - 65) * 4.2).toFixed(1) + ' %';
     badge.className = 'age-badge badge-zuschlag';
   }
+}
+
+function toggleInflation() {
+  inflAn = !inflAn;
+  document.getElementById('ls_pill_infl').classList.toggle('on', inflAn);
+  document.getElementById('infl_fields').classList.toggle('hidden', !inflAn);
+  berechne();
 }
 
 function toggleVeranlagung(ct) {
@@ -506,12 +525,28 @@ function berechne() {
     return;
   }
 
+  // Inflation
+  const inflRate = inflAn ? (vv('ls_inflation') || 2.1) / 100 : 0;
+
   // Phase 2: Benoetigtes Kapital bei Pensionsantritt
   const rE = rEntn / 12;
   const nE = entnahmeJahre * 12;
-  const kBenoetig = rE > 1e-8
-    ? luecke * (1 - Math.pow(1 + rE, -nE)) / rE
-    : luecke * nE;
+  let kBenoetig;
+  if (inflRate > 0) {
+    // Wachsende Rente (Entnahme steigt jaehrlich um Inflation)
+    // PV einer geometrisch wachsenden Rente
+    const rJ = rEntn;
+    const g = inflRate;
+    if (Math.abs(rJ - g) < 1e-8) {
+      kBenoetig = luecke * 12 * entnahmeJahre / (1 + rJ);
+    } else {
+      kBenoetig = luecke * 12 * (1 - Math.pow((1 + g) / (1 + rJ), entnahmeJahre)) / (rJ - g);
+    }
+  } else {
+    kBenoetig = rE > 1e-8
+      ? luecke * (1 - Math.pow(1 + rE, -nE)) / rE
+      : luecke * nE;
+  }
 
   // Phase 1: Benoetigte Sparrate + Endkapital
   let sparrate, kapitalBeiPension;
@@ -534,8 +569,9 @@ function berechne() {
     let testVerm = kapitalBeiPension;
     tatsaechlicheJahre = 0;
     for (let j = 1; j <= 120; j++) {
+      const entnJ = luecke * Math.pow(1 + inflRate, j - 1);
       for (let m = 0; m < 12; m++) {
-        testVerm = testVerm * (1 + rE) - luecke;
+        testVerm = testVerm * (1 + rE) - entnJ;
         if (testVerm <= 0) { tatsaechlicheJahre = j; break; }
       }
       if (testVerm <= 0) break;
@@ -580,41 +616,44 @@ function berechne() {
     rows.push({ alter: alter + j, eingezahlt: totalEingezahlt, entnahme: 0, vermoegen, phase: 'anspar' });
   }
 
-  // Entnahmephase
+  // Entnahmephase (mit optionaler Inflation auf Entnahme)
   const entnJahreEffektiv = hatManuell ? Math.max(tatsaechlicheJahre, entnahmeJahre) : entnahmeJahre;
   let verm = kapitalBeiPension;
+  let kumEntn = 0;
   for (let j = 1; j <= entnJahreEffektiv; j++) {
+    const entnJ = luecke * Math.pow(1 + inflRate, j - 1); // jaehrlich steigende Entnahme
     for (let m = 0; m < 12; m++) {
-      verm = verm * (1 + rE) - luecke;
+      verm = verm * (1 + rE) - entnJ;
       if (verm < 0) verm = 0;
     }
-    rows.push({ alter: antritt + j, eingezahlt: totalEingezahlt, entnahme: luecke * 12 * j, vermoegen: verm, phase: 'entn' });
+    kumEntn += entnJ * 12;
+    rows.push({ alter: antritt + j, eingezahlt: totalEingezahlt, entnahme: kumEntn, entnJahr: entnJ, vermoegen: verm, phase: 'entn' });
   }
 
-  // ── Chart ──
+  // ── Chart (zwei Datasets: Anspar + Entnahme, getrennt fuer sauberen Uebergang) ──
   const t = tc();
   if (chart) chart.destroy();
+
+  const ansparRows = rows.filter(r => r.phase === 'anspar');
+  const entnRows = rows.filter(r => r.phase === 'entn');
+  // Verbindungspunkt: letzter Anspar-Punkt auch im Entnahme-Dataset
+  const labels = rows.map(r => r.alter);
+  const ansparData = rows.map(r => r.phase === 'anspar' ? r.vermoegen : null);
+  const entnData = rows.map((r, i) => {
+    if (r.phase === 'entn') return r.vermoegen;
+    // Letzter Anspar-Punkt als Startpunkt der Entnahme-Linie
+    if (r.phase === 'anspar' && i === ansparRows.length - 1) return r.vermoegen;
+    return null;
+  });
+
   chart = new Chart(document.getElementById('mainChart').getContext('2d'), {
     type: 'line',
     data: {
-      labels: rows.map(r => r.alter),
-      datasets: [{
-        label: 'Verm\u00F6gen',
-        data: rows.map(r => r.vermoegen),
-        segment: {
-          borderColor: ctx => {
-            // Rot ab dem letzten Anspar-Punkt (Uebergang zur Entnahme)
-            const idx = ctx.p1DataIndex;
-            return rows[idx]?.phase === 'entn' ? t.red : t.ac;
-          },
-          backgroundColor: ctx => {
-            const idx = ctx.p1DataIndex;
-            return rows[idx]?.phase === 'entn' ? t.redFill : t.acFill;
-          }
-        },
-        borderColor: t.ac,
-        borderWidth: 2.5, tension: .4, pointRadius: 0, fill: true
-      }]
+      labels,
+      datasets: [
+        { label: 'Ansparen', data: ansparData, borderColor: t.ac, backgroundColor: t.acFill, borderWidth: 2.5, tension: .4, pointRadius: 0, fill: true, spanGaps: false },
+        { label: 'Entnahme', data: entnData, borderColor: t.red, backgroundColor: t.redFill, borderWidth: 2.5, tension: .4, pointRadius: 0, fill: true, spanGaps: false }
+      ]
     },
     options: {
       responsive: true, maintainAspectRatio: false,
@@ -624,10 +663,9 @@ function berechne() {
           enabled: false, mode: 'index', intersect: false, external: externalTooltip,
           callbacks: {
             title: items => 'Alter ' + items[0].label,
-            label: c => ' Verm\u00F6gen: ' + fE(c.parsed.y)
+            label: c => c.parsed.y != null ? (' Verm\u00F6gen: ' + fE(c.parsed.y)) : ''
           }
-        },
-        annotation: undefined
+        }
       },
       scales: {
         x: { grid: { color: t.grid, drawTicks: false }, ticks: { color: t.ticks, font: { size: 10 }, maxTicksLimit: 12 }, border: { color: 'transparent' }, title: { display: true, text: '(Alter)', align: 'end', color: t.ticks, font: { size: 10 } } },
@@ -644,7 +682,7 @@ function berechne() {
       ? '<span class="phase-badge phase-anspar">Ansparen</span>'
       : '<span class="phase-badge phase-entn">Entnahme</span>';
     const einzStr = r.phase === 'anspar' ? fE(r.eingezahlt) : '\u2014';
-    const entnStr = r.phase === 'entn' ? fE(r.entnahme) : '\u2014';
+    const entnStr = r.phase === 'entn' ? fE(r.entnJahr || luecke) + '/Mo.' : '\u2014';
     const vermColor = r.phase === 'anspar' ? 'color:var(--ac)' : (r.vermoegen > 0 ? 'color:var(--red)' : 'color:var(--tm)');
     return '<tr><td>' + r.alter + '</td><td>' + einzStr + '</td><td>' + entnStr + '</td><td style="' + vermColor + '">' + fE(r.vermoegen) + '</td><td>' + phaseBadge + '</td></tr>';
   }).join('');

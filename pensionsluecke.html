@@ -771,13 +771,14 @@ let AUFWERTUNG   = 1.022;    // Durchschn. jährlicher PK-Aufwertungsfaktor (~2,
 // ─── Config integration ──────────────────────
 function applyPensionConfig() {
   if (!CONFIG) return;
-  const p = CONFIG.pension || CONFIG;
-  if (p.SV_AN_RATE   !== undefined) SV_AN_RATE   = p.SV_AN_RATE;
-  if (p.HBGG_ASVG    !== undefined) HBGG_ASVG    = p.HBGG_ASVG;
-  if (p.HBGG_GSVG    !== undefined) HBGG_GSVG    = p.HBGG_GSVG;
-  if (p.MINDEST_GSVG !== undefined) MINDEST_GSVG = p.MINDEST_GSVG;
-  if (p.KEZ_BASIS    !== undefined) KEZ_BASIS    = p.KEZ_BASIS;
-  if (p.AUFWERTUNG   !== undefined) AUFWERTUNG   = p.AUFWERTUNG;
+  const sv = CONFIG.sozialversicherung || {};
+  const pe = CONFIG.pension || {};
+  if (sv.an_sv_rate != null) SV_AN_RATE = sv.an_sv_rate;
+  if (sv.hbgg_asvg_monat_eur != null) HBGG_ASVG = sv.hbgg_asvg_monat_eur;
+  if (sv.hbgg_gsvg_monat_eur != null) HBGG_GSVG = sv.hbgg_gsvg_monat_eur;
+  if (sv.mindest_bgg_gsvg_monat_eur != null) MINDEST_GSVG = sv.mindest_bgg_gsvg_monat_eur;
+  if (sv.kindererziehungszeiten_bgg_monat_eur != null) KEZ_BASIS = sv.kindererziehungszeiten_bgg_monat_eur;
+  if (pe.aufwertungsfaktor_jährlich != null) AUFWERTUNG = pe.aufwertungsfaktor_jährlich;
 }
 
 // ─── Boot ─────────────────────────────────────
@@ -1181,11 +1182,13 @@ function berechne() {
   const lueckePct = Math.max(0, 100 - deckPct);
 
   // Inflation / Kaufkraft
+  // Reale Luecke = aktuelles Einkommen vs. Kaufkraft der Pension in heutigen Euro
   const inflRate = inflAn ? (parseFloat(document.getElementById('p_inflation').value) || 2.1) / 100 : 0;
   const kkFaktor = ytp > 0 && inflAn ? Math.pow(1 + inflRate, ytp) : 1;
   const kkPension = pension / kkFaktor;
-  const kkLuecke  = Math.max(wunsch / kkFaktor - kkPension, 0);
-  const kkPct     = wunsch > 0 ? Math.min(kkPension / wunsch, 1) * 100 : 0;
+  const kkWunsch  = eink * wunschPct / 100; // aktuelles Einkommen als Massstab (heutige Kaufkraft)
+  const kkLuecke  = Math.max(kkWunsch - kkPension, 0);
+  const kkPct     = kkWunsch > 0 ? Math.min(kkPension / kkWunsch, 1) * 100 : 0;
 
   // ── Donut ──
   const gaugeColor = deckung >= 1 ? 'var(--ac)' : deckung >= 0.8 ? 'var(--ora)' : 'var(--red)';
@@ -1234,9 +1237,9 @@ function berechne() {
     document.getElementById('kk_pension_val').textContent = fmt(kkPension) + ' €/Mo.';
     document.getElementById('kk_seg').style.width = kkPct.toFixed(1) + '%';
     document.getElementById('kk_infl_hint').textContent =
-      'nach ' + ytp + ' J. Inflation (' + (inflRate * 100).toFixed(1) + ' % p.a.)';
+      'Kaufkraft nach ' + ytp + ' J. bei ' + (inflRate * 100).toFixed(1) + ' % Inflation';
     document.getElementById('kk_luecke_val').textContent =
-      kkLuecke > 0 ? 'Reale Lücke: −' + fmt(kkLuecke) + ' €' : 'Keine reale Lücke';
+      kkLuecke > 0 ? 'Reale L\u00FCcke: \u2212' + fmt(kkLuecke) + ' \u20AC (vs. ' + fmt(kkWunsch) + ' \u20AC heute)' : 'Keine reale L\u00FCcke';
   }
 
   // ── Kaufkraft detail cards ──

@@ -45,7 +45,7 @@ input[type="range"]::-moz-range-thumb{
   transition:all .15s;text-align:center;
   -webkit-tap-highlight-color:transparent;
 }
-.mode-btn.on{background:var(--ss);color:var(--ac);border-radius:8px;box-shadow:0 1px 4px var(--sh);}
+.mode-btn.on{background:var(--ac);color:#051a10;border-radius:8px;box-shadow:0 1px 4px var(--sh);font-weight:700;}
 
 /* ══════════ PHASE INDICATOR ══════════ */
 .phase-badge{font-size:9px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:2px 8px;border-radius:100px;}
@@ -78,7 +78,7 @@ tbody td:first-child{text-align:center;color:var(--tm);font-weight:600;}
       </div>
       <div class="f">
         <label>Monatliche Pensionslücke</label>
-        <div class="fu"><input type="number" id="ls_luecke" value="500" min="0" max="10000" step="50"><span class="ub">€ / Mo.</span></div>
+        <div class="fu"><input type="number" id="ls_luecke" value="1000" min="0" max="10000" step="50"><span class="ub">€ / Mo.</span></div>
       </div>
     </div>
 
@@ -103,7 +103,7 @@ tbody td:first-child{text-align:center;color:var(--tm);font-weight:600;}
       </div>
       <div class="f">
         <label>Rendite in der Pension</label>
-        <div class="fu"><input type="number" id="ls_rendite_entn" value="4" min="0" max="10" step="0.5"><span class="ub">% p.a.</span></div>
+        <div class="fu"><input type="number" id="ls_rendite_entn" value="3" min="0" max="10" step="0.5"><span class="ub">% p.a.</span></div>
       </div>
     </div>
 
@@ -125,13 +125,10 @@ tbody td:first-child{text-align:center;color:var(--tm);font-weight:600;}
           <div class="fu"><input type="number" id="ls_rendite_anspar" value="7" min="0" max="15" step="0.5"><span class="ub">% p.a.</span></div>
         </div>
         <div class="f">
-          <label>Agio (Abschlusskosten)</label>
-          <div class="fu"><input type="number" id="ls_flv_agio" value="7.65" min="0" max="20" step="0.1"><span class="ub">%</span></div>
+          <label>FLV-Endwert manuell eingeben</label>
+          <div class="fu"><input type="number" id="ls_flv_manuell" value="" min="0" step="1000" placeholder="leer = automatisch"><span class="ub">€</span></div>
         </div>
-        <div class="f">
-          <label>Laufende Kosten</label>
-          <div class="fu"><input type="number" id="ls_flv_lk" value="0.61" min="0" max="5" step="0.01"><span class="ub">% p.a.</span></div>
-        </div>
+        <div class="auto-info" id="ls_flv_hint">Endwert wird automatisch aus Wertstand-Tabellen berechnet. Oder: Wert aus dem FLV-Rechner hier eintragen.</div>
       </div>
 
       <!-- Depot Felder -->
@@ -282,13 +279,6 @@ function buildAnbieterSelect() {
 }
 
 function setFlvAnbieter() {
-  const key = document.getElementById('ls_flv_anbieter')?.value || 'donau';
-  const provider = CONFIG?.flv_anbieter?.[key];
-  const ek = provider?.flv_kosten_effektiv;
-  if (ek) {
-    document.getElementById('ls_flv_agio').value = ek.agio_pct;
-    document.getElementById('ls_flv_lk').value = ek.laufend_pct;
-  }
   berechne();
 }
 
@@ -320,8 +310,11 @@ function calcFlvEndwert(mb, laufzeit) {
   const b5 = tables?.mb500 || {};
   if (!Object.keys(b5).length) { for (const [k, v] of Object.entries(b1)) { if (!k.startsWith('_')) b5[k] = v * 5; } }
 
-  const agio = vv('ls_flv_agio') / 100;
-  const lk = vv('ls_flv_lk') / 100;
+  // Kosten aus Config lesen (nicht mehr als Input-Felder sichtbar)
+  const key = document.getElementById('ls_flv_anbieter')?.value || 'donau';
+  const ek = CONFIG?.flv_anbieter?.[key]?.flv_kosten_effektiv;
+  const agio = (ek?.agio_pct || 7.65) / 100;
+  const lk = (ek?.laufend_pct || 0.61) / 100;
   const terDiff = 0; // Keine separate TER-Korrektur in diesem Rechner
   const rpaAdj = rpa - terDiff;
   const qr = Math.pow(1 + ref, 1 / 12);
@@ -480,6 +473,18 @@ function berechne() {
   const entnahmeJahre = maxAlter - antritt;
   const rEntn = vv('ls_rendite_entn') / 100;
 
+  // Manueller FLV-Endwert?
+  const flvManuell = parseFloat(document.getElementById('ls_flv_manuell')?.value);
+  const hatManuell = modus === 'flv' && flvManuell > 0 && !isNaN(flvManuell);
+
+  // Hint aktualisieren
+  const hintEl = document.getElementById('ls_flv_hint');
+  if (hintEl) {
+    hintEl.textContent = hatManuell
+      ? 'Manueller Endwert: ' + fE(flvManuell) + ' wird verwendet.'
+      : 'Endwert wird automatisch aus Wertstand-Tabellen berechnet. Oder: Wert aus dem FLV-Rechner hier eintragen.';
+  }
+
   if (ansparJahre <= 0 || luecke <= 0) {
     document.getElementById('r_sparrate').textContent = luecke <= 0 ? '0 \u20AC' : 'n/a';
     document.getElementById('r_sparrate_sub').textContent = ansparJahre <= 0 ? 'Bereits in Pension' : 'Keine L\u00FCcke';
@@ -499,20 +504,34 @@ function berechne() {
     ? luecke * (1 - Math.pow(1 + rE, -nE)) / rE
     : luecke * nE;
 
-  // Phase 1: Benoetigte Sparrate
-  let sparrate;
-  if (modus === 'flv') {
-    sparrate = bisectionFlv(kBenoetig, ansparJahre);
-  } else {
-    sparrate = calcDepotRate(kBenoetig, ansparJahre);
-  }
+  // Phase 1: Benoetigte Sparrate + Endkapital
+  let sparrate, kapitalBeiPension;
 
-  // Tatsaechliches Endkapital bei der gefundenen Rate
-  let kapitalBeiPension;
-  if (modus === 'flv') {
+  if (hatManuell) {
+    // Manueller FLV-Endwert: Sparrate rueckrechnen
+    kapitalBeiPension = flvManuell;
+    sparrate = bisectionFlv(flvManuell, ansparJahre);
+  } else if (modus === 'flv') {
+    sparrate = bisectionFlv(kBenoetig, ansparJahre);
     kapitalBeiPension = calcFlvEndwert(sparrate, ansparJahre);
   } else {
+    sparrate = calcDepotRate(kBenoetig, ansparJahre);
     kapitalBeiPension = calcDepotEndwert(sparrate, ansparJahre);
+  }
+
+  // Wenn manueller Endwert: Entnahmedauer berechnen (wie lange reicht das Geld?)
+  let tatsaechlicheJahre = entnahmeJahre;
+  if (hatManuell) {
+    let testVerm = kapitalBeiPension;
+    tatsaechlicheJahre = 0;
+    for (let j = 1; j <= 120; j++) {
+      for (let m = 0; m < 12; m++) {
+        testVerm = testVerm * (1 + rE) - luecke;
+        if (testVerm <= 0) { tatsaechlicheJahre = j; break; }
+      }
+      if (testVerm <= 0) break;
+      tatsaechlicheJahre = j;
+    }
   }
 
   // ── KPIs ──
@@ -523,16 +542,21 @@ function berechne() {
   document.getElementById('r_kapital').textContent = fE(kapitalBeiPension);
   document.getElementById('r_kapital_sub').textContent = 'bei Pensionsantritt mit ' + antritt;
 
-  document.getElementById('r_dauer').textContent = entnahmeJahre + ' Jahre';
-  document.getElementById('r_dauer_sub').textContent = 'Alter ' + antritt + ' bis ' + maxAlter;
+  if (hatManuell) {
+    const reichtBis = antritt + tatsaechlicheJahre;
+    document.getElementById('r_dauer').textContent = tatsaechlicheJahre + ' Jahre';
+    document.getElementById('r_dauer_sub').textContent = 'reicht bis Alter ' + reichtBis;
+  } else {
+    document.getElementById('r_dauer').textContent = entnahmeJahre + ' Jahre';
+    document.getElementById('r_dauer_sub').textContent = 'Alter ' + antritt + ' bis ' + maxAlter;
+  }
 
-  document.getElementById('r_info').innerHTML =
-    'Mit <b>' + fE(sparrate) + '/Monat</b> \u00FCber <b>' + ansparJahre + ' Jahre</b> erreichst du <b>' + fE(kapitalBeiPension) + '</b> \u2014 ' +
-    'damit ist deine L\u00FCcke von <b>' + fE(luecke) + '/Mo.</b> bis Alter <b>' + maxAlter + '</b> gedeckt.';
+  document.getElementById('r_info').innerHTML = hatManuell
+    ? 'Mit <b>' + fE(kapitalBeiPension) + ' FLV-Endwert</b> und <b>' + fE(luecke) + '/Mo. Entnahme</b> reicht dein Kapital <b>' + tatsaechlicheJahre + ' Jahre</b> (bis Alter ' + (antritt + tatsaechlicheJahre) + ').'
+    : 'Mit <b>' + fE(sparrate) + '/Monat</b> \u00FCber <b>' + ansparJahre + ' Jahre</b> erreichst du <b>' + fE(kapitalBeiPension) + '</b> \u2014 damit ist deine L\u00FCcke von <b>' + fE(luecke) + '/Mo.</b> bis Alter <b>' + maxAlter + '</b> gedeckt.';
 
   // ── Chart + Tabelle: Beide Phasen ──
   const rows = [];
-  const renditeAnspar = modus === 'flv' ? vv('ls_rendite_anspar') / 100 : vv('ls_dep_rendite') / 100;
 
   // Ansparphase — Jahr fuer Jahr
   let vermoegen = 0;
@@ -547,9 +571,10 @@ function berechne() {
     rows.push({ alter: alter + j, eingezahlt: totalEingezahlt, entnahme: 0, vermoegen, phase: 'anspar' });
   }
 
-  // Entnahmephase — Monat fuer Monat, aber nur Jahreswerte speichern
+  // Entnahmephase
+  const entnJahreEffektiv = hatManuell ? Math.max(tatsaechlicheJahre, entnahmeJahre) : entnahmeJahre;
   let verm = kapitalBeiPension;
-  for (let j = 1; j <= entnahmeJahre; j++) {
+  for (let j = 1; j <= entnJahreEffektiv; j++) {
     for (let m = 0; m < 12; m++) {
       verm = verm * (1 + rE) - luecke;
       if (verm < 0) verm = 0;
@@ -569,11 +594,12 @@ function berechne() {
         data: rows.map(r => r.vermoegen),
         segment: {
           borderColor: ctx => {
-            const idx = ctx.p0DataIndex;
+            // Rot ab dem letzten Anspar-Punkt (Uebergang zur Entnahme)
+            const idx = ctx.p1DataIndex;
             return rows[idx]?.phase === 'entn' ? t.red : t.ac;
           },
           backgroundColor: ctx => {
-            const idx = ctx.p0DataIndex;
+            const idx = ctx.p1DataIndex;
             return rows[idx]?.phase === 'entn' ? t.redFill : t.acFill;
           }
         },
@@ -622,7 +648,7 @@ function berechne() {
       pensionsantritt: antritt,
       hoechstalter: maxAlter,
       modus,
-      rendite_anspar: renditeAnspar * 100,
+      rendite_anspar: modus === 'flv' ? vv('ls_rendite_anspar') : vv('ls_dep_rendite'),
       rendite_entnahme: rEntn * 100
     },
     results: {

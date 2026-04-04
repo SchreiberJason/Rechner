@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Pensionslücke schließen | Jason Schreiber</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Inter+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="shared.css">
+<style>
+/* ══════════ AGE SLIDER ══════════ */
+.age-display{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.age-val{font-size:30px;font-weight:700;letter-spacing:-.03em;color:var(--tp);}
+.age-badge{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:5px 11px;border-radius:100px;}
+.badge-regel{background:var(--adim2);color:var(--ac);}
+.badge-abschlag{background:var(--rdim2);color:var(--red);}
+.badge-zuschlag{background:var(--gdim);color:var(--grn);}
+
+input[type="range"]{
+  width:100%;-webkit-appearance:none;appearance:none;
+  height:6px;border-radius:100px;background:var(--st);border:none;outline:none;cursor:pointer;
+}
+input[type="range"]::-webkit-slider-thumb{
+  -webkit-appearance:none;width:20px;height:20px;border-radius:50%;
+  background:var(--ac);cursor:pointer;box-shadow:0 2px 8px var(--sh-ac);
+}
+input[type="range"]::-moz-range-thumb{
+  width:20px;height:20px;border-radius:50%;border:none;background:var(--ac);cursor:pointer;
+}
+.range-labels{
+  display:flex;justify-content:space-between;
+  font-size:9.5px;color:var(--tm);margin-top:6px;font-weight:500;
+}
+
+/* ══════════ MODE TOGGLE ══════════ */
+.mode-toggle{
+  display:grid;grid-template-columns:1fr 1fr;
+  gap:2px;background:var(--st);border-radius:14px;overflow:hidden;
+  margin-bottom:12px;
+}
+.mode-btn{
+  background:none;border:none;padding:10px 8px;
+  font-family:inherit;font-size:12.5px;font-weight:600;
+  color:var(--ts);cursor:pointer;
+  transition:all .15s;text-align:center;
+  -webkit-tap-highlight-color:transparent;
+}
+.mode-btn.on{background:var(--ss);color:var(--ac);border-radius:8px;box-shadow:0 1px 4px var(--sh);}
+
+/* ══════════ PHASE INDICATOR ══════════ */
+.phase-badge{font-size:9px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:2px 8px;border-radius:100px;}
+.phase-anspar{background:var(--adim);color:var(--ac);}
+.phase-entn{background:var(--rdim);color:var(--red);}
+
+/* ══════════ TABLE ══════════ */
+.tw{max-height:360px;overflow-y:auto;}
+thead th:first-child{text-align:center;}
+tbody td:first-child{text-align:center;color:var(--tm);font-weight:600;}
+
+/* ══════════ RESPONSIVE ══════════ */
+@media(max-width:599px){
+  .age-val{font-size:24px;}
+}
+</style>
+</head>
+<body>
+<div id="chart-tip"></div>
+
+<div class="calc-layout">
+
+  <!-- ══════════ LEFT: PARAMS ══════════ -->
+  <aside class="params-panel">
+    <div class="ps">
+      <div class="sl">Deine Situation</div>
+      <div class="f">
+        <label>Geburtsdatum</label>
+        <input type="date" id="ls_geburt" value="1995-01-01">
+      </div>
+      <div class="f">
+        <label>Monatliche Pensionslücke</label>
+        <div class="fu"><input type="number" id="ls_luecke" value="500" min="0" max="10000" step="50"><span class="ub">€ / Mo.</span></div>
+      </div>
+    </div>
+
+    <div class="ps">
+      <div class="sl">Pensionsantritt</div>
+      <div class="age-display">
+        <div>
+          <div class="age-val" id="ls_age_disp">65</div>
+          <div style="font-size:10.5px;color:var(--ts)">Lebensjahr</div>
+        </div>
+        <div class="age-badge badge-regel" id="ls_age_badge">Regelpension</div>
+      </div>
+      <input type="range" id="ls_antritt" min="62" max="68" step="1" value="65" oninput="updateSlider(); berechne();">
+      <div class="range-labels"><span>62</span><span>63</span><span>64</span><span>65</span><span>66</span><span>67</span><span>68</span></div>
+    </div>
+
+    <div class="ps">
+      <div class="sl">Entnahmephase</div>
+      <div class="f">
+        <label>Geld soll reichen bis Alter</label>
+        <div class="fu"><input type="number" id="ls_maxalter" value="90" min="70" max="120" step="1"><span class="ub">Jahre</span></div>
+      </div>
+      <div class="f">
+        <label>Rendite in der Pension</label>
+        <div class="fu"><input type="number" id="ls_rendite_entn" value="4" min="0" max="10" step="0.5"><span class="ub">% p.a.</span></div>
+      </div>
+    </div>
+
+    <div class="ps">
+      <div class="sl">Veranlagung</div>
+      <div class="mode-toggle">
+        <button class="mode-btn on" id="btn_flv" onclick="setMode('flv')">FLV</button>
+        <button class="mode-btn" id="btn_depot" onclick="setMode('depot')">Depot</button>
+      </div>
+
+      <!-- FLV Felder -->
+      <div id="flv_fields">
+        <div class="f">
+          <label>FLV-Anbieter</label>
+          <select id="ls_flv_anbieter" onchange="setFlvAnbieter()"></select>
+        </div>
+        <div class="f">
+          <label>Rendite Ansparphase</label>
+          <div class="fu"><input type="number" id="ls_rendite_anspar" value="7" min="0" max="15" step="0.5"><span class="ub">% p.a.</span></div>
+        </div>
+        <div class="f">
+          <label>Agio (Abschlusskosten)</label>
+          <div class="fu"><input type="number" id="ls_flv_agio" value="7.65" min="0" max="20" step="0.1"><span class="ub">%</span></div>
+        </div>
+        <div class="f">
+          <label>Laufende Kosten</label>
+          <div class="fu"><input type="number" id="ls_flv_lk" value="0.61" min="0" max="5" step="0.01"><span class="ub">% p.a.</span></div>
+        </div>
+      </div>
+
+      <!-- Depot Felder -->
+      <div id="depot_fields" class="hidden">
+        <div class="f">
+          <label>Rendite Ansparphase</label>
+          <div class="fu"><input type="number" id="ls_dep_rendite" value="7" min="0" max="15" step="0.5"><span class="ub">% p.a.</span></div>
+        </div>
+        <div class="f">
+          <label>Agio (Ausgabeaufschlag)</label>
+          <div class="fu"><input type="number" id="ls_dep_agio" value="0" min="0" max="10" step="0.1"><span class="ub">%</span></div>
+        </div>
+        <div class="f">
+          <label>TER (Fondskosten)</label>
+          <div class="fu"><input type="number" id="ls_dep_ter" value="0.2" min="0" max="3" step="0.1"><span class="ub">% p.a.</span></div>
+        </div>
+        <div class="f">
+          <label>KESt</label>
+          <div class="fu"><input type="number" id="ls_dep_kest" value="27.5" min="0" max="50" step="0.5"><span class="ub">%</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ps ps-sticky">
+      <button class="btn-calc" onclick="berechne()">Berechnen</button>
+    </div>
+  </aside>
+
+  <!-- ══════════ RIGHT: RESULTS ══════════ -->
+  <div class="rp">
+
+    <!-- KPIs -->
+    <div class="g3">
+      <div class="met hi">
+        <span class="mi">💰</span>
+        <div class="ml">Benötigte Sparrate</div>
+        <div class="mv ac" id="r_sparrate">—</div>
+        <div class="ms" id="r_sparrate_sub">—</div>
+      </div>
+      <div class="met">
+        <span class="mi">🏦</span>
+        <div class="ml">Kapital bei Pension</div>
+        <div class="mv green" id="r_kapital">—</div>
+        <div class="ms" id="r_kapital_sub">—</div>
+      </div>
+      <div class="met">
+        <span class="mi">📅</span>
+        <div class="ml">Entnahmedauer</div>
+        <div class="mv blue" id="r_dauer">—</div>
+        <div class="ms" id="r_dauer_sub">—</div>
+      </div>
+    </div>
+
+    <!-- Info Strip -->
+    <div class="info-strip" id="r_info">—</div>
+
+    <!-- Chart -->
+    <div class="card">
+      <div class="ch"><span class="ct-title">Vermögensverlauf</span></div>
+      <div class="cb2">
+        <div class="chart-box" style="height:280px"><canvas id="mainChart"></canvas></div>
+      </div>
+    </div>
+
+    <!-- Table -->
+    <div class="card">
+      <div class="ch"><span class="ct-title">Jahresübersicht</span></div>
+      <div class="tw">
+        <table>
+          <thead><tr><th>Alter</th><th>Eingezahlt</th><th>Entnahme</th><th>Vermögen</th><th>Phase</th></tr></thead>
+          <tbody id="r_tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script src="shared.js"></script>
+<script>
+/* ══════════ ACCESS PROTECTION ══════════ */
+(function(){
+  const isLocal=['localhost','127.0.0.1',''].includes(location.hostname);
+  const validRef=document.referrer.includes('jasonschreiber.at');
+  const ACCESS_KEY='flv2025';
+  const urlKey=new URLSearchParams(location.search).get('access');
+  if(!isLocal&&!validRef&&urlKey!==ACCESS_KEY){
+    document.body.style.cssText='margin:0;background:#0F0F0F;display:flex;align-items:center;justify-content:center;height:100vh;font-family:Inter,sans-serif;';
+    document.body.innerHTML='<div style="color:#555;font-size:14px;text-align:center"><div style="font-size:32px;margin-bottom:12px">&#128274;</div>Zugriff nicht gestattet.</div>';
+    throw new Error('Access denied');
+  }
+})();
+
+/* ══════════ STATE ══════════ */
+let modus = 'flv';
+let chart = null;
+const vv = id => parseFloat(document.getElementById(id)?.value) || 0;
+const fmt = n => Math.round(n).toLocaleString('de-AT');
+const fE = n => fmt(n) + ' \u20AC';
+
+/* ══════════ HELPERS ══════════ */
+function getAge() {
+  const v = document.getElementById('ls_geburt')?.value;
+  if (!v) return 30;
+  const bd = new Date(v), now = new Date();
+  let a = now.getFullYear() - bd.getFullYear();
+  if (now.getMonth() < bd.getMonth() || (now.getMonth() === bd.getMonth() && now.getDate() < bd.getDate())) a--;
+  return Math.max(0, a);
+}
+
+function updateSlider() {
+  const antritt = +document.getElementById('ls_antritt').value;
+  document.getElementById('ls_age_disp').textContent = antritt;
+  const badge = document.getElementById('ls_age_badge');
+  if (antritt === 65) {
+    badge.textContent = 'Regelpension';
+    badge.className = 'age-badge badge-regel';
+  } else if (antritt < 65) {
+    badge.textContent = 'Abschlag ' + ((65 - antritt) * 4.2).toFixed(1) + ' %';
+    badge.className = 'age-badge badge-abschlag';
+  } else {
+    badge.textContent = 'Zuschlag +' + ((antritt - 65) * 4.2).toFixed(1) + ' %';
+    badge.className = 'age-badge badge-zuschlag';
+  }
+}
+
+function setMode(m) {
+  modus = m;
+  document.getElementById('btn_flv').className = 'mode-btn' + (m === 'flv' ? ' on' : '');
+  document.getElementById('btn_depot').className = 'mode-btn' + (m === 'depot' ? ' on' : '');
+  document.getElementById('flv_fields').classList.toggle('hidden', m !== 'flv');
+  document.getElementById('depot_fields').classList.toggle('hidden', m !== 'depot');
+  berechne();
+}
+
+/* ══════════ FLV ANBIETER ══════════ */
+function buildAnbieterSelect() {
+  const sel = document.getElementById('ls_flv_anbieter');
+  if (!sel || !CONFIG?.flv_anbieter) return;
+  sel.innerHTML = '';
+  for (const [k, v] of Object.entries(CONFIG.flv_anbieter)) {
+    if (k.startsWith('_')) continue;
+    const o = document.createElement('option');
+    o.value = k;
+    o.textContent = v.name + ' \u2014 ' + (v.produkt || '');
+    sel.appendChild(o);
+  }
+}
+
+function setFlvAnbieter() {
+  const key = document.getElementById('ls_flv_anbieter')?.value || 'donau';
+  const provider = CONFIG?.flv_anbieter?.[key];
+  const ek = provider?.flv_kosten_effektiv;
+  if (ek) {
+    document.getElementById('ls_flv_agio').value = ek.agio_pct;
+    document.getElementById('ls_flv_lk').value = ek.laufend_pct;
+  }
+  berechne();
+}
+
+function getFlvTables() {
+  const key = document.getElementById('ls_flv_anbieter')?.value || 'donau';
+  const alter = getAge();
+  const provider = CONFIG?.flv_anbieter?.[key];
+  if (!provider?.wertstand_tabellen) return null;
+  const avail = Object.keys(provider.wertstand_tabellen)
+    .filter(k => k.startsWith('alter_') && !k.includes('_e'))
+    .map(k => +k.replace('alter_', '')).sort((a, b) => a - b);
+  if (!avail.length) return null;
+  let best = avail[0];
+  for (const a of avail) { if (a <= alter) best = a; else break; }
+  const wt = provider.wertstand_tabellen['alter_' + best];
+  if (!wt) return null;
+  let mb100 = wt.mb100 || null;
+  let mb500 = wt.mb500 || null;
+  if (!mb500 && mb100) { mb500 = {}; for (const [k, v] of Object.entries(mb100)) { if (!k.startsWith('_')) mb500[k] = v * 5; } }
+  return { mb100, mb500, laufzeit_max: wt._laufzeit_max || 45, ref: provider.hochrechnungszins_referenz_pct ? provider.hochrechnungszins_referenz_pct / 100 : 0.06 };
+}
+
+/* ══════════ FLV ENDWERT BERECHNUNG ══════════ */
+function calcFlvEndwert(mb, laufzeit) {
+  const rpa = vv('ls_rendite_anspar') / 100;
+  const tables = getFlvTables();
+  const ref = tables?.ref || 0.06;
+  const b1 = tables?.mb100 || { 0: 0, 5: 3470, 10: 11062, 15: 21209, 20: 34768, 25: 52883, 30: 77080, 35: 109395, 40: 152546, 45: 210160 };
+  const b5 = tables?.mb500 || {};
+  if (!Object.keys(b5).length) { for (const [k, v] of Object.entries(b1)) { if (!k.startsWith('_')) b5[k] = v * 5; } }
+
+  const agio = vv('ls_flv_agio') / 100;
+  const lk = vv('ls_flv_lk') / 100;
+  const terDiff = 0; // Keine separate TER-Korrektur in diesem Rechner
+  const rpaAdj = rpa - terDiff;
+  const qr = Math.pow(1 + ref, 1 / 12);
+  const qf = Math.pow(1 + rpaAdj, 1 / 12);
+
+  function rwr(m, n) { return Math.abs(ref) < 1e-8 ? m * n : m * ((Math.pow(qr, n) - 1) / (qr - 1)); }
+  function rwf(m, n) { return Math.abs(rpaAdj) < 1e-8 ? m * n : m * ((Math.pow(qf, n) - 1) / (qf - 1)); }
+
+  let fm = 0;
+  const maxJ = Math.min(laufzeit, tables?.laufzeit_max || 45);
+  for (let j = 1; j <= maxJ; j++) {
+    let bs, be, am;
+    if (j <= 5) { bs = j - 1; be = j; am = 12; }
+    else { bs = Math.floor((j - 1) / 5) * 5; be = bs + 5; am = 60; }
+
+    function mr(ks, ke) { return (ke - ks * Math.pow(qr, am)) / rwr(1, am); }
+    let m1, m5;
+    if (b1[be] !== undefined && b5[be] !== undefined) {
+      m1 = mr(b1[bs] || 0, b1[be]);
+      m5 = mr(b5[bs] || 0, b5[be]);
+    } else {
+      const bk = Object.keys(b1).map(Number).filter(k => k >= 0 && k % 5 === 0).sort((a, b) => a - b);
+      const fb = bk.length >= 2 ? bk.slice(-2) : [35, 40];
+      m1 = mr(b1[fb[0]] || 0, b1[fb[1]] || b1[fb[0]] || 0);
+      m5 = mr(b5[fb[0]] || 0, b5[fb[1]] || b5[fb[0]] || 0);
+    }
+    const ma = m1 + (m5 - m1) * ((mb - 100) / 400);
+    fm = fm * Math.pow(qf, 12) + rwf(ma, 12);
+  }
+  return fm;
+}
+
+/* ══════════ FLV BISECTION — finde benoetigte Rate ══════════ */
+function bisectionFlv(zielKapital, laufzeit) {
+  if (zielKapital <= 0) return 0;
+  let lo = 1, hi = 10000;
+  for (let i = 0; i < 50; i++) {
+    const mid = (lo + hi) / 2;
+    const ew = calcFlvEndwert(mid, laufzeit);
+    if (ew < zielKapital) lo = mid; else hi = mid;
+    if (Math.abs(hi - lo) < 0.5) break;
+  }
+  return Math.ceil((lo + hi) / 2);
+}
+
+/* ══════════ DEPOT BERECHNUNG ══════════ */
+function calcDepotRate(zielKapital, laufzeit) {
+  if (zielKapital <= 0 || laufzeit <= 0) return 0;
+  const rendite = vv('ls_dep_rendite') / 100;
+  const agio = vv('ls_dep_agio') / 100;
+  const ter = vv('ls_dep_ter') / 100;
+  const kest = vv('ls_dep_kest') / 100;
+
+  // Brutto-Zielkapital (KESt auf Gewinne beruecksichtigen)
+  // Annahme: ~60% des Endwerts sind Gewinne bei langer Laufzeit
+  // Iterativ: K_brutto so dass K_brutto - (K_brutto - Einzahlung) * kest >= zielKapital
+  const rEff = (rendite - ter) / 12;
+  const n = laufzeit * 12;
+
+  if (rEff <= 0) {
+    const rate = zielKapital / n / (1 - agio);
+    return Math.ceil(rate);
+  }
+
+  // Sparplanformel: FV = rate * ((1+r)^n - 1) / r
+  // rate_netto = zielKapital * r / ((1+r)^n - 1)
+  // Aber wir brauchen Brutto wegen KESt auf Gewinne
+  // Iterativ loesen:
+  let lo = 1, hi = 10000;
+  for (let i = 0; i < 50; i++) {
+    const mid = (lo + hi) / 2;
+    const nettoBeitrag = mid * (1 - agio);
+    const fv = nettoBeitrag * ((Math.pow(1 + rEff, n) - 1) / rEff);
+    const einzahlung = nettoBeitrag * n;
+    const gewinn = Math.max(0, fv - einzahlung);
+    const netto = fv - gewinn * kest;
+    if (netto < zielKapital) lo = mid; else hi = mid;
+    if (Math.abs(hi - lo) < 0.5) break;
+  }
+  return Math.ceil((lo + hi) / 2);
+}
+
+/* ══════════ DEPOT ENDWERT fuer gegebene Rate ══════════ */
+function calcDepotEndwert(rate, laufzeit) {
+  const rendite = vv('ls_dep_rendite') / 100;
+  const agio = vv('ls_dep_agio') / 100;
+  const ter = vv('ls_dep_ter') / 100;
+  const kest = vv('ls_dep_kest') / 100;
+  const rEff = (rendite - ter) / 12;
+  const n = laufzeit * 12;
+  const nettoBeitrag = rate * (1 - agio);
+  if (rEff <= 0) return nettoBeitrag * n;
+  const fv = nettoBeitrag * ((Math.pow(1 + rEff, n) - 1) / rEff);
+  const einzahlung = nettoBeitrag * n;
+  const gewinn = Math.max(0, fv - einzahlung);
+  return fv - gewinn * kest;
+}
+
+/* ══════════ CHART HELPERS ══════════ */
+function tc() {
+  const d = window.matchMedia('(prefers-color-scheme:dark)').matches;
+  return {
+    grid: d ? 'rgba(255,255,255,.12)' : 'rgba(0,0,0,.28)',
+    ticks: d ? '#666B78' : '#777777',
+    ac: d ? '#38D9A3' : '#039F6B',
+    acFill: d ? 'rgba(56,217,163,.07)' : 'rgba(3,159,107,.07)',
+    red: d ? '#f87171' : '#D93535',
+    redFill: d ? 'rgba(248,113,113,.07)' : 'rgba(217,53,53,.07)',
+    tt: d ? '#F0EDE8' : '#1A1A1A',
+    ts: '#969696'
+  };
+}
+
+function externalTooltip({ chart: c, tooltip }) {
+  const el = document.getElementById('chart-tip');
+  if (!el) return;
+  if (!tooltip.opacity) { el.style.display = 'none'; return; }
+  const t = tc();
+  let html = '<div class="ctt" style="color:' + t.tt + '">' + (tooltip.title?.[0] || '') + '</div>';
+  (tooltip.body || []).forEach((b, i) => {
+    const col = tooltip.labelColors?.[i]?.backgroundColor || '#888';
+    const line = (b.lines?.[0] || '').trim();
+    html += '<div class="cti" style="color:' + t.ts + '"><span class="ctd" style="background:' + col + '"></span>' + line + '</div>';
+  });
+  el.innerHTML = html;
+  el.style.display = 'block';
+  const r = c.canvas.getBoundingClientRect();
+  let x = r.left + tooltip.caretX + 14;
+  let y = r.top + tooltip.caretY - el.offsetHeight / 2;
+  if (x + el.offsetWidth > window.innerWidth - 8) x = r.left + tooltip.caretX - el.offsetWidth - 14;
+  if (x < 8) x = 8; if (y < 8) y = 8;
+  if (y + el.offsetHeight > window.innerHeight - 8) y = window.innerHeight - el.offsetHeight - 8;
+  el.style.left = x + 'px'; el.style.top = y + 'px';
+}
+
+const crosshairPlugin = {
+  id: 'crosshair',
+  afterDraw(c) {
+    if (!c.tooltip._active?.length) return;
+    const { ctx, chartArea: { top, bottom } } = c;
+    const x = c.tooltip._active[0].element.x;
+    const d = window.matchMedia('(prefers-color-scheme:dark)').matches;
+    ctx.save(); ctx.beginPath(); ctx.moveTo(x, top); ctx.lineTo(x, bottom);
+    ctx.lineWidth = 1; ctx.strokeStyle = d ? 'rgba(255,255,255,.2)' : 'rgba(0,0,0,.12)';
+    ctx.setLineDash([4, 3]); ctx.stroke(); ctx.restore();
+  }
+};
+
+/* ══════════ HAUPTBERECHNUNG ══════════ */
+function berechne() {
+  const alter = getAge();
+  const antritt = +document.getElementById('ls_antritt').value;
+  const ansparJahre = Math.max(0, antritt - alter);
+  const luecke = vv('ls_luecke');
+  const maxAlter = Math.max(antritt + 1, vv('ls_maxalter'));
+  const entnahmeJahre = maxAlter - antritt;
+  const rEntn = vv('ls_rendite_entn') / 100;
+
+  if (ansparJahre <= 0 || luecke <= 0) {
+    document.getElementById('r_sparrate').textContent = luecke <= 0 ? '0 \u20AC' : 'n/a';
+    document.getElementById('r_sparrate_sub').textContent = ansparJahre <= 0 ? 'Bereits in Pension' : 'Keine L\u00FCcke';
+    document.getElementById('r_kapital').textContent = '\u2014';
+    document.getElementById('r_kapital_sub').textContent = '';
+    document.getElementById('r_dauer').textContent = '\u2014';
+    document.getElementById('r_dauer_sub').textContent = '';
+    document.getElementById('r_info').textContent = '\u2014';
+    document.getElementById('r_tbody').innerHTML = '';
+    return;
+  }
+
+  // Phase 2: Benoetigtes Kapital bei Pensionsantritt
+  const rE = rEntn / 12;
+  const nE = entnahmeJahre * 12;
+  const kBenoetig = rE > 1e-8
+    ? luecke * (1 - Math.pow(1 + rE, -nE)) / rE
+    : luecke * nE;
+
+  // Phase 1: Benoetigte Sparrate
+  let sparrate;
+  if (modus === 'flv') {
+    sparrate = bisectionFlv(kBenoetig, ansparJahre);
+  } else {
+    sparrate = calcDepotRate(kBenoetig, ansparJahre);
+  }
+
+  // Tatsaechliches Endkapital bei der gefundenen Rate
+  let kapitalBeiPension;
+  if (modus === 'flv') {
+    kapitalBeiPension = calcFlvEndwert(sparrate, ansparJahre);
+  } else {
+    kapitalBeiPension = calcDepotEndwert(sparrate, ansparJahre);
+  }
+
+  // ── KPIs ──
+  document.getElementById('r_sparrate').textContent = fE(sparrate);
+  document.getElementById('r_sparrate_sub').textContent =
+    modus === 'flv' ? 'monatlich via FLV' : 'monatlich via Depot';
+
+  document.getElementById('r_kapital').textContent = fE(kapitalBeiPension);
+  document.getElementById('r_kapital_sub').textContent = 'bei Pensionsantritt mit ' + antritt;
+
+  document.getElementById('r_dauer').textContent = entnahmeJahre + ' Jahre';
+  document.getElementById('r_dauer_sub').textContent = 'Alter ' + antritt + ' bis ' + maxAlter;
+
+  document.getElementById('r_info').innerHTML =
+    'Mit <b>' + fE(sparrate) + '/Monat</b> \u00FCber <b>' + ansparJahre + ' Jahre</b> erreichst du <b>' + fE(kapitalBeiPension) + '</b> \u2014 ' +
+    'damit ist deine L\u00FCcke von <b>' + fE(luecke) + '/Mo.</b> bis Alter <b>' + maxAlter + '</b> gedeckt.';
+
+  // ── Chart + Tabelle: Beide Phasen ──
+  const rows = [];
+  const renditeAnspar = modus === 'flv' ? vv('ls_rendite_anspar') / 100 : vv('ls_dep_rendite') / 100;
+
+  // Ansparphase — Jahr fuer Jahr
+  let vermoegen = 0;
+  let totalEingezahlt = 0;
+  for (let j = 1; j <= ansparJahre; j++) {
+    totalEingezahlt += sparrate * 12;
+    if (modus === 'flv') {
+      vermoegen = calcFlvEndwert(sparrate, j);
+    } else {
+      vermoegen = calcDepotEndwert(sparrate, j);
+    }
+    rows.push({ alter: alter + j, eingezahlt: totalEingezahlt, entnahme: 0, vermoegen, phase: 'anspar' });
+  }
+
+  // Entnahmephase — Monat fuer Monat, aber nur Jahreswerte speichern
+  let verm = kapitalBeiPension;
+  for (let j = 1; j <= entnahmeJahre; j++) {
+    for (let m = 0; m < 12; m++) {
+      verm = verm * (1 + rE) - luecke;
+      if (verm < 0) verm = 0;
+    }
+    rows.push({ alter: antritt + j, eingezahlt: totalEingezahlt, entnahme: luecke * 12 * j, vermoegen: verm, phase: 'entn' });
+  }
+
+  // ── Chart ──
+  const t = tc();
+  if (chart) chart.destroy();
+  chart = new Chart(document.getElementById('mainChart').getContext('2d'), {
+    type: 'line',
+    data: {
+      labels: rows.map(r => r.alter),
+      datasets: [{
+        label: 'Verm\u00F6gen',
+        data: rows.map(r => r.vermoegen),
+        segment: {
+          borderColor: ctx => {
+            const idx = ctx.p0DataIndex;
+            return rows[idx]?.phase === 'entn' ? t.red : t.ac;
+          },
+          backgroundColor: ctx => {
+            const idx = ctx.p0DataIndex;
+            return rows[idx]?.phase === 'entn' ? t.redFill : t.acFill;
+          }
+        },
+        borderColor: t.ac,
+        borderWidth: 2.5, tension: .4, pointRadius: 0, fill: true
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          enabled: false, mode: 'index', intersect: false, external: externalTooltip,
+          callbacks: {
+            title: items => 'Alter ' + items[0].label,
+            label: c => ' Verm\u00F6gen: ' + fE(c.parsed.y)
+          }
+        },
+        annotation: undefined
+      },
+      scales: {
+        x: { grid: { color: t.grid, drawTicks: false }, ticks: { color: t.ticks, font: { size: 10 }, maxTicksLimit: 12 }, border: { color: 'transparent' }, title: { display: true, text: '(Alter)', align: 'end', color: t.ticks, font: { size: 10 } } },
+        y: { grid: { color: t.grid, drawTicks: false }, ticks: { color: t.ticks, font: { size: 10 }, callback: v => eurShort(v) }, border: { color: 'transparent' }, title: { display: true, text: '(\u20AC)', align: 'end', color: t.ticks, font: { size: 10 } } }
+      }
+    },
+    plugins: [crosshairPlugin]
+  });
+
+  // ── Tabelle ──
+  const tbody = document.getElementById('r_tbody');
+  tbody.innerHTML = rows.map(r => {
+    const phaseBadge = r.phase === 'anspar'
+      ? '<span class="phase-badge phase-anspar">Ansparen</span>'
+      : '<span class="phase-badge phase-entn">Entnahme</span>';
+    const einzStr = r.phase === 'anspar' ? fE(r.eingezahlt) : '\u2014';
+    const entnStr = r.phase === 'entn' ? fE(r.entnahme) : '\u2014';
+    const vermColor = r.phase === 'anspar' ? 'color:var(--ac)' : (r.vermoegen > 0 ? 'color:var(--red)' : 'color:var(--tm)');
+    return '<tr><td>' + r.alter + '</td><td>' + einzStr + '</td><td>' + entnStr + '</td><td style="' + vermColor + '">' + fE(r.vermoegen) + '</td><td>' + phaseBadge + '</td></tr>';
+  }).join('');
+
+  // ── Axion Bridge ──
+  if (window.__axionSendResult) window.__axionSendResult({
+    type: 'luecke_schliessen',
+    inputs: {
+      pensionsluecke_monat: luecke,
+      pensionsantritt: antritt,
+      hoechstalter: maxAlter,
+      modus,
+      rendite_anspar: renditeAnspar * 100,
+      rendite_entnahme: rEntn * 100
+    },
+    results: {
+      sparrate_monat: sparrate,
+      kapital_bei_pension: kapitalBeiPension,
+      benoetigtes_kapital: kBenoetig,
+      entnahme_jahre: entnahmeJahre,
+      anspar_jahre: ansparJahre
+    }
+  });
+
+  setTimeout(updatePanelMaxHeight, 50);
+  setTimeout(sendHeight, 100);
+}
+
+/* ══════════ INIT ══════════ */
+window.addEventListener('DOMContentLoaded', async () => {
+  await loadConfig();
+  buildAnbieterSelect();
+  setFlvAnbieter();
+  updateSlider();
+  berechne();
+  setTimeout(updatePanelMaxHeight, 0);
+  setTimeout(sendHeight, 100);
+});
+</script>
+</body>
+</html>

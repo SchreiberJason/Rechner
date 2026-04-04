@@ -123,6 +123,10 @@ window.addEventListener('message', function (e) {
       var el = document.getElementById('p_geschlecht');
       if (el) { el.value = d.geschlecht; el.dispatchEvent(new Event('change')); }
     }
+    if (d.luecke) {
+      var el = document.getElementById('ls_luecke') || document.getElementById('luecke') || document.getElementById('p_luecke') || document.getElementById('sparrate_ziel');
+      if (el) { el.value = d.luecke; el.dispatchEvent(new Event('input')); }
+    }
   }
   if (e.data?.type === 'axion-save-request') {
     if (typeof berechne === 'function') berechne();

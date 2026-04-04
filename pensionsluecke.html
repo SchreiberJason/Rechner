@@ -574,9 +574,9 @@ input[type="range"]::-moz-range-thumb{
     <div class="ps">
       <div class="acc-hdr" onclick="toggleInflation()" style="border-top:none;margin-top:0;padding-top:0">
         <div class="sl" style="margin-bottom:0">Inflation berücksichtigen</div>
-        <span class="acc-arrow open" id="infl_arrow">▾</span>
+        <span class="acc-arrow" id="infl_arrow">▾</span>
       </div>
-      <div id="infl_body" class="acc-body open">
+      <div id="infl_body" class="acc-body">
         <div style="padding-top:10px">
           <div class="f" style="margin-bottom:0">
             <label>Inflation p.a.</label>
@@ -752,7 +752,7 @@ input[type="range"]::-moz-range-thumb{
 })();
 
 // ─── State ────────────────────────────────────
-let inflAn        = true;
+let inflAn        = false;
 let pkStandManual = false;
 
 const TODAY = new Date('2026-03-16');
@@ -1035,20 +1035,20 @@ function getPKVorhandene(grossCurrent, anzahlG) {
 function calcPKData(grossCurrent, anzahlG, ytp, karriereR) {
   const hbgg = getBeschaeft() === 'gsvg' ? HBGG_GSVG : HBGG_ASVG;
   const pkPast = getPKVorhandene(grossCurrent, anzahlG);
+  // Aufwertung nur anwenden wenn Inflation aktiviert ist
+  const aufwertung = inflAn ? AUFWERTUNG : 1;
   const contribPerYear = [];
   let pkFuture = 0;
   for (let i = 0; i < ytp; i++) {
     const grossY = grossCurrent * Math.pow(1 + karriereR, i);
     const capped = Math.min(grossY, hbgg);
     const rawTK = capped * anzahlG * 0.0178;
-    // Aufwertung: Beitrag aus Jahr i wird (ytp - i - 1) Jahre aufgewertet
     const yearsToRetire = ytp - i - 1;
-    const tk = rawTK * Math.pow(AUFWERTUNG, Math.max(0, yearsToRetire));
+    const tk = rawTK * Math.pow(aufwertung, Math.max(0, yearsToRetire));
     contribPerYear.push(tk);
     pkFuture += tk;
   }
-  // Auch den bestehenden PK-Stand bis Pension aufwerten
-  const pkPastAufgewertet = pkPast * Math.pow(AUFWERTUNG, ytp);
+  const pkPastAufgewertet = pkPast * Math.pow(aufwertung, ytp);
   const pkTotal = pkPastAufgewertet + pkFuture;
   const contribNow   = contribPerYear[0] || 0;
   const contribLast  = contribPerYear[contribPerYear.length - 1] || 0;

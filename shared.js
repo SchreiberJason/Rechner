@@ -102,3 +102,28 @@ document.addEventListener('blur', e => {
     window.dispatchEvent(new CustomEvent('axion-calculator-result', { detail: data }));
   };
 })();
+
+/* ══════════ AXION PREFILL — empfaengt Kundendaten ══════════ */
+window.addEventListener('message', function (e) {
+  if (e.data?.type === 'axion-prefill') {
+    var d = e.data;
+    if (d.geburtsdatum) {
+      var el = document.getElementById('p_geburt') || document.getElementById('gebdat');
+      if (el) { el.value = d.geburtsdatum; el.dispatchEvent(new Event('input')); }
+    }
+    if (d.einkommen) {
+      var el = document.getElementById('p_eink') || document.getElementById('einkommen');
+      if (el) { el.value = d.einkommen; el.dispatchEvent(new Event('input')); }
+    }
+    if (d.geschlecht) {
+      var el = document.getElementById('p_geschlecht');
+      if (el) { el.value = d.geschlecht; el.dispatchEvent(new Event('change')); }
+    }
+  }
+  if (e.data?.type === 'axion-save-request') {
+    if (typeof berechne === 'function') berechne();
+    else if (typeof calculate === 'function') calculate();
+    else if (typeof berechneGFB === 'function') berechneGFB();
+    else if (typeof berechneKurz === 'function') berechneKurz();
+  }
+});

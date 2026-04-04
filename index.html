@@ -1260,7 +1260,14 @@ function berechneMittel(){
   if (window.__axionSendResult) window.__axionSendResult({
     type: '3saeulen_mittel',
     inputs: { startkapital: start, sparrate: rate, jahre: jahre },
-    results: { endwert_fonds: last.f, endwert_tagesgeld: last.t, zinsertrag: last.f - last.e }
+    results: {
+      endwert_fonds: last.f,
+      eingezahlt: last.e,
+      zinsertrag: last.f - last.e,
+      yearly_data: rows.map(r => ({
+        year: r.j, eingezahlt: Math.round(r.e), fonds: Math.round(r.f)
+      }))
+    }
   });
 
   sendHeight();
@@ -1503,7 +1510,16 @@ function berechneLang(){
   if (window.__axionSendResult) window.__axionSendResult({
     type: '3saeulen_lang',
     inputs: { monatsbeitrag: mb, laufzeit_jahre: lj, rendite_pct: rpa * 100 },
-    results: { flv_endwert: last.FN, depot_thes_endwert: last.TN, depot_ausch_endwert: last.AN, eingezahlt: last.E, flv_vorteil: last.FN - Math.max(last.TN, last.AN) }
+    results: {
+      flv_endwert: last.FN,
+      depot_thes_endwert: last.TN,
+      eingezahlt: last.E,
+      flv_vorteil: last.FN - Math.max(last.TN, last.AN),
+      laufzeit_jahre: lj,
+      yearly_data: data.map(r => ({
+        year: r.J, eingezahlt: Math.round(r.E), fonds: Math.round(r.FN)
+      }))
+    }
   });
 
   sendHeight();

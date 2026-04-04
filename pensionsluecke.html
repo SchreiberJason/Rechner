@@ -574,9 +574,9 @@ input[type="range"]::-moz-range-thumb{
     <div class="ps">
       <div class="acc-hdr" onclick="toggleInflation()" style="border-top:none;margin-top:0;padding-top:0">
         <div class="sl" style="margin-bottom:0">Inflation berücksichtigen</div>
-        <span class="acc-arrow" id="infl_arrow">▾</span>
+        <span class="acc-arrow open" id="infl_arrow">▾</span>
       </div>
-      <div id="infl_body" class="acc-body">
+      <div id="infl_body" class="acc-body open">
         <div style="padding-top:10px">
           <div class="f" style="margin-bottom:0">
             <label>Inflation p.a.</label>
@@ -752,7 +752,7 @@ input[type="range"]::-moz-range-thumb{
 })();
 
 // ─── State ────────────────────────────────────
-let inflAn        = false;
+let inflAn        = true;
 let pkStandManual = false;
 
 const TODAY = new Date('2026-03-16');
@@ -1190,29 +1190,36 @@ function berechne() {
   const kkLuecke  = Math.max(kkWunsch - kkPension, 0);
   const kkPct     = kkWunsch > 0 ? Math.min(kkPension / kkWunsch, 1) * 100 : 0;
 
-  // ── Donut ──
-  const gaugeColor = deckung >= 1 ? 'var(--ac)' : deckung >= 0.8 ? 'var(--ora)' : 'var(--red)';
-  const dp = deckPct;
+  // ── Donut + 3 Zahlen: bei Inflation die REALEN Werte zeigen ──
+  const showPension = inflAn ? kkPension : pension;
+  const showWunsch  = inflAn ? kkWunsch  : wunsch;
+  const showLuecke  = inflAn ? kkLuecke  : lueckeMo;
+  const showDeckung = showWunsch > 0 ? Math.min(showPension / showWunsch, 1) : 0;
+  const showDeckPct = Math.round(showDeckung * 100);
+  const showLueckePct = Math.max(0, 100 - showDeckPct);
+
+  const gaugeColor = showDeckung >= 1 ? 'var(--ac)' : showDeckung >= 0.8 ? 'var(--ora)' : 'var(--red)';
   document.getElementById('wirkung_donut').style.background =
-    `conic-gradient(var(--ac) 0% ${dp}%, var(--red) ${dp}% 100%)`;
-  document.getElementById('wirkung_pct').textContent  = dp + '%';
+    `conic-gradient(var(--ac) 0% ${showDeckPct}%, var(--red) ${showDeckPct}% 100%)`;
+  document.getElementById('wirkung_pct').textContent  = showDeckPct + '%';
   document.getElementById('wirkung_pct').style.color  = gaugeColor;
 
-  // ── 3 Zahlen ──
-  document.getElementById('wn_pension').textContent = fmt(pension) + ' €';
-  document.getElementById('wn_pension_sub').textContent = getBeschaeft() === 'gsvg'
-    ? 'GSVG-Schätzwert netto/Monat'
-    : Math.round((pension / wunsch) * 100) + ' % des Wunscheinkommens';
+  document.getElementById('wn_pension').textContent = fmt(showPension) + ' \u20AC';
+  document.getElementById('wn_pension_sub').textContent = inflAn
+    ? 'Kaufkraft netto/Monat (heutige \u20AC)'
+    : (getBeschaeft() === 'gsvg' ? 'GSVG-Sch\u00E4tzwert netto/Monat'
+      : Math.round((pension / wunsch) * 100) + ' % des Wunscheinkommens');
 
-  document.getElementById('wn_luecke').textContent = lueckeMo > 0 ? '−' + fmt(lueckeMo) + ' €' : '0 €';
-  document.getElementById('wn_luecke').className   = 'wside-val ' + (lueckeMo > 0 ? 'red' : 'ac');
-  document.getElementById('wn_luecke_sub').textContent = lueckeMo > 0
-    ? lueckePct + ' % des Wunscheinkommens fehlt'
-    : 'Pension deckt das Wunscheinkommen';
+  document.getElementById('wn_luecke').textContent = showLuecke > 0 ? '\u2212' + fmt(showLuecke) + ' \u20AC' : '0 \u20AC';
+  document.getElementById('wn_luecke').className   = 'wside-val ' + (showLuecke > 0 ? 'red' : 'ac');
+  document.getElementById('wn_luecke_sub').textContent = showLuecke > 0
+    ? showLueckePct + ' % des ' + (inflAn ? 'aktuellen' : 'Wunsch') + 'einkommens fehlt'
+    : 'Pension deckt das ' + (inflAn ? 'aktuelle Einkommen' : 'Wunscheinkommen');
 
-  document.getElementById('wn_wunsch').textContent = fmt(wunsch) + ' €';
-  document.getElementById('wn_wunsch_sub').textContent =
-    Math.round(wunschPct) + ' % des Einkommens bei Pensionsantritt';
+  document.getElementById('wn_wunsch').textContent = fmt(showWunsch) + ' \u20AC';
+  document.getElementById('wn_wunsch_sub').textContent = inflAn
+    ? 'aktuelles Einkommen (heutige \u20AC)'
+    : Math.round(wunschPct) + ' % des Einkommens bei Pensionsantritt';
 
   // ── Info strip ──
   const totalBJ = ((parseFloat(document.getElementById('p_vm').value)||0)/12 + ytp).toFixed(1);

@@ -289,8 +289,6 @@ tbody td:first-child{text-align:center;color:var(--tm);font-weight:600;}
         <div class="db-row"><span class="db-label">Eingezahlt (netto gesamt)</span><span class="db-val" id="ew-ein-netto">&mdash;</span></div>
         <div class="db-sep"></div>
         <div class="db-row"><span class="db-label">BAV-Endwert</span><span class="db-val green" id="ew-bav">&mdash;</span></div>
-        <div class="db-row"><span class="db-label">R&uuml;ckkaufswert</span><span class="db-val" id="ew-rk">&mdash;</span></div>
-        <div class="db-sep"></div>
         <div class="db-row"><span class="db-label">Privat-Endwert (nach KESt)</span><span class="db-val" id="ew-privat">&mdash;</span></div>
         <div class="db-sep"></div>
         <div class="db-row"><span class="db-label"><b>BAV-Vorteil</b></span><span class="db-val green" id="ew-diff">&mdash;</span></div>
@@ -311,7 +309,7 @@ tbody td:first-child{text-align:center;color:var(--tm);font-weight:600;}
       <div class="ch"><span class="ct-title">Jahres&uuml;bersicht</span></div>
       <div class="tw">
         <table>
-          <thead><tr><th>Alter</th><th>Eingezahlt</th><th>BAV-Guthaben</th><th>R&uuml;ckkaufswert</th><th>Privat</th><th>Vorteil</th></tr></thead>
+          <thead><tr><th>Alter</th><th>Eingezahlt</th><th>BAV-Guthaben</th><th>Privat</th><th>Vorteil</th></tr></thead>
           <tbody id="tbl"></tbody>
         </table>
       </div>
@@ -528,7 +526,7 @@ function calcTax(mg) {
 
 /* ══════════ CHART HELPERS ══════════ */
 let lineChartInst = null;
-const chartVis = { bav: true, privat: true, eingez: true, rk: false };
+const chartVis = { bav: true, privat: true, eingez: true };
 
 function tc() {
   const d = window.matchMedia('(prefers-color-scheme:dark)').matches;
@@ -581,13 +579,13 @@ const crosshairPlugin = {
   }
 };
 
-const LC = { bav: 'rgb(56,217,163)', privat: 'rgb(167,139,250)', eingez: '#555860', rk: '#fbbf24' };
-const LL = { bav: 'BAV-Guthaben', privat: 'Privat (nach KESt)', eingez: 'Eingezahlt', rk: 'R\u00FCckkaufswert' };
+const LC = { bav: 'rgb(56,217,163)', privat: 'rgb(167,139,250)', eingez: '#555860' };
+const LL = { bav: 'BAV-Guthaben', privat: 'Privat (nach KESt)', eingez: 'Eingezahlt' };
 
 function buildLegend() {
   const el = document.getElementById('chart-legend');
   el.innerHTML = '';
-  for (const k of ['bav', 'privat', 'eingez', 'rk']) {
+  for (const k of ['bav', 'privat', 'eingez']) {
     const btn = document.createElement('span');
     btn.className = 'li ' + (chartVis[k] ? 'on' : 'off');
     btn.innerHTML = `<span class="ld" style="background:${LC[k]}"></span>${LL[k]}`;
@@ -595,7 +593,7 @@ function buildLegend() {
       chartVis[k] = !chartVis[k];
       btn.className = 'li ' + (chartVis[k] ? 'on' : 'off');
       if (lineChartInst) {
-        const idx = ['bav', 'privat', 'eingez', 'rk'].indexOf(k);
+        const idx = ['bav', 'privat', 'eingez'].indexOf(k);
         lineChartInst.data.datasets[idx].hidden = !chartVis[k];
         lineChartInst.update('none');
       }
@@ -706,7 +704,6 @@ function calculate() {
   document.getElementById('ew-ein-brutto').textContent = fE(L.ein);
   document.getElementById('ew-ein-netto').textContent = fE(L.nEin);
   document.getElementById('ew-bav').textContent = fE(L.bG);
-  document.getElementById('ew-rk').textContent = fE(L.rk);
   document.getElementById('ew-privat').textContent = fE(L.pKest);
   const ewDiff = document.getElementById('ew-diff');
   ewDiff.textContent = vtSign + fE(L.vt);
@@ -718,8 +715,7 @@ function calculate() {
   const ds = [
     { label: LL.bav, data: yrs.map(r => r.bG), borderColor: LC.bav, backgroundColor: t.acFill, borderWidth: 2.5, tension: .4, pointRadius: 0, fill: true, hidden: !chartVis.bav },
     { label: LL.privat, data: yrs.map(r => r.pKest), borderColor: LC.privat, backgroundColor: 'rgba(167,139,250,.06)', borderWidth: 2.5, tension: .4, pointRadius: 0, fill: false, hidden: !chartVis.privat },
-    { label: LL.eingez, data: yrs.map(r => r.ein), borderColor: LC.eingez, borderDash: [5, 3], borderWidth: 1.5, tension: 0, pointRadius: 0, fill: false, hidden: !chartVis.eingez },
-    { label: LL.rk, data: yrs.map(r => r.rk), borderColor: LC.rk, borderDash: [4, 2], borderWidth: 2, tension: .4, pointRadius: 0, fill: false, hidden: !chartVis.rk }
+    { label: LL.eingez, data: yrs.map(r => r.ein), borderColor: LC.eingez, borderDash: [5, 3], borderWidth: 1.5, tension: 0, pointRadius: 0, fill: false, hidden: !chartVis.eingez }
   ];
   if (lineChartInst) { lineChartInst.destroy(); lineChartInst = null; }
   lineChartInst = new Chart(document.getElementById('lineChart').getContext('2d'), {
@@ -746,7 +742,7 @@ function calculate() {
 
   // Table
   document.getElementById('tbl').innerHTML = yrs.map(r =>
-    `<tr><td>${r.age}</td><td>${fE(r.ein)}</td><td class="hl">${fE(r.bG)}</td><td>${fE(r.rk)}</td><td>${fE(r.pKest)}</td><td class="${r.vt >= 0 ? 'hl' : ''}">${r.vt >= 0 ? '+' : ''}${fE(r.vt)}</td></tr>`
+    `<tr><td>${r.age}</td><td>${fE(r.ein)}</td><td class="hl">${fE(r.bG)}</td><td>${fE(r.pKest)}</td><td class="${r.vt >= 0 ? 'hl' : ''}">${r.vt >= 0 ? '+' : ''}${fE(r.vt)}</td></tr>`
   ).join('');
 
   // Axion Bridge

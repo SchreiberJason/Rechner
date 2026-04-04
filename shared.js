@@ -94,12 +94,16 @@ document.addEventListener('blur', e => {
 
 /* ══════════ AXION CRM BRIDGE ══════════ */
 (function () {
-  if (!window.__axionToolbar) return;
+  var isIframe = window.parent !== window;
 
   window.__axionSendResult = function (data) {
-    // data = { type: "3saeulen"|"pensionsluecke"|"bav"|"ifb", inputs: {...}, results: {...} }
     window.__AXION_RESULT = data;
+    // Local event (for Tauri WebviewWindow mode)
     window.dispatchEvent(new CustomEvent('axion-calculator-result', { detail: data }));
+    // postMessage to parent (for iFrame mode in Axion)
+    if (isIframe) {
+      window.parent.postMessage(data, '*');
+    }
   };
 })();
 

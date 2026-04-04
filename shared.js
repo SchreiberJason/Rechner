@@ -127,6 +127,18 @@ window.addEventListener('message', function (e) {
       var el = document.getElementById('ls_luecke') || document.getElementById('luecke') || document.getElementById('p_luecke') || document.getElementById('sparrate_ziel');
       if (el) { el.value = d.luecke; el.dispatchEvent(new Event('input')); }
     }
+    if (d.zielbetrag) {
+      var el = document.getElementById('m_ziel');
+      if (el) { el.value = d.zielbetrag; el.dispatchEvent(new Event('input')); }
+    }
+    if (d.laufzeit) {
+      var el = document.getElementById('m_jahre') || document.getElementById('mf_jahre');
+      if (el) { el.value = d.laufzeit; el.dispatchEvent(new Event('input')); }
+    }
+    if (d.zielname) {
+      var el = document.getElementById('m_name');
+      if (el) { el.value = d.zielname; el.dispatchEvent(new Event('input')); }
+    }
   }
   if (e.data?.type === 'axion-save-request') {
     if (typeof berechne === 'function') berechne();

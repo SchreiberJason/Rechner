@@ -1259,7 +1259,7 @@ function berechneMittel(){
 
   if (window.__axionSendResult) window.__axionSendResult({
     type: '3saeulen_mittel',
-    inputs: { startkapital: start, sparrate: rate, jahre: jahre },
+    inputs: { startkapital: start, sparrate: rate, jahre: jahre, zielname: document.getElementById('m_name')?.value || '' },
     results: {
       endwert_fonds: last.f,
       eingezahlt: last.e,

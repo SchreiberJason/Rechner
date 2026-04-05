@@ -1264,6 +1264,7 @@ function berechneMittel(){
       endwert_fonds: last.f,
       eingezahlt: last.e,
       zinsertrag: last.f - last.e,
+      benoetigte_sparrate: isZ ? rate : null,
       yearly_data: rows.map(r => ({
         year: r.j, eingezahlt: Math.round(r.e), fonds: Math.round(r.f)
       }))

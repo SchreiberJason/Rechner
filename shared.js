@@ -127,6 +127,10 @@ window.addEventListener('message', function (e) {
       var el = document.getElementById('ls_luecke') || document.getElementById('luecke') || document.getElementById('p_luecke') || document.getElementById('sparrate_ziel');
       if (el) { el.value = d.luecke; el.dispatchEvent(new Event('input')); }
     }
+    // Modus ZUERST setzen, damit Felder sichtbar sind bevor sie befuellt werden
+    if (d.modus && typeof setMode === 'function') {
+      setMode(d.modus);
+    }
     if (d.zielbetrag) {
       var el = document.getElementById('m_ziel');
       if (el) { el.value = d.zielbetrag; el.dispatchEvent(new Event('input')); }
@@ -138,10 +142,6 @@ window.addEventListener('message', function (e) {
     if (d.zielname) {
       var el = document.getElementById('m_name');
       if (el) { el.value = d.zielname; el.dispatchEvent(new Event('input')); }
-    }
-    // Modus setzen (z.B. 'ziel'/'frei' fuer Mittelfrist, 'flv'/'depot' fuer Luecke)
-    if (d.modus && typeof setMode === 'function') {
-      setMode(d.modus);
     }
     // 3-Säulen: zur richtigen Sub-View navigieren
     // view = 'kurz' | 'mittel' | 'lang'

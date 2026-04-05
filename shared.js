@@ -150,6 +150,10 @@ window.addEventListener('message', function (e) {
     }
   }
   if (e.data?.type === 'axion-save-request') {
+    // Set mode BEFORE calculating (for Zielsparen)
+    if (e.data.modus && typeof setMode === 'function') {
+      setMode(e.data.modus);
+    }
     var view = e.data.view;
     // 3-Säulen: zur richtigen Sub-View navigieren und berechnen
     if (view && typeof goTo === 'function') {

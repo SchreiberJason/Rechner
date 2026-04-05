@@ -127,6 +127,10 @@ window.addEventListener('message', function (e) {
       var el = document.getElementById('ls_luecke') || document.getElementById('luecke') || document.getElementById('p_luecke') || document.getElementById('sparrate_ziel');
       if (el) { el.value = d.luecke; el.dispatchEvent(new Event('input')); }
     }
+    if (d.k_einkommen) {
+      var el = document.getElementById('k_eink');
+      if (el) { el.value = d.k_einkommen; el.dispatchEvent(new Event('input')); }
+    }
     // Modus ZUERST setzen, damit Felder sichtbar sind bevor sie befuellt werden
     if (d.modus && typeof setMode === 'function') {
       setMode(d.modus);

@@ -139,6 +139,10 @@ window.addEventListener('message', function (e) {
       var el = document.getElementById('m_name');
       if (el) { el.value = d.zielname; el.dispatchEvent(new Event('input')); }
     }
+    // Modus setzen (z.B. 'ziel'/'frei' fuer Mittelfrist, 'flv'/'depot' fuer Luecke)
+    if (d.modus && typeof setMode === 'function') {
+      setMode(d.modus);
+    }
     // 3-Säulen: zur richtigen Sub-View navigieren
     // view = 'kurz' | 'mittel' | 'lang'
     if (d.view && typeof goTo === 'function') {

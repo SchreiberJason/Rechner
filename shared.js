@@ -136,8 +136,12 @@ window.addEventListener('message', function (e) {
       if (el) { el.value = d.zielbetrag; el.dispatchEvent(new Event('input')); }
     }
     if (d.laufzeit) {
-      var el = document.getElementById('m_jahre') || document.getElementById('mf_jahre');
+      var el = document.getElementById('m_jahre') || document.getElementById('mf_jahre') || document.getElementById('l_lj');
       if (el) { el.value = d.laufzeit; el.dispatchEvent(new Event('input')); }
+    }
+    if (d.monatsbeitrag !== undefined) {
+      var el = document.getElementById('l_mb');
+      if (el) { el.value = d.monatsbeitrag; el.dispatchEvent(new Event('input')); }
     }
     if (d.zielname) {
       var el = document.getElementById('m_name');

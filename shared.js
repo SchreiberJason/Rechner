@@ -151,6 +151,10 @@ window.addEventListener('message', function (e) {
       var el = document.getElementById('m_name');
       if (el) { el.value = d.zielname; el.dispatchEvent(new Event('input')); }
     }
+    if (d.clearEinmal) {
+      if (typeof einmal !== 'undefined') einmal = [];
+      if (typeof renderEinmal === 'function') renderEinmal();
+    }
     // 3-Säulen: zur richtigen Sub-View navigieren
     // view = 'kurz' | 'mittel' | 'lang'
     if (d.view && typeof goTo === 'function') {

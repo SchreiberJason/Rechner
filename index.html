@@ -383,7 +383,7 @@ tbody td:first-child{text-align:center;color:var(--tm);font-weight:600;}
         <div class="f"><label>Startkapital</label>
           <div class="fu"><input type="number" id="m_start" value="5000" min="0" step="500"><span class="ub">€</span></div></div>
       </div>
-      <div class="ps">
+      <div class="ps" id="m_rate_wrap" style="display:none">
         <div class="sl">Sparrate</div>
         <div class="fu"><input type="number" id="m_rate" value="500" min="0" step="50"><span class="ub">€ / Mo.</span></div>
         <div class="ib" id="m_hint" style="margin-top:10px">Benötigte Sparrate wird automatisch berechnet.</div>
@@ -1090,7 +1090,7 @@ function berechneMittel(){
   let jahre=Math.round(+(document.getElementById(jahreId).value)||5);
   if(jahre<1){jahre=1;document.getElementById(jahreId).value=1;}
   const start=isZ?(+document.getElementById('m_start').value||0):(+document.getElementById('mf_start').value||0);
-  const rate =isZ?(+document.getElementById('m_rate').value||0) :(+document.getElementById('mf_rate').value||0);
+  let rate = isZ ? 0 : (+document.getElementById('mf_rate').value||0);
   const ziel =isZ?(+document.getElementById('m_ziel').value||0) :null;
   const name =isZ?(document.getElementById('m_name').value||'Sparziel'):'Freies Sparen';
   const rendite=(+document.getElementById('m_rendite').value||0)/100;
@@ -1122,14 +1122,9 @@ function berechneMittel(){
     else{let lo=0,hi=ziel/12;for(let i=0;i<80;i++){const mid=(lo+hi)/2;if(calcF(mid,jahre)<ziel)lo=mid;else hi=mid;}needed=(lo+hi)/2;}
   }
 
-  // Update hint
+  // Im Zielsparen: die berechnete Rate direkt verwenden
   if(isZ&&needed!==null){
-    const d=rate-needed,h=document.getElementById('m_hint');
-    if(h){
-      if(Math.abs(d)<1)h.innerHTML='<b>Perfekt!</b> Deine Sparrate trifft das Ziel exakt.';
-      else if(d>0)h.innerHTML=`<b>+${eur(d)}/Mo.</b> über der benötigten Rate — du übertriffst das Ziel.`;
-      else h.innerHTML=`Benötigte Rate: <b>${eur(needed)}/Mo.</b> — noch <b>${eur(Math.abs(d))}/Mo.</b> zu wenig.`;
-    }
+    rate=needed;
   }
 
   const allMEinmal=mRegAn?genRegEinmal(
@@ -1172,8 +1167,8 @@ function berechneMittel(){
   if(isZ){
     g.innerHTML=`
       <div class="met hi"><span class="mi">🎯</span><div class="ml">Zielbetrag</div><div class="mv ac">${eur(ziel)}</div><div class="ms">${name}</div></div>
-      <div class="met"><span class="mi">📈</span><div class="ml">Fonds-Ergebnis</div><div class="mv blue">${eur(last.f)}</div><div class="ms">${last.f>=ziel?'✓ Ziel erreicht!':'Lücke: '+eur(ziel-last.f)}</div></div>
-      <div class="met"><span class="mi">💡</span><div class="ml">Benötigte Sparrate</div><div class="mv">${needed!==null?eur(needed)+'/Mo.':'—'}</div><div class="ms">um Ziel exakt zu erreichen</div></div>`;
+      <div class="met"><span class="mi">💰</span><div class="ml">Erforderliche Rate</div><div class="mv ac">${needed!==null?eur(needed)+'/Mo.':'—'}</div><div class="ms">über ${jahre} Jahre</div></div>
+      <div class="met"><span class="mi">📈</span><div class="ml">Eingezahlt</div><div class="mv">${eur(last.e)}</div><div class="ms">Zinsgewinn: +${eur(last.f-last.e)}</div></div>`;
   }else{
     g.innerHTML=`
       <div class="met hi"><span class="mi">📈</span><div class="ml">Fonds-Ergebnis</div><div class="mv ac">${eur(last.f)}</div><div class="ms">nach ${jahre} Jahren${inflation>0?` · <span style="color:#a78bfa">${eur(last.f/Math.pow(1+inflation,jahre))}</span> real`:''}</div></div>

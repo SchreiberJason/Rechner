@@ -223,19 +223,20 @@ function calcFLV(mb, lj, rpa, ein, flv, dep, dynamik, flvTer, flvRefTer, tables)
 }
 
 /** FLV-Endwert fuer gegebene Sparrate (nur FLV, ohne Depot/Einmalzahlungen). */
-function calcFlvEndwert(mb, laufzeit, rpa, tables) {
+function calcFlvEndwert(mb, laufzeit, rpa, tables, startkapital) {
   const ZERO_DEP = { ag: 0, sp: 0, ez: 0, ter: 0, ke: 0, dv: 0, ae: 0, dg: 0, spread: 0 };
-  const data = calcFLV(mb, laufzeit, rpa, [], { ai: 0, lk: 0 }, ZERO_DEP, 0, 0, 0, tables);
+  const ein = startkapital > 0 ? [{ j: 0, b: startkapital }] : [];
+  const data = calcFLV(mb, laufzeit, rpa, ein, { ai: 0, lk: 0 }, ZERO_DEP, 0, 0, 0, tables);
   return data.length ? data[data.length - 1].FN : 0;
 }
 
 /** Bisection: benoetigte monatliche FLV-Rate fuer ein Zielkapital. */
-function bisectionFlv(zielKapital, laufzeit, rpa, tables) {
+function bisectionFlv(zielKapital, laufzeit, rpa, tables, startkapital) {
   if (zielKapital <= 0) return 0;
   let lo = 1, hi = 10000;
   for (let i = 0; i < 50; i++) {
     const mid = (lo + hi) / 2;
-    const ew = calcFlvEndwert(mid, laufzeit, rpa, tables);
+    const ew = calcFlvEndwert(mid, laufzeit, rpa, tables, startkapital || 0);
     if (ew < zielKapital) lo = mid; else hi = mid;
     if (Math.abs(hi - lo) < 0.5) break;
   }
@@ -298,6 +299,12 @@ window.addEventListener('message', function (e) {
     if (d.zielname) {
       var el = document.getElementById('m_name');
       if (el) { el.value = d.zielname; el.dispatchEvent(new Event('input')); }
+    }
+    if (d.einmalinvestment !== undefined) {
+      var el = document.getElementById('ls_einmalinvest');
+      if (el) { el.value = d.einmalinvestment; el.dispatchEvent(new Event('input')); }
+      var el2 = document.getElementById('ls_dep_einmalinvest');
+      if (el2) { el2.value = d.einmalinvestment; el2.dispatchEvent(new Event('input')); }
     }
     if (d.clearEinmal) {
       if (typeof einmal !== 'undefined') einmal = [];

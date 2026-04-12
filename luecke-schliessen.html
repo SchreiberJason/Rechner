@@ -144,6 +144,8 @@ tbody td:first-child{text-align:center;color:var(--tm);font-weight:600;}
           <div class="fu"><input type="number" id="ls_flv_manuell" value="" min="0" step="1000" placeholder="leer = automatisch"><span class="ub">€</span></div>
         </div>
         <div class="auto-info" id="ls_flv_hint">Endwert wird automatisch aus Wertstand-Tabellen berechnet. Oder: Wert aus dem FLV-Rechner hier eintragen.</div>
+        <div class="f"><label>Einmalinvestment</label>
+        <div class="fu"><input type="number" id="ls_einmalinvest" value="0" min="0" step="1000"><span class="ub">&euro;</span></div></div>
       </div>
 
       <!-- Depot Felder -->
@@ -164,6 +166,8 @@ tbody td:first-child{text-align:center;color:var(--tm);font-weight:600;}
           <label>KESt</label>
           <div class="fu"><input type="number" id="ls_dep_kest" value="27.5" min="0" max="50" step="0.5"><span class="ub">%</span></div>
         </div>
+        <div class="f"><label>Einmalinvestment</label>
+        <div class="fu"><input type="number" id="ls_dep_einmalinvest" value="0" min="0" step="1000"><span class="ub">&euro;</span></div></div>
       </div>
     </div>
 
@@ -222,7 +226,7 @@ tbody td:first-child{text-align:center;color:var(--tm);font-weight:600;}
   </div>
 </div>
 
-<script src="shared.js?v=3"></script>
+<script src="shared.js?v=4"></script>
 <script>
 /* ══════════ ACCESS PROTECTION ══════════ */
 (function(){
@@ -323,13 +327,15 @@ function getFlvTablesLocal() {
 /** DOM-Wrapper: FLV-Endwert mit Rendite aus Input-Feld */
 function calcFlvEndwertLocal(mb, laufzeit) {
   const rpa = vv('ls_rendite_anspar') / 100;
-  return calcFlvEndwert(mb, laufzeit, rpa, getFlvTablesLocal());
+  const einmal = vv('ls_einmalinvest') || 0;
+  return calcFlvEndwert(mb, laufzeit, rpa, getFlvTablesLocal(), einmal);
 }
 
 /** DOM-Wrapper: Bisection mit Rendite aus Input-Feld */
 function bisectionFlvLocal(zielKapital, laufzeit) {
   const rpa = vv('ls_rendite_anspar') / 100;
-  return bisectionFlv(zielKapital, laufzeit, rpa, getFlvTablesLocal());
+  const einmal = vv('ls_einmalinvest') || 0;
+  return bisectionFlv(zielKapital, laufzeit, rpa, getFlvTablesLocal(), einmal);
 }
 
 /* ══════════ DEPOT BERECHNUNG ══════════ */
@@ -339,6 +345,7 @@ function calcDepotRate(zielKapital, laufzeit) {
   const agio = vv('ls_dep_agio') / 100;
   const ter = vv('ls_dep_ter') / 100;
   const kest = vv('ls_dep_kest') / 100;
+  const startK = vv('ls_dep_einmalinvest') || 0;
 
   // Brutto-Zielkapital (KESt auf Gewinne beruecksichtigen)
   // Annahme: ~60% des Endwerts sind Gewinne bei langer Laufzeit
@@ -347,20 +354,20 @@ function calcDepotRate(zielKapital, laufzeit) {
   const n = laufzeit * 12;
 
   if (rEff <= 0) {
-    const rate = zielKapital / n / (1 - agio);
+    const nettoStart = startK * n;
+    const rate = Math.max(0, (zielKapital - nettoStart) / n / (1 - agio));
     return Math.ceil(rate);
   }
 
   // Sparplanformel: FV = rate * ((1+r)^n - 1) / r
-  // rate_netto = zielKapital * r / ((1+r)^n - 1)
-  // Aber wir brauchen Brutto wegen KESt auf Gewinne
+  // Plus startkapital growth: startK * (1+r)^n
   // Iterativ loesen:
-  let lo = 1, hi = 10000;
+  let lo = 0, hi = 10000;
   for (let i = 0; i < 50; i++) {
     const mid = (lo + hi) / 2;
     const nettoBeitrag = mid * (1 - agio);
-    const fv = nettoBeitrag * ((Math.pow(1 + rEff, n) - 1) / rEff);
-    const einzahlung = nettoBeitrag * n;
+    const fv = nettoBeitrag * ((Math.pow(1 + rEff, n) - 1) / rEff) + startK * Math.pow(1 + rEff, n);
+    const einzahlung = nettoBeitrag * n + startK;
     const gewinn = Math.max(0, fv - einzahlung);
     const netto = fv - gewinn * kest;
     if (netto < zielKapital) lo = mid; else hi = mid;
@@ -375,12 +382,13 @@ function calcDepotEndwert(rate, laufzeit) {
   const agio = vv('ls_dep_agio') / 100;
   const ter = vv('ls_dep_ter') / 100;
   const kest = vv('ls_dep_kest') / 100;
+  const startK = vv('ls_dep_einmalinvest') || 0;
   const rEff = (rendite - ter) / 12;
   const n = laufzeit * 12;
   const nettoBeitrag = rate * (1 - agio);
-  if (rEff <= 0) return nettoBeitrag * n;
-  const fv = nettoBeitrag * ((Math.pow(1 + rEff, n) - 1) / rEff);
-  const einzahlung = nettoBeitrag * n;
+  if (rEff <= 0) return nettoBeitrag * n + startK;
+  const fv = nettoBeitrag * ((Math.pow(1 + rEff, n) - 1) / rEff) + startK * Math.pow(1 + rEff, n);
+  const einzahlung = nettoBeitrag * n + startK;
   const gewinn = Math.max(0, fv - einzahlung);
   return fv - gewinn * kest;
 }
@@ -640,7 +648,8 @@ function berechne() {
       hoechstalter: maxAlter,
       modus,
       rendite_anspar: modus === 'flv' ? vv('ls_rendite_anspar') : vv('ls_dep_rendite'),
-      rendite_entnahme: rEntn * 100
+      rendite_entnahme: rEntn * 100,
+      einmalinvestment: modus === 'flv' ? vv('ls_einmalinvest') : vv('ls_dep_einmalinvest')
     },
     results: {
       sparrate_monat: sparrate,

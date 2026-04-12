@@ -249,6 +249,11 @@ window.addEventListener('message', function (e) {
     if (d.geburtsdatum) {
       var el = document.getElementById('p_geburt') || document.getElementById('gebdat');
       if (el) { el.value = d.geburtsdatum; el.dispatchEvent(new Event('input')); }
+      // Sparrechner + 3-Saeulen haben eigene Geburtstag-Felder
+      var el2 = document.getElementById('ls_geburt');
+      if (el2) { el2.value = d.geburtsdatum; el2.dispatchEvent(new Event('input')); }
+      var el3 = document.getElementById('l_gebdat');
+      if (el3) { el3.value = d.geburtsdatum; el3.dispatchEvent(new Event('input')); }
     }
     if (d.einkommen) {
       var el = document.getElementById('p_eink') || document.getElementById('einkommen');

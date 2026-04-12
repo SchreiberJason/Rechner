@@ -99,6 +99,15 @@ document.addEventListener('blur', e => {
   }
 }, true);
 
+/* ══════════ AXION THEME BRIDGE ══════════ */
+window.addEventListener('message', function (e) {
+  if (e.data && e.data.type === 'axion-theme') {
+    var t = e.data.theme;
+    document.documentElement.classList.toggle('light', t === 'light');
+    document.documentElement.classList.toggle('dark', t === 'dark');
+  }
+});
+
 /* ══════════ AXION CRM BRIDGE ══════════ */
 (function () {
   var isIframe = window.parent !== window;

@@ -311,82 +311,25 @@ function setFlvAnbieter() {
   berechne();
 }
 
-function getFlvTables() {
+// getFlvTables(), calcFLV(), calcFlvEndwert(), bisectionFlv() now in shared.js
+
+/** DOM-Wrapper: Tabellen fuer aktuellen Anbieter/Alter laden */
+function getFlvTablesLocal() {
   const key = document.getElementById('ls_flv_anbieter')?.value || 'donau';
   const alter = getAge();
-  const provider = CONFIG?.flv_anbieter?.[key];
-  if (!provider?.wertstand_tabellen) return null;
-  const avail = Object.keys(provider.wertstand_tabellen)
-    .filter(k => k.startsWith('alter_') && !k.includes('_e'))
-    .map(k => +k.replace('alter_', '')).sort((a, b) => a - b);
-  if (!avail.length) return null;
-  let best = avail[0];
-  for (const a of avail) { if (a <= alter) best = a; else break; }
-  const wt = provider.wertstand_tabellen['alter_' + best];
-  if (!wt) return null;
-  let mb100 = wt.mb100 || null;
-  let mb500 = wt.mb500 || null;
-  if (!mb500 && mb100) { mb500 = {}; for (const [k, v] of Object.entries(mb100)) { if (!k.startsWith('_')) mb500[k] = v * 5; } }
-  return { mb100, mb500, laufzeit_max: wt._laufzeit_max || 45, ref: provider.hochrechnungszins_referenz_pct ? provider.hochrechnungszins_referenz_pct / 100 : 0.06 };
+  return getFlvTables(key, alter);
 }
 
-/* ══════════ FLV ENDWERT BERECHNUNG ══════════ */
-function calcFlvEndwert(mb, laufzeit) {
+/** DOM-Wrapper: FLV-Endwert mit Rendite aus Input-Feld */
+function calcFlvEndwertLocal(mb, laufzeit) {
   const rpa = vv('ls_rendite_anspar') / 100;
-  const tables = getFlvTables();
-  const ref = tables?.ref || 0.06;
-  const b1 = tables?.mb100 || { 0: 0, 5: 3470, 10: 11062, 15: 21209, 20: 34768, 25: 52883, 30: 77080, 35: 109395, 40: 152546, 45: 210160 };
-  const b5 = tables?.mb500 || {};
-  if (!Object.keys(b5).length) { for (const [k, v] of Object.entries(b1)) { if (!k.startsWith('_')) b5[k] = v * 5; } }
-
-  // Kosten aus Config lesen (nicht mehr als Input-Felder sichtbar)
-  const key = document.getElementById('ls_flv_anbieter')?.value || 'donau';
-  const ek = CONFIG?.flv_anbieter?.[key]?.flv_kosten_effektiv;
-  const agio = (ek?.agio_pct || 7.65) / 100;
-  const lk = (ek?.laufend_pct || 0.61) / 100;
-  const terDiff = 0; // Keine separate TER-Korrektur in diesem Rechner
-  const rpaAdj = rpa - terDiff;
-  const qr = Math.pow(1 + ref, 1 / 12);
-  const qf = Math.pow(1 + rpaAdj, 1 / 12);
-
-  function rwr(m, n) { return Math.abs(ref) < 1e-8 ? m * n : m * ((Math.pow(qr, n) - 1) / (qr - 1)); }
-  function rwf(m, n) { return Math.abs(rpaAdj) < 1e-8 ? m * n : m * ((Math.pow(qf, n) - 1) / (qf - 1)); }
-
-  let fm = 0;
-  const maxJ = Math.min(laufzeit, tables?.laufzeit_max || 45);
-  for (let j = 1; j <= maxJ; j++) {
-    let bs, be, am;
-    if (j <= 5) { bs = j - 1; be = j; am = 12; }
-    else { bs = Math.floor((j - 1) / 5) * 5; be = bs + 5; am = 60; }
-
-    function mr(ks, ke) { return (ke - ks * Math.pow(qr, am)) / rwr(1, am); }
-    let m1, m5;
-    if (b1[be] !== undefined && b5[be] !== undefined) {
-      m1 = mr(b1[bs] || 0, b1[be]);
-      m5 = mr(b5[bs] || 0, b5[be]);
-    } else {
-      const bk = Object.keys(b1).map(Number).filter(k => k >= 0 && k % 5 === 0).sort((a, b) => a - b);
-      const fb = bk.length >= 2 ? bk.slice(-2) : [35, 40];
-      m1 = mr(b1[fb[0]] || 0, b1[fb[1]] || b1[fb[0]] || 0);
-      m5 = mr(b5[fb[0]] || 0, b5[fb[1]] || b5[fb[0]] || 0);
-    }
-    const ma = m1 + (m5 - m1) * ((mb - 100) / 400);
-    fm = fm * Math.pow(qf, 12) + rwf(ma, 12);
-  }
-  return fm;
+  return calcFlvEndwert(mb, laufzeit, rpa, getFlvTablesLocal());
 }
 
-/* ══════════ FLV BISECTION — finde benoetigte Rate ══════════ */
-function bisectionFlv(zielKapital, laufzeit) {
-  if (zielKapital <= 0) return 0;
-  let lo = 1, hi = 10000;
-  for (let i = 0; i < 50; i++) {
-    const mid = (lo + hi) / 2;
-    const ew = calcFlvEndwert(mid, laufzeit);
-    if (ew < zielKapital) lo = mid; else hi = mid;
-    if (Math.abs(hi - lo) < 0.5) break;
-  }
-  return Math.ceil((lo + hi) / 2);
+/** DOM-Wrapper: Bisection mit Rendite aus Input-Feld */
+function bisectionFlvLocal(zielKapital, laufzeit) {
+  const rpa = vv('ls_rendite_anspar') / 100;
+  return bisectionFlv(zielKapital, laufzeit, rpa, getFlvTablesLocal());
 }
 
 /* ══════════ DEPOT BERECHNUNG ══════════ */
@@ -555,10 +498,10 @@ function berechne() {
   if (hatManuell) {
     // Manueller FLV-Endwert: Sparrate rueckrechnen
     kapitalBeiPension = flvManuell;
-    sparrate = bisectionFlv(flvManuell, ansparJahre);
+    sparrate = bisectionFlvLocal(flvManuell, ansparJahre);
   } else if (modus === 'flv') {
-    sparrate = bisectionFlv(kBenoetig, ansparJahre);
-    kapitalBeiPension = calcFlvEndwert(sparrate, ansparJahre);
+    sparrate = bisectionFlvLocal(kBenoetig, ansparJahre);
+    kapitalBeiPension = calcFlvEndwertLocal(sparrate, ansparJahre);
   } else {
     sparrate = calcDepotRate(kBenoetig, ansparJahre);
     kapitalBeiPension = calcDepotEndwert(sparrate, ansparJahre);
@@ -610,7 +553,7 @@ function berechne() {
   for (let j = 1; j <= ansparJahre; j++) {
     totalEingezahlt += sparrate * 12;
     if (modus === 'flv') {
-      vermoegen = calcFlvEndwert(sparrate, j);
+      vermoegen = calcFlvEndwertLocal(sparrate, j);
     } else {
       vermoegen = calcDepotEndwert(sparrate, j);
     }

@@ -123,6 +123,125 @@ window.addEventListener('message', function (e) {
   };
 })();
 
+/* ══════════ FLV MATH — shared across calculators ══════════ */
+
+/**
+ * Wertstand-Tabellen fuer einen FLV-Anbieter laden.
+ * Parametrisiert (kein DOM-Zugriff), nutzt globales CONFIG aus loadConfig().
+ * @param {string} anbieterKey  z.B. 'donau'
+ * @param {number} alter        Einstiegsalter
+ * @returns {{ mb100, mb500, laufzeit_max, matched_alter, alter, ref } | null}
+ */
+function getFlvTables(anbieterKey, alter) {
+  anbieterKey = anbieterKey || 'donau';
+  alter = alter ?? 20;
+  const provider = CONFIG?.flv_anbieter?.[anbieterKey];
+  if (!provider?.wertstand_tabellen) return null;
+  const avail = Object.keys(provider.wertstand_tabellen)
+    .filter(k => k.startsWith('alter_'))
+    .map(k => +k.replace('alter_', ''))
+    .sort((a, b) => a - b);
+  if (!avail.length) return null;
+  let best = avail[0];
+  for (const a of avail) { if (a <= alter) best = a; else break; }
+  const wt = provider.wertstand_tabellen['alter_' + best];
+  if (!wt) return null;
+  let mb100 = wt.mb100 || wt.mb100_rückkaufswert || null;
+  let mb500 = wt.mb500 || wt.mb500_rückkaufswert || null;
+  if (!mb500 && mb100) {
+    mb500 = {};
+    for (const [k, v] of Object.entries(mb100)) { if (!k.startsWith('_')) mb500[k] = v * 5; }
+  }
+  return {
+    mb100, mb500,
+    laufzeit_max: wt._laufzeit_max || 45,
+    matched_alter: best,
+    alter,
+    ref: provider.hochrechnungszins_referenz_pct ? provider.hochrechnungszins_referenz_pct / 100 : 0.06
+  };
+}
+
+/**
+ * FLV vs Depot Berechnung — Jahres-Ergebnisse.
+ * 1:1 Portierung aus index.html (3-Saeulen langfristig).
+ * @param {number} mb        Monatsbeitrag
+ * @param {number} lj        Laufzeit (Jahre)
+ * @param {number} rpa       Marktrendite (dezimal, z.B. 0.07)
+ * @param {Array}  ein       Einmalzahlungen [{j, b}, ...]
+ * @param {Object} flv       FLV-Kosten {ai, lk}
+ * @param {Object} dep       Depot-Kosten {ag, sp, ez, ter, ke, dv, ae, dg, spread}
+ * @param {number} dynamik   Beitragsdynamik (dezimal)
+ * @param {number} flvTer    Fonds-TER (dezimal)
+ * @param {number} flvRefTer Referenz-TER (dezimal)
+ * @param {Object} [tables]  Ergebnis von getFlvTables() — optional
+ * @returns {Array<{J, E, FN, TN, AN}>}
+ */
+function calcFLV(mb, lj, rpa, ein, flv, dep, dynamik, flvTer, flvRefTer, tables) {
+  dynamik = dynamik || 0; flvTer = flvTer || 0; flvRefTer = flvRefTer || 0;
+  const terDiff = flvTer - flvRefTer;
+  const rpaAdj = rpa - terDiff;
+  tables = tables || getFlvTables();
+  const ref = tables?.ref || 0.06, qr = Math.pow(1 + ref, 1 / 12);
+  function rwr(m, n) { return Math.abs(ref) < 1e-8 ? m * n : m * ((Math.pow(qr, n) - 1) / (qr - 1)); }
+  const b1 = tables?.mb100 || { 0: 0, 1: 618.06, 2: 1270.27, 3: 1961.42, 4: 2693.89, 5: 3470.10, 10: 11062.82, 15: 21209.92, 20: 34766.96, 25: 52875.92, 30: 77060, 35: 109352.45, 40: 152464.60 };
+  const b5 = tables?.mb500 || { 0: 0, 1: 3204.64, 2: 6597.50, 3: 10192.99, 4: 14003.30, 5: 18041.10, 10: 56149.33, 15: 108933.69, 20: 178401.14, 25: 271203.42, 30: 395157.38, 35: 560699.45 };
+  const qf = Math.pow(1 + rpaAdj, 1 / 12), qd = Math.pow(1 + rpa - dep.ter - (dep.dg || 0), 1 / 12);
+  function rwf(m, n) { return Math.abs(rpaAdj) < 1e-8 ? m * n : m * ((Math.pow(qf, n) - 1) / (qf - 1)); }
+  const res = []; let kum = 0, fm = 0, kt = 0, bt = 0, ka = 0, ba = 0;
+  const sp = dep.spread || 0;
+  let kumE = 0;
+  for (const a of ein) if (a.j <= 0) { kum += a.b; bt += a.b; ba += a.b; const n = Math.max(0, a.b * (1 - dep.ag) * (1 - sp) - dep.ez); kt += n; ka += n; }
+  for (let j = 1; j <= lj; j++) {
+    const mb_j = mb * Math.pow(1 + dynamik, j - 1);
+    let bs, be, am;
+    if (j <= 5) { bs = j - 1; be = j; am = 12; } else { bs = Math.floor((j - 1) / 5) * 5; be = bs + 5; am = 60; }
+    function mr(ks, ke) { return (ke - ks * Math.pow(qr, am)) / rwr(1, am); }
+    let m1, m5;
+    if (b1[be] !== undefined && b5[be] !== undefined) { m1 = mr(b1[bs], b1[be]); m5 = mr(b5[bs], b5[be]); }
+    else {
+      const bk = Object.keys(b1).map(Number).filter(k => k >= 0 && k % 5 === 0).sort((a, b2) => a - b2);
+      const fb = bk.length >= 2 ? bk.slice(-2) : [35, 40];
+      m1 = mr(b1[fb[0]] || 0, b1[fb[1]] || b1[fb[0]] || 0);
+      m5 = mr(b5[fb[0]] || 0, b5[fb[1]] || b5[fb[0]] || 0);
+    }
+    const ma = m1 + (m5 - m1) * ((mb_j - 100) / 400);
+    fm = fm * Math.pow(qf, 12) + rwf(ma, 12);
+    let fe = 0;
+    for (const a of ein) {
+      if (a.j === j) { kum += a.b; bt += a.b; ba += a.b; const n = Math.max(0, a.b * (1 - dep.ag) * (1 - sp) - dep.ez); kt += n; ka += n; }
+      if (j >= a.j) { const jsa = a.j > 0 ? (j - a.j + 1) : j; fe += a.b * (1 - flv.ai) * Math.pow(1 - flv.lk, jsa) * Math.pow(1 + rpaAdj, jsa); }
+    }
+    for (let m = 1; m <= 12; m++) { bt += mb_j; ba += mb_j; const ns = Math.max(0, mb_j * (1 - dep.ag) * (1 - sp) - dep.sp); kt += ns; ka += ns; kt *= qd; ka *= qd; }
+    kumE += mb_j * 12;
+    const te = kt * dep.dv, st = te * dep.ae * dep.ke; kt -= st; bt += te * dep.ae;
+    const da = ka * dep.dv, sa = da * dep.ke; ka -= sa; ba += da - sa;
+    const kt_s = kt * (1 - sp), ka_s = ka * (1 - sp);
+    const FN = fm + fe, TN = kt_s - Math.max(0, kt_s - bt) * dep.ke, AN = ka_s - Math.max(0, ka_s - ba) * dep.ke;
+    res.push({ J: j, E: kumE + kum, FN, TN, AN });
+  }
+  return res;
+}
+
+/** FLV-Endwert fuer gegebene Sparrate (nur FLV, ohne Depot/Einmalzahlungen). */
+function calcFlvEndwert(mb, laufzeit, rpa, tables) {
+  const ZERO_DEP = { ag: 0, sp: 0, ez: 0, ter: 0, ke: 0, dv: 0, ae: 0, dg: 0, spread: 0 };
+  const data = calcFLV(mb, laufzeit, rpa, [], { ai: 0, lk: 0 }, ZERO_DEP, 0, 0, 0, tables);
+  return data.length ? data[data.length - 1].FN : 0;
+}
+
+/** Bisection: benoetigte monatliche FLV-Rate fuer ein Zielkapital. */
+function bisectionFlv(zielKapital, laufzeit, rpa, tables) {
+  if (zielKapital <= 0) return 0;
+  let lo = 1, hi = 10000;
+  for (let i = 0; i < 50; i++) {
+    const mid = (lo + hi) / 2;
+    const ew = calcFlvEndwert(mid, laufzeit, rpa, tables);
+    if (ew < zielKapital) lo = mid; else hi = mid;
+    if (Math.abs(hi - lo) < 0.5) break;
+  }
+  return Math.ceil((lo + hi) / 2);
+}
+
 /* ══════════ AXION PREFILL — empfaengt Kundendaten ══════════ */
 window.addEventListener('message', function (e) {
   if (e.data?.type === 'axion-prefill') {

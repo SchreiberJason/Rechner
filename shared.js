@@ -40,6 +40,13 @@ function eurShort(v) {
   return v.toFixed(0);
 }
 
+/* ══════════ THEME DETECTION ══════════ */
+function isDark() {
+  if (document.documentElement.classList.contains('dark')) return true;
+  if (document.documentElement.classList.contains('light')) return false;
+  return window.matchMedia('(prefers-color-scheme:dark)').matches;
+}
+
 /* ══════════ IFRAME HEIGHT (postMessage) ══════════ */
 function sendHeight() {
   if (window.parent === window) return;

@@ -2,6 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
+<script>(function(){var p=new URLSearchParams(window.location.search),t=p.get('theme');if(t==='light')document.documentElement.classList.add('light');else if(t==='dark')document.documentElement.classList.add('dark');})()</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Finanzplan | Jason Schreiber</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
@@ -962,7 +963,7 @@ function externalTooltip({chart,tooltip}){
   el.style.top=y+'px';
 }
 function tc(){
-  const d=window.matchMedia('(prefers-color-scheme:dark)').matches;
+  const d=isDark();
   return{grid:d?'rgba(255,255,255,.12)':'rgba(0,0,0,.28)',ticks:d?'#666B78':'#777777',
     bg:d?'#16171B':'#F7F2EA',st:d?'#282930':'#FFFEFC',bdr:d?'#282930':'#DEDAD3',tt:d?'#F0EDE8':'#1A1A1A',ts:'#969696',
     ac:d?'#38D9A3':'#039F6B',acFill:d?'rgba(56,217,163,.07)':'rgba(3,159,107,.07)'};
@@ -973,7 +974,7 @@ const crosshairPlugin={
     if(!chart.tooltip._active||!chart.tooltip._active.length) return;
     const {ctx,chartArea:{top,bottom}}=chart;
     const x=chart.tooltip._active[0].element.x;
-    const d=window.matchMedia('(prefers-color-scheme:dark)').matches;
+    const d=isDark();
     ctx.save();
     ctx.beginPath();
     ctx.moveTo(x,top);

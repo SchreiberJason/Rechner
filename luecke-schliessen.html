@@ -2,6 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
+<script>(function(){var p=new URLSearchParams(window.location.search),t=p.get('theme');if(t==='light')document.documentElement.classList.add('light');else if(t==='dark')document.documentElement.classList.add('dark');})()</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Pensionslücke schließen | Jason Schreiber</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
@@ -443,7 +444,7 @@ function calcDepotEndwert(rate, laufzeit) {
 
 /* ══════════ CHART HELPERS ══════════ */
 function tc() {
-  const d = window.matchMedia('(prefers-color-scheme:dark)').matches;
+  const d = isDark();
   return {
     grid: d ? 'rgba(255,255,255,.12)' : 'rgba(0,0,0,.28)',
     ticks: d ? '#666B78' : '#777777',
@@ -484,7 +485,7 @@ const crosshairPlugin = {
     if (!c.tooltip._active?.length) return;
     const { ctx, chartArea: { top, bottom } } = c;
     const x = c.tooltip._active[0].element.x;
-    const d = window.matchMedia('(prefers-color-scheme:dark)').matches;
+    const d = isDark();
     ctx.save(); ctx.beginPath(); ctx.moveTo(x, top); ctx.lineTo(x, bottom);
     ctx.lineWidth = 1; ctx.strokeStyle = d ? 'rgba(255,255,255,.2)' : 'rgba(0,0,0,.12)';
     ctx.setLineDash([4, 3]); ctx.stroke(); ctx.restore();

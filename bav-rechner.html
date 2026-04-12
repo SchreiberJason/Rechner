@@ -2,6 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
+<script>(function(){var p=new URLSearchParams(window.location.search),t=p.get('theme');if(t==='light')document.documentElement.classList.add('light');else if(t==='dark')document.documentElement.classList.add('dark');})()</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>BAV-Rechner §3(1)15 | Jason Schreiber</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Inter+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -27,9 +28,11 @@ tbody td:first-child{text-align:center;color:var(--tm);font-weight:600;}
 .bv-seg.sv{background:rgba(248,113,113,0.35);color:var(--ts);}
 .bv-seg.net{background:var(--st);color:var(--ts);}
 @media(prefers-color-scheme:light){
-  .bv-seg.tax{background:#1C8764;color:#fff;}
-  .bv-seg.sv{background:rgba(239,68,68,0.25);color:#555;}
+  :root:not(.dark) .bv-seg.tax{background:#1C8764;color:#fff;}
+  :root:not(.dark) .bv-seg.sv{background:rgba(239,68,68,0.25);color:#555;}
 }
+:root.light .bv-seg.tax{background:#1C8764;color:#fff;}
+:root.light .bv-seg.sv{background:rgba(239,68,68,0.25);color:#555;}
 .bv-labels{display:flex;justify-content:space-between;margin-top:8px;font-size:11px;color:var(--ts);}
 .bv-labels b{color:var(--ac);}
 .bv-stat{text-align:right;flex-shrink:0;min-width:100px;}
@@ -52,9 +55,11 @@ tbody td:first-child{text-align:center;color:var(--tm);font-weight:600;}
 }
 .ew-vorteil.neg{color:var(--r);background:rgba(248,113,113,.08);border-color:rgba(248,113,113,.18);}
 @media(prefers-color-scheme:light){
-  .ew-vorteil{background:rgba(3,159,107,.08);border-color:rgba(3,159,107,.18);color:#039F6B;}
-  .ew-vorteil.neg{background:rgba(239,68,68,.08);border-color:rgba(239,68,68,.18);color:#ef4444;}
+  :root:not(.dark) .ew-vorteil{background:rgba(3,159,107,.08);border-color:rgba(3,159,107,.18);color:#039F6B;}
+  :root:not(.dark) .ew-vorteil.neg{background:rgba(239,68,68,.08);border-color:rgba(239,68,68,.18);color:#ef4444;}
 }
+:root.light .ew-vorteil{background:rgba(3,159,107,.08);border-color:rgba(3,159,107,.18);color:#039F6B;}
+:root.light .ew-vorteil.neg{background:rgba(239,68,68,.08);border-color:rgba(239,68,68,.18);color:#ef4444;}
 .ew-sub{font-size:11px;color:var(--ts);margin-top:10px;}
 .ew-details-toggle{
   display:inline-flex;align-items:center;gap:6px;
@@ -529,7 +534,7 @@ let lineChartInst = null;
 const chartVis = { bav: true, privat: true, eingez: true };
 
 function tc() {
-  const d = window.matchMedia('(prefers-color-scheme:dark)').matches;
+  const d = isDark();
   return {
     grid: d ? 'rgba(255,255,255,.12)' : 'rgba(0,0,0,.28)',
     ticks: d ? '#666B78' : '#777777',
@@ -572,7 +577,7 @@ const crosshairPlugin = {
     if (!chart.tooltip._active || !chart.tooltip._active.length) return;
     const { ctx, chartArea: { top, bottom } } = chart;
     const x = chart.tooltip._active[0].element.x;
-    const d = window.matchMedia('(prefers-color-scheme:dark)').matches;
+    const d = isDark();
     ctx.save(); ctx.beginPath(); ctx.moveTo(x, top); ctx.lineTo(x, bottom);
     ctx.lineWidth = 1; ctx.strokeStyle = d ? 'rgba(255,255,255,.2)' : 'rgba(0,0,0,.12)';
     ctx.setLineDash([4, 3]); ctx.stroke(); ctx.restore();

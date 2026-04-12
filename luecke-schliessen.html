@@ -144,8 +144,9 @@ tbody td:first-child{text-align:center;color:var(--tm);font-weight:600;}
           <div class="fu"><input type="number" id="ls_flv_manuell" value="" min="0" step="1000" placeholder="leer = automatisch"><span class="ub">€</span></div>
         </div>
         <div class="auto-info" id="ls_flv_hint">Endwert wird automatisch aus Wertstand-Tabellen berechnet. Oder: Wert aus dem FLV-Rechner hier eintragen.</div>
-        <div class="f"><label>Einmalinvestment</label>
-        <div class="fu"><input type="number" id="ls_einmalinvest" value="0" min="0" step="1000"><span class="ub">&euro;</span></div></div>
+        <div class="sl" style="margin-top:12px">Sonderzahlungen</div>
+        <div id="ls_einmal_c"></div>
+        <button class="btn-add" onclick="addLsEinmal()">+ Einmalzahlung</button>
       </div>
 
       <!-- Depot Felder -->
@@ -166,8 +167,9 @@ tbody td:first-child{text-align:center;color:var(--tm);font-weight:600;}
           <label>KESt</label>
           <div class="fu"><input type="number" id="ls_dep_kest" value="27.5" min="0" max="50" step="0.5"><span class="ub">%</span></div>
         </div>
-        <div class="f"><label>Einmalinvestment</label>
-        <div class="fu"><input type="number" id="ls_dep_einmalinvest" value="0" min="0" step="1000"><span class="ub">&euro;</span></div></div>
+        <div class="sl" style="margin-top:12px">Sonderzahlungen</div>
+        <div id="ls_dep_einmal_c"></div>
+        <button class="btn-add" onclick="addLsEinmal()">+ Einmalzahlung</button>
       </div>
     </div>
 
@@ -226,7 +228,7 @@ tbody td:first-child{text-align:center;color:var(--tm);font-weight:600;}
   </div>
 </div>
 
-<script src="shared.js?v=4"></script>
+<script src="shared.js?v=5"></script>
 <script>
 /* ══════════ ACCESS PROTECTION ══════════ */
 (function(){
@@ -243,6 +245,31 @@ tbody td:first-child{text-align:center;color:var(--tm);font-weight:600;}
 
 /* ══════════ STATE ══════════ */
 let modus = 'flv';
+let lsEinmal = [];
+
+function renderLsEinmal() {
+  const c = document.getElementById('ls_einmal_c');
+  const c2 = document.getElementById('ls_dep_einmal_c');
+  [c, c2].forEach(container => {
+    if (!container) return;
+    container.innerHTML = '';
+    lsEinmal.forEach((e, i) => {
+      const row = document.createElement('div');
+      row.className = 'er';
+      row.innerHTML = `
+        <div>${i === 0 ? '<label>Jahr</label>' : '<label style="visibility:hidden">J</label>'}
+          <div class="fu"><input type="number" value="${e.j}" min="0" step="1" onchange="lsEinmal[${i}].j=Math.max(0,Math.round(+this.value||0));this.value=lsEinmal[${i}].j;berechne()" style="border-radius:8px 0 0 8px;border-right:none"><span class="ub">J.</span></div></div>
+        <div>${i === 0 ? '<label>Betrag</label>' : '<label style="visibility:hidden">B</label>'}
+          <div class="fu"><input type="number" value="${e.b}" min="0" step="100" onchange="lsEinmal[${i}].b=Math.max(0,Math.round(+this.value||0));this.value=lsEinmal[${i}].b;berechne()" style="border-radius:8px 0 0 8px;border-right:none"><span class="ub">\u20AC</span></div></div>
+        <div style="display:flex;align-items:flex-end"><button class="btn-rm" onclick="removeLsEinmal(${i})">×</button></div>`;
+      container.appendChild(row);
+    });
+  });
+}
+
+function addLsEinmal() { lsEinmal.push({ j: 0, b: 0 }); renderLsEinmal(); }
+function removeLsEinmal(i) { lsEinmal.splice(i, 1); renderLsEinmal(); berechne(); }
+
 let inflAn = false;
 let chart = null;
 const vv = id => parseFloat(document.getElementById(id)?.value) || 0;
@@ -327,15 +354,13 @@ function getFlvTablesLocal() {
 /** DOM-Wrapper: FLV-Endwert mit Rendite aus Input-Feld */
 function calcFlvEndwertLocal(mb, laufzeit) {
   const rpa = vv('ls_rendite_anspar') / 100;
-  const einmal = vv('ls_einmalinvest') || 0;
-  return calcFlvEndwert(mb, laufzeit, rpa, getFlvTablesLocal(), einmal);
+  return calcFlvEndwert(mb, laufzeit, rpa, getFlvTablesLocal(), lsEinmal);
 }
 
 /** DOM-Wrapper: Bisection mit Rendite aus Input-Feld */
 function bisectionFlvLocal(zielKapital, laufzeit) {
   const rpa = vv('ls_rendite_anspar') / 100;
-  const einmal = vv('ls_einmalinvest') || 0;
-  return bisectionFlv(zielKapital, laufzeit, rpa, getFlvTablesLocal(), einmal);
+  return bisectionFlv(zielKapital, laufzeit, rpa, getFlvTablesLocal(), lsEinmal);
 }
 
 /* ══════════ DEPOT BERECHNUNG ══════════ */
@@ -345,7 +370,7 @@ function calcDepotRate(zielKapital, laufzeit) {
   const agio = vv('ls_dep_agio') / 100;
   const ter = vv('ls_dep_ter') / 100;
   const kest = vv('ls_dep_kest') / 100;
-  const startK = vv('ls_dep_einmalinvest') || 0;
+  const startK = lsEinmal.reduce((sum, e) => sum + (e.b || 0), 0);
 
   // Brutto-Zielkapital (KESt auf Gewinne beruecksichtigen)
   // Annahme: ~60% des Endwerts sind Gewinne bei langer Laufzeit
@@ -382,7 +407,7 @@ function calcDepotEndwert(rate, laufzeit) {
   const agio = vv('ls_dep_agio') / 100;
   const ter = vv('ls_dep_ter') / 100;
   const kest = vv('ls_dep_kest') / 100;
-  const startK = vv('ls_dep_einmalinvest') || 0;
+  const startK = lsEinmal.reduce((sum, e) => sum + (e.b || 0), 0);
   const rEff = (rendite - ter) / 12;
   const n = laufzeit * 12;
   const nettoBeitrag = rate * (1 - agio);
@@ -649,7 +674,7 @@ function berechne() {
       modus,
       rendite_anspar: modus === 'flv' ? vv('ls_rendite_anspar') : vv('ls_dep_rendite'),
       rendite_entnahme: rEntn * 100,
-      einmalinvestment: modus === 'flv' ? vv('ls_einmalinvest') : vv('ls_dep_einmalinvest')
+      einmalzahlungen: lsEinmal.filter(e => e.b > 0)
     },
     results: {
       sparrate_monat: sparrate,
@@ -671,6 +696,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   setFlvAnbieter();
   updateSlider();
   berechne();
+  renderLsEinmal();
   setTimeout(updatePanelMaxHeight, 0);
   setTimeout(sendHeight, 100);
 });

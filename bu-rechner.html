@@ -1,0 +1,997 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<script>(function(){var p=new URLSearchParams(window.location.search),t=p.get('theme');if(t==='light')document.documentElement.classList.add('light');else if(t==='dark')document.documentElement.classList.add('dark');})()</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>BU-Rechner | Jason Schreiber</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Inter+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="shared.css">
+<style>
+/* ══════════ BU-RECHNER — adapted from pensionsluecke ══════════ */
+
+.params-panel{border-radius:20px; position:sticky; top:20px; max-height:calc(100vh - 40px);}
+.card{border-radius:20px;}
+.met{border-radius:20px;}
+.calc-layout{padding:20px 16px 80px;}
+
+/* ── Accordion sections ── */
+.acc-hdr{
+  display:flex;align-items:center;justify-content:space-between;
+  cursor:pointer;user-select:none;padding:10px 0;
+  border-top:1px solid var(--brd);margin-top:4px;
+}
+.acc-hdr:first-child,.ps > .acc-hdr:first-child{border-top:none;margin-top:0;padding-top:0;}
+.acc-hdr-label{font-size:11.5px;font-weight:600;color:var(--ts);}
+.acc-arrow{
+  font-size:13px;color:var(--tm);line-height:1;
+  transition:transform .22s ease;display:inline-block;
+}
+.acc-arrow.open{transform:rotate(180deg);}
+.acc-body{
+  overflow:hidden;max-height:0;
+  transition:max-height .32s ease, opacity .25s ease;
+  opacity:0;
+}
+.acc-body.open{max-height:700px;opacity:1;}
+
+/* ── Scrollbar override ── */
+.params-panel::-webkit-scrollbar{width:3px;}
+.params-panel::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:3px;}
+
+/* ── Radio options ── */
+.radio-opt{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--ts);cursor:pointer;padding:5px 10px;border-radius:8px;border:1px solid var(--brd);}
+.radio-opt:has(input:checked){border-color:var(--ac);color:var(--tp);}
+
+/* ══════════ DONUT / WIRKUNG (1:1 from pensionsluecke) ══════════ */
+
+@keyframes donut-float{
+  0%,100%{transform:translateY(0px) rotate(0deg);}
+  40%    {transform:translateY(-4px) rotate(.2deg);}
+  70%    {transform:translateY(-2px) rotate(-.15deg);}
+}
+@keyframes donut-glow{
+  0%,100%{box-shadow:0 14px 48px rgba(0,0,0,.45),0 0 0 2px rgba(255,255,255,.04);}
+  50%    {box-shadow:0 20px 56px rgba(0,0,0,.5),0 0 36px rgba(56,217,163,.14),0 0 0 2px rgba(255,255,255,.06);}
+}
+@keyframes donut-glow-light{
+  0%,100%{box-shadow:0 8px 28px rgba(0,0,0,.10),0 0 0 2px rgba(255,255,255,.6);}
+  50%    {box-shadow:0 12px 36px rgba(0,0,0,.13),0 0 28px rgba(2,136,86,.12),0 0 0 2px rgba(255,255,255,.8);}
+}
+@media(prefers-color-scheme:light){
+  :root:not(.dark) .wirkung-donut{animation:donut-glow-light 8s ease-in-out infinite;}
+}
+:root.light .wirkung-donut{animation:donut-glow-light 8s ease-in-out infinite;}
+@keyframes side-pulse{
+  0%,100%{opacity:1;}
+  50%    {opacity:.92;}
+}
+
+.wirkung-card{
+  background:
+    radial-gradient(ellipse 60% 80% at 15% 50%, rgba(248,113,113,.06) 0%, transparent 70%),
+    radial-gradient(ellipse 60% 80% at 85% 50%, rgba(56,217,163,.06) 0%, transparent 70%),
+    var(--ss);
+}
+.wirkung-body{
+  display:grid;
+  grid-template-columns:1fr auto 1fr;
+  align-items:center;
+  gap:16px;
+  padding:28px 20px 24px;
+}
+
+/* ── Side glass cards ── */
+.wside{
+  padding:26px 20px;border-radius:18px;text-align:center;
+  position:relative;overflow:hidden;
+  backdrop-filter:blur(20px) saturate(1.5);
+  -webkit-backdrop-filter:blur(20px) saturate(1.5);
+}
+.wside::before{
+  content:'';position:absolute;
+  top:0;left:0;right:0;height:46%;
+  background:linear-gradient(180deg,rgba(255,255,255,.07) 0%,transparent 100%);
+  border-radius:18px 18px 40% 40%;pointer-events:none;
+}
+.wside-luecke{
+  background:rgba(248,113,113,.07);
+  border:1px solid rgba(248,113,113,.22);
+  box-shadow:inset 0 1px 0 rgba(248,113,113,.12),0 0 28px rgba(248,113,113,.07);
+  animation:side-pulse 7s ease-in-out infinite 3.5s;
+}
+.wside-pension{
+  background:rgba(56,217,163,.07);
+  border:1px solid rgba(56,217,163,.22);
+  box-shadow:inset 0 1px 0 rgba(56,217,163,.12),0 0 28px rgba(56,217,163,.07);
+  animation:side-pulse 7s ease-in-out infinite;
+}
+.wside-label{font-size:9.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ts);margin-bottom:12px;}
+.wside-val{font-size:clamp(24px,3.2vw,36px);font-weight:700;letter-spacing:-.04em;line-height:1;margin-bottom:9px;position:relative;}
+.wside-val.ac{color:var(--ac);}
+.wside-val.red{color:var(--red);}
+.wside-sub{font-size:11px;color:var(--tm);line-height:1.4;position:relative;}
+.wside-detail{font-size:10px;color:var(--ts);margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,.07);line-height:1.5;position:relative;}
+
+/* ── Light Mode: wside ── */
+@media(prefers-color-scheme:light){
+  :root:not(.dark) .wside::before{background:linear-gradient(180deg,rgba(255,255,255,.55) 0%,transparent 100%);}
+  :root:not(.dark) .wside-luecke{
+    background:rgba(217,53,53,.06);border:1px solid rgba(217,53,53,.22);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.8),0 0 24px rgba(217,53,53,.06);
+  }
+  :root:not(.dark) .wside-pension{
+    background:rgba(2,136,86,.06);border:1px solid rgba(2,136,86,.22);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.8),0 0 24px rgba(2,136,86,.06);
+  }
+  :root:not(.dark) .wirkung-card{
+    background:
+      radial-gradient(ellipse 60% 80% at 15% 50%, rgba(217,53,53,.05) 0%, transparent 70%),
+      radial-gradient(ellipse 60% 80% at 85% 50%, rgba(2,136,86,.05) 0%, transparent 70%),
+      var(--ss);
+  }
+}
+:root.light .wside::before{background:linear-gradient(180deg,rgba(255,255,255,.55) 0%,transparent 100%);}
+:root.light .wside-luecke{
+  background:rgba(217,53,53,.06);border:1px solid rgba(217,53,53,.22);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.8),0 0 24px rgba(217,53,53,.06);
+}
+:root.light .wside-pension{
+  background:rgba(2,136,86,.06);border:1px solid rgba(2,136,86,.22);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.8),0 0 24px rgba(2,136,86,.06);
+}
+:root.light .wirkung-card{
+  background:
+    radial-gradient(ellipse 60% 80% at 15% 50%, rgba(217,53,53,.05) 0%, transparent 70%),
+    radial-gradient(ellipse 60% 80% at 85% 50%, rgba(2,136,86,.05) 0%, transparent 70%),
+    var(--ss);
+}
+
+/* ── Donut center column ── */
+.wirkung-donut-col{
+  display:flex;flex-direction:column;align-items:center;gap:10px;
+  animation:donut-float 8s ease-in-out infinite;
+  will-change:transform;
+}
+.wirkung-donut{
+  width:260px;height:260px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  background:conic-gradient(var(--ac) 0% 51%, var(--red) 51% 100%);
+  transition:background .55s ease, transform .5s cubic-bezier(.23,1,.32,1);
+  position:relative;
+  animation:donut-glow 8s ease-in-out infinite;
+}
+.wirkung-donut::before{
+  content:'';position:absolute;inset:0;border-radius:50%;
+  box-shadow:inset 0 2px 0 rgba(255,255,255,.18);
+  pointer-events:none;
+}
+@media(prefers-color-scheme:light){
+  :root:not(.dark) .wirkung-donut::before{box-shadow:inset 0 2px 0 rgba(255,255,255,.6);}
+}
+:root.light .wirkung-donut::before{box-shadow:inset 0 2px 0 rgba(255,255,255,.6);}
+.wirkung-inner{
+  width:196px;height:196px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;flex-direction:column;gap:3px;
+  position:relative;overflow:hidden;
+  background:rgba(22,23,27,.56);
+  backdrop-filter:blur(30px) saturate(1.7);
+  -webkit-backdrop-filter:blur(30px) saturate(1.7);
+  border:1px solid rgba(255,255,255,.09);
+  box-shadow:
+    inset 0 1.5px 0 rgba(255,255,255,.12),
+    inset 0 -1px 0 rgba(0,0,0,.28),
+    0 6px 24px rgba(0,0,0,.4);
+}
+.wirkung-inner::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:50%;
+  border-radius:100px 100px 58% 58%;
+  background:linear-gradient(180deg,rgba(255,255,255,.10) 0%,rgba(255,255,255,.02) 55%,transparent 100%);
+  pointer-events:none;
+}
+@media(prefers-color-scheme:light){
+  :root:not(.dark) .wirkung-inner{
+    background:rgba(255,254,250,.72);border:1px solid rgba(255,255,255,.85);
+    box-shadow:inset 0 1.5px 0 rgba(255,255,255,.95),inset 0 -1px 0 rgba(0,0,0,.05),0 4px 20px rgba(0,0,0,.10);
+  }
+  :root:not(.dark) .wirkung-inner::before{background:linear-gradient(180deg,rgba(255,255,255,.60) 0%,rgba(255,255,255,.15) 55%,transparent 100%);}
+  :root:not(.dark) .wirkung-lbl{color:var(--ts);}
+}
+:root.light .wirkung-inner{
+  background:rgba(255,254,250,.72);border:1px solid rgba(255,255,255,.85);
+  box-shadow:inset 0 1.5px 0 rgba(255,255,255,.95),inset 0 -1px 0 rgba(0,0,0,.05),0 4px 20px rgba(0,0,0,.10);
+}
+:root.light .wirkung-inner::before{background:linear-gradient(180deg,rgba(255,255,255,.60) 0%,rgba(255,255,255,.15) 55%,transparent 100%);}
+:root.light .wirkung-lbl{color:var(--ts);}
+.wirkung-pct{font-size:52px;font-weight:700;letter-spacing:-.04em;line-height:1;transition:color .3s;position:relative;}
+.wirkung-lbl{font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--ts);position:relative;}
+.wirkung-subtitle{font-size:9.5px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:var(--tm);}
+
+/* ── Wirkung bottom row ── */
+.wirkung-bottom{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 20px;border-top:1px solid var(--brd);background:rgba(255,255,255,.015);
+}
+.wirkung-bottom-lbl{font-size:11px;font-weight:500;color:var(--ts);}
+.wirkung-bottom-right{display:flex;flex-direction:column;align-items:flex-end;gap:1px;}
+.wirkung-bottom-val{font-size:18px;font-weight:700;letter-spacing:-.02em;color:var(--tp);}
+.wirkung-bottom-sub{font-size:10px;color:var(--tm);}
+
+/* ── Info strip ── */
+.info-strip{
+  display:grid;grid-template-columns:repeat(3,1fr);
+  gap:1px;background:var(--brd);border-top:1px solid var(--brd);
+  border:none;border-radius:0;padding:0;
+}
+.is-item{background:var(--st);padding:12px 16px;}
+.is-label{font-size:9.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--tm);margin-bottom:4px;}
+.is-val{font-size:14px;font-weight:700;color:var(--tp);}
+.is-val.ac{color:var(--ac);}
+.is-val.red{color:var(--red);}
+
+/* ── Income bar ── */
+.ib-wrap{padding:20px 20px 16px;}
+.ib-track{height:44px;border-radius:12px;overflow:hidden;display:flex;background:var(--st);margin-bottom:14px;}
+.ib-pension{background:var(--ac);transition:width .5s ease;border-radius:12px 0 0 12px;}
+.ib-luecke{background:var(--red);transition:width .5s ease;border-radius:0 12px 12px 0;}
+.ib-labels{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:0;}
+.ib-side{display:flex;align-items:flex-start;gap:8px;}
+.ib-dot{width:8px;height:8px;border-radius:2px;flex-shrink:0;margin-top:4px;}
+.ib-lname{font-size:10.5px;color:var(--ts);margin-bottom:2px;font-weight:500;}
+.ib-lval{font-size:clamp(16px,2.5vw,20px);font-weight:700;letter-spacing:-.02em;}
+.ib-lval.ac{color:var(--ac);}
+.ib-lval.red{color:var(--red);}
+.ib-total{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:12px 0 0;border-top:1px solid var(--brd);margin-top:14px;
+}
+.ib-total-lbl{font-size:11px;color:var(--ts);font-weight:500;}
+.ib-total-val{font-size:14px;font-weight:700;color:var(--tp);}
+
+/* ── Detail rows ── */
+.detail-row{display:flex;justify-content:space-between;align-items:center;padding:4px 0;color:var(--tp);font-size:12.5px;}
+.detail-sub{display:flex;justify-content:space-between;align-items:center;padding:2px 0 2px 16px;font-size:11px;color:var(--ts);}
+.detail-sep{height:1px;background:var(--brd);margin:8px 0;}
+.detail-total{display:flex;justify-content:space-between;align-items:center;padding:6px 0;font-weight:700;font-size:13px;color:var(--tp);}
+
+/* ── Warning banner ── */
+.warn-banner{
+  background:rgba(248,113,113,.06);
+  border:1px solid rgba(248,113,113,.18);
+  border-radius:16px;
+  padding:20px 22px;
+}
+.warn-banner-title{
+  font-size:13px;font-weight:700;color:var(--red);margin-bottom:8px;
+  display:flex;align-items:center;gap:8px;
+}
+.warn-banner-body{font-size:11.5px;color:var(--ts);line-height:1.7;}
+.warn-banner-body b{color:var(--tp);}
+.warn-banner-body .red-hl{color:var(--red);font-weight:700;}
+@media(prefers-color-scheme:light){
+  :root:not(.dark) .warn-banner{background:rgba(217,53,53,.05);border-color:rgba(217,53,53,.18);}
+}
+:root.light .warn-banner{background:rgba(217,53,53,.05);border-color:rgba(217,53,53,.18);}
+
+/* ── Empfehlung card ── */
+.empf-card{
+  background:linear-gradient(135deg, rgba(56,217,163,.07), rgba(56,217,163,.02));
+  border:1px solid rgba(56,217,163,.2);
+  border-radius:20px;padding:24px 22px;text-align:center;
+}
+.empf-val{font-size:clamp(28px,4vw,40px);font-weight:700;letter-spacing:-.03em;color:var(--ac);line-height:1;}
+.empf-sub{font-size:11px;color:var(--ts);margin-top:8px;line-height:1.4;}
+@media(prefers-color-scheme:light){
+  :root:not(.dark) .empf-card{background:linear-gradient(135deg, rgba(2,136,86,.06), rgba(2,136,86,.02));border-color:rgba(2,136,86,.2);}
+}
+:root.light .empf-card{background:linear-gradient(135deg, rgba(2,136,86,.06), rgba(2,136,86,.02));border-color:rgba(2,136,86,.2);}
+
+/* ── Factor grid ── */
+.factor-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.factor-item{background:var(--st);border-radius:12px;padding:14px;text-align:center;}
+.factor-val{font-size:20px;font-weight:700;color:var(--tp);margin-bottom:2px;}
+.factor-val.ac{color:var(--ac);}
+.factor-lbl{font-size:10px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--tm);}
+
+/* ══════════ RESPONSIVE ══════════ */
+@media(max-width:719px){
+  .calc-layout{padding:14px 12px 60px;}
+  .wirkung-body{
+    grid-template-columns:1fr;
+    grid-template-rows:auto auto auto;
+    justify-items:center;
+    padding:24px 16px 16px;gap:14px;
+  }
+  .wside{width:100%;max-width:340px;}
+  .wirkung-donut-col{order:-1;}
+}
+@media(max-width:479px){
+  .ps{padding:14px;}
+  .wirkung-donut{width:200px;height:200px;}
+  .wirkung-inner{width:150px;height:150px;}
+  .wirkung-pct{font-size:40px;}
+  .factor-grid{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+
+<div class="calc-layout">
+
+  <!-- ════════════════════════════
+       PARAMS PANEL
+  ════════════════════════════ -->
+  <aside class="params-panel">
+
+    <!-- Persoenliche Daten -->
+    <div class="ps">
+      <div class="sl">Pers&ouml;nliche Daten</div>
+      <div class="f">
+        <label>Geburtsdatum</label>
+        <input type="date" id="p_geburt" value="1990-01-01" min="1960-01-01" max="2005-12-31" oninput="onInput()">
+      </div>
+      <div class="f">
+        <label>Berufseinstieg mit</label>
+        <div class="fu"><input type="number" id="bu_einstieg" value="20" min="14" max="55" step="1" oninput="onInput()"><span class="ub">Jahren</span></div>
+      </div>
+      <div class="f" style="margin-bottom:0">
+        <label>Besch&auml;ftigungsart</label>
+        <select id="bu_typ" onchange="onInput()">
+          <option value="angestellt">Angestellte/r (ASVG)</option>
+          <option value="arbeiter">Arbeiter/in (ASVG)</option>
+        </select>
+      </div>
+      <div style="display:flex;align-items:baseline;gap:8px;margin-top:10px;">
+        <span style="font-size:11.5px;color:var(--ts)">Alter heute:</span>
+        <span style="font-size:18px;font-weight:700;color:var(--tp)" id="p_age_disp">36 J.</span>
+        <span style="font-size:11.5px;color:var(--ts);margin-left:auto">Versicherungsjahre:</span>
+        <span style="font-size:18px;font-weight:700;color:var(--ac)" id="p_vj_disp">16 J.</span>
+      </div>
+    </div>
+
+    <!-- Einkommen -->
+    <div class="ps">
+      <div class="sl">Einkommen</div>
+      <div class="f">
+        <label id="eink_label">Aktuelles Nettoeinkommen</label>
+        <div class="bn-toggle">
+          <button class="bn-btn active" id="btn_netto" onclick="setIncomeType('netto')">NETTO</button>
+          <button class="bn-btn"        id="btn_brutto" onclick="setIncomeType('brutto')">BRUTTO</button>
+        </div>
+        <div class="fu"><input type="number" id="p_eink" value="2050" min="500" max="20000" step="50" oninput="onInput()"><span class="ub">&euro;/Mo.</span></div>
+        <div class="hint-sub" id="eink_convert_hint" style="margin-top:4px">&asymp; Brutto: 2.850 &euro;/Mo.</div>
+      </div>
+      <div class="f" style="margin-bottom:0">
+        <label>Geh&auml;lter pro Jahr</label>
+        <div style="display:flex;gap:8px;margin-top:4px">
+          <label class="radio-opt"><input type="radio" name="gehaelter" id="g14" value="14" checked onchange="onInput()"> 14 (Standard &Ouml;sterreich)</label>
+          <label class="radio-opt"><input type="radio" name="gehaelter" id="g12" value="12" onchange="onInput()"> 12</label>
+        </div>
+      </div>
+    </div>
+
+    <!-- Erweiterte Einstellungen -->
+    <div class="ps">
+      <div class="acc-hdr" onclick="toggleAcc('adv_body','adv_arrow')" style="border-top:none;margin-top:0;padding-top:0">
+        <div class="sl" style="margin-bottom:0">Erweiterte Einstellungen</div>
+        <span class="acc-arrow" id="adv_arrow">&#9662;</span>
+      </div>
+      <div id="adv_body" class="acc-body">
+        <div style="padding-top:10px">
+          <div class="f">
+            <label style="display:flex;align-items:center;gap:6px">
+              Wunsch-Absicherung
+              <span class="info-icon" onclick="openInfoModal()">
+                i<span class="info-tip">Wie viel % Ihres Nettos m&ouml;chten Sie abgesichert haben?</span>
+              </span>
+            </label>
+            <div class="fu"><input type="number" id="bu_ziel_pct" value="80" min="50" max="100" step="5" oninput="onInput()"><span class="ub">% vom Netto</span></div>
+          </div>
+          <div class="f">
+            <label style="display:flex;align-items:center;gap:6px">
+              Durchschnittl. Karriereeinkommen
+              <span class="info-icon">
+                i<span class="info-tip">Falls Ihr Einkommen fr&uuml;her deutlich niedriger war, senkt dies die Bemessungsgrundlage. 100&thinsp;% = immer auf aktuellem Niveau verdient.</span>
+              </span>
+            </label>
+            <div class="fu"><input type="number" id="bu_karriere_pct" value="85" min="40" max="100" step="5" oninput="onInput()"><span class="ub">% des aktuellen</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Button -->
+    <div class="ps ps-sticky">
+      <button class="btn-calc" onclick="berechne()">BU-L&uuml;cke berechnen</button>
+    </div>
+
+  </aside>
+
+  <!-- ════════════════════════════
+       RESULTS
+  ════════════════════════════ -->
+  <div class="rp">
+
+    <!-- ═══ HERO: Donut Wirkungsgrad ═══ -->
+    <div class="card wirkung-card">
+      <div class="wirkung-body">
+
+        <!-- Links: Monatliche Luecke -->
+        <div class="wside wside-luecke">
+          <div class="wside-label">Monatliche L&uuml;cke</div>
+          <div class="wside-val red" id="wn_luecke">&mdash;</div>
+          <div class="wside-sub" id="wn_luecke_sub">Fehlt monatlich</div>
+          <div class="wside-detail" id="wn_luecke_detail"></div>
+        </div>
+
+        <!-- Mitte: Donut -->
+        <div class="wirkung-donut-col">
+          <div class="wirkung-donut" id="wirkung_donut">
+            <div class="wirkung-inner">
+              <div class="wirkung-pct" id="wirkung_pct">&mdash;</div>
+              <div class="wirkung-lbl">abgesichert</div>
+            </div>
+          </div>
+          <div class="wirkung-subtitle">BU-Absicherungsgrad</div>
+        </div>
+
+        <!-- Rechts: Staatliche BU-Pension -->
+        <div class="wside wside-pension">
+          <div class="wside-label">Staatliche BU-Pension</div>
+          <div class="wside-val ac" id="wn_pension">&mdash;</div>
+          <div class="wside-sub" id="wn_pension_sub">Sch&auml;tzwert netto/Mo.</div>
+          <div class="wside-detail" id="wn_pension_detail"></div>
+        </div>
+
+      </div>
+
+      <!-- Aktuelles Nettoeinkommen -->
+      <div class="wirkung-bottom">
+        <span class="wirkung-bottom-lbl">Aktuelles Netto-Einkommen</span>
+        <div class="wirkung-bottom-right">
+          <span class="wirkung-bottom-val" id="wn_netto">&mdash;</span>
+          <span class="wirkung-bottom-sub" id="wn_netto_sub">monatlich</span>
+        </div>
+      </div>
+
+      <!-- Info strip -->
+      <div class="info-strip">
+        <div class="is-item">
+          <div class="is-label">Versicherungsjahre</div>
+          <div class="is-val" id="is_vj">&mdash;</div>
+        </div>
+        <div class="is-item">
+          <div class="is-label">Steigerungssatz</div>
+          <div class="is-val ac" id="is_steig">&mdash;</div>
+        </div>
+        <div class="is-item">
+          <div class="is-label">Zurechnungszeit</div>
+          <div class="is-val" id="is_zurech">&mdash;</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ Einkommensbalken ═══ -->
+    <div class="card">
+      <div class="ch" style="padding:16px 20px 0">
+        <span class="ct-title" style="font-size:13px;font-weight:700;color:var(--tp)">Einkommensvergleich bei Berufsunf&auml;higkeit</span>
+      </div>
+      <div class="ib-wrap">
+        <div class="ib-track">
+          <div class="ib-pension" id="bar_pension" style="width:50%"></div>
+          <div class="ib-luecke" id="bar_luecke" style="width:50%"></div>
+        </div>
+        <div class="ib-labels">
+          <div class="ib-side">
+            <div class="ib-dot" style="background:var(--ac)"></div>
+            <div>
+              <div class="ib-lname">Staatliche BU-Pension</div>
+              <div class="ib-lval ac" id="bar_pension_val">&mdash;</div>
+            </div>
+          </div>
+          <div class="ib-side" style="text-align:right">
+            <div>
+              <div class="ib-lname">Versorgungsl&uuml;cke</div>
+              <div class="ib-lval red" id="bar_luecke_val">&mdash;</div>
+            </div>
+            <div class="ib-dot" style="background:var(--red)"></div>
+          </div>
+        </div>
+        <div class="ib-total">
+          <div class="ib-total-lbl">Aktuelles Netto-Einkommen</div>
+          <div class="ib-total-val" id="bar_total_val">&mdash;</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ Empfehlung ═══ -->
+    <div class="empf-card">
+      <div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ts);margin-bottom:12px">&#10004; Empfohlene private BU-Rente</div>
+      <div class="empf-val" id="r_empfehlung">&mdash;</div>
+      <div class="empf-sub">monatliche BU-Rente empfohlen, um <span id="r_ziel_text">80 %</span> des Nettoeinkommens abzusichern</div>
+    </div>
+
+    <!-- ═══ WARNUNG: Ablehnungsquote ═══ -->
+    <div class="warn-banner">
+      <div class="warn-banner-title">&#9888;&#65039; Warum eine private BU-Rente &uuml;ber die L&uuml;cke hinaus sinnvoll ist</div>
+      <div class="warn-banner-body">
+        <p>In &Ouml;sterreich werden aktuell rund <span class="red-hl">80 % aller Antr&auml;ge</span> auf Berufsunf&auml;higkeits- bzw. Invalidit&auml;tspension von der PVA <b>abgelehnt</b> (Quelle: PVA-Statistik). Das hei&szlig;t: <b>Nur etwa jeder f&uuml;nfte Antrag wird tats&auml;chlich genehmigt.</b> Die h&auml;ufigsten Gr&uuml;nde:</p>
+        <ul style="margin:8px 0 8px 16px;padding:0;">
+          <li><b>Verweisbarkeit:</b> Die PVA pr&uuml;ft, ob Sie noch <em>irgendeinen</em> zumutbaren Beruf aus&uuml;ben k&ouml;nnten &ndash; selbst bei erheblichen gesundheitlichen Einschr&auml;nkungen. Besonders Arbeiter/innen ohne Berufsschutz werden auf praktisch jede T&auml;tigkeit verwiesen.</li>
+          <li><b>Reha vor Pension:</b> Seit 2014 wird bei unter 50-J&auml;hrigen vorrangig Rehabilitation statt Pension gew&auml;hrt. Ein BU-Antrag wird dann oft abgelehnt, mit dem Verweis auf Umschulungsm&ouml;glichkeiten.</li>
+          <li><b>Fehlende Versicherungsmonate:</b> Ohne ausreichend Beitragszeiten (mind. 60 Monate in den letzten 10 Jahren) besteht gar kein Anspruch.</li>
+          <li><b>&Auml;rztliche Begutachtung:</b> Die PVA-Gutachter beurteilen die Leistungsf&auml;higkeit oft strenger als der behandelnde Arzt.</li>
+        </ul>
+        <p>Selbst bei Genehmigung kann die Pension <b>deutlich niedriger</b> ausfallen als die hier errechnete Sch&auml;tzung. Eine <b>private BU-Versicherung</b> zahlt unabh&auml;ngig von der staatlichen Entscheidung, hat eigene &auml;rztliche Pr&uuml;fkriterien und bietet eine <b>eigenst&auml;ndige Absicherungsebene</b> &ndash; auch wenn die L&uuml;cke rechnerisch geschlossen scheint.</p>
+        <p style="margin-top:8px;color:var(--tp);font-weight:600">Empfehlung: Die private BU-Rente sollte <b>mindestens die errechnete L&uuml;cke abdecken</b> &ndash; besser noch <span class="red-hl">deutlich dar&uuml;ber</span>, da die Wahrscheinlichkeit hoch ist, dass die staatliche Leistung gar nicht oder nur teilweise gew&auml;hrt wird.</p>
+      </div>
+    </div>
+
+    <!-- ═══ Berechnungsfaktoren + Details (einklappbar) ═══ -->
+    <div class="card">
+      <div class="ch" style="cursor:pointer" onclick="toggleDetails()">
+        <span class="ct-title">Berechnungsdetails</span>
+        <span class="acc-arrow" id="detail_arrow" style="margin-left:auto">&#9662;</span>
+      </div>
+      <div id="detail_body" style="overflow:hidden;max-height:0;transition:max-height .4s ease,opacity .3s ease;opacity:0;">
+        <div class="cb2">
+          <div class="factor-grid" style="margin-bottom:18px;">
+            <div class="factor-item">
+              <div class="factor-val" id="f_versicherungsjahre">&mdash;</div>
+              <div class="factor-lbl">Versicherungsjahre</div>
+            </div>
+            <div class="factor-item">
+              <div class="factor-val" id="f_zurechnungszeit">&mdash;</div>
+              <div class="factor-lbl">Zurechnungszeit</div>
+            </div>
+            <div class="factor-item">
+              <div class="factor-val ac" id="f_steigerung">&mdash;</div>
+              <div class="factor-lbl">Steigerungssatz</div>
+            </div>
+            <div class="factor-item">
+              <div class="factor-val" id="f_bemessung">&mdash;</div>
+              <div class="factor-lbl">Bemessungsgrundlage</div>
+            </div>
+          </div>
+        </div>
+        <div class="cb2" style="font-size:12.5px;padding-top:0;">
+          <div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ts);margin-bottom:8px">Aktuelles Einkommen</div>
+          <div class="detail-row"><span>Bruttogehalt (monatlich)</span><span id="d_brutto" style="font-weight:700">&mdash;</span></div>
+          <div class="detail-row"><span>SV-Abz&uuml;ge</span><span id="d_sv" style="color:var(--red)">&mdash;</span></div>
+          <div class="detail-row"><span>Lohnsteuer</span><span id="d_lst" style="color:var(--y)">&mdash;</span></div>
+          <div class="detail-total"><span>= Netto monatlich</span><span id="d_netto" style="color:var(--ac)">&mdash;</span></div>
+
+          <div class="detail-sep" style="margin:14px 0"></div>
+
+          <div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ts);margin-bottom:8px">Staatliche BU-Pension (Sch&auml;tzung)</div>
+          <div class="detail-row"><span>Tats&auml;chliche Versicherungsjahre</span><span id="d_vj_real">&mdash;</span></div>
+          <div class="detail-row"><span>+ Zurechnungszeit (bis Alter 60)</span><span id="d_vj_zurech">&mdash;</span></div>
+          <div class="detail-row"><span>= Effektive Versicherungsjahre</span><span id="d_vj" style="font-weight:700">&mdash;</span></div>
+          <div class="detail-row"><span>Steigerungssatz (1,78 % &times; eff. Jahre)</span><span id="d_steig">&mdash;</span></div>
+          <div class="detail-row"><span>Bemessungsgrundlage</span><span id="d_bemess">&mdash;</span></div>
+          <div class="detail-sep"></div>
+          <div class="detail-row"><span>BU-Pension brutto</span><span id="d_bu_brutto" style="font-weight:700">&mdash;</span></div>
+          <div class="detail-sub"><span>KV-Beitrag Pensionist (5,10 %)</span><span id="d_bu_kv" style="color:var(--red)">&mdash;</span></div>
+          <div class="detail-sub"><span>Lohnsteuer (Pensionsbez&uuml;ge)</span><span id="d_bu_lst" style="color:var(--y)">&mdash;</span></div>
+          <div class="detail-total"><span>= BU-Pension netto</span><span id="d_bu_netto" style="color:var(--y)">&mdash;</span></div>
+
+          <div class="detail-sep" style="margin:14px 0"></div>
+
+          <div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ts);margin-bottom:8px">Versorgungsl&uuml;cke</div>
+          <div class="detail-row"><span>Aktuelles Netto</span><span id="d_gap_netto">&mdash;</span></div>
+          <div class="detail-row"><span>&minus; Staatliche BU-Pension netto</span><span id="d_gap_pension" style="color:var(--y)">&mdash;</span></div>
+          <div class="detail-total"><span>= Monatliche L&uuml;cke</span><span id="d_gap_total" style="color:var(--red)">&mdash;</span></div>
+          <div class="detail-sep"></div>
+          <div class="detail-row"><span>Wunsch-Absicherung (<span id="d_ziel_pct2">80</span> % vom Netto)</span><span id="d_wunsch">&mdash;</span></div>
+          <div class="detail-row"><span>&minus; Staatliche BU-Pension netto</span><span id="d_wunsch_pension" style="color:var(--y)">&mdash;</span></div>
+          <div class="detail-total" style="font-size:14px"><span>= Empfohlene private BU-Rente</span><span id="d_empf" style="color:var(--ac)">&mdash;</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer info -->
+    <div style="font-size:10px;color:var(--ts);line-height:1.6;padding:8px 4px;text-align:center;">
+      Sch&auml;tzwerte gem&auml;&szlig; <b>ASVG 2026</b> (Pensionskonto-Logik, &sect;&sect;254/273 ASVG). Die tats&auml;chliche BU-/Invalidit&auml;tspension h&auml;ngt vom individuellen Pensionskonto, der &auml;rztlichen Begutachtung und der PVA-Entscheidung ab. Ohne Gew&auml;hr.
+    </div>
+
+  </div>
+</div>
+
+<!-- Info Modal -->
+<div class="info-overlay" id="info_modal" onclick="if(event.target===this)closeInfoModal()">
+  <div class="info-box" onclick="event.stopPropagation()" style="max-width:500px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <div style="font-size:14px;font-weight:700;color:var(--tp)">Wunsch-Absicherung bei BU</div>
+      <button onclick="closeInfoModal()" style="background:rgba(255,255,255,.06);border:1px solid var(--brd);color:var(--ts);border-radius:8px;width:28px;height:28px;cursor:pointer;font-size:16px;">&times;</button>
+    </div>
+    <div style="font-size:12px;color:var(--ts);line-height:1.7;">
+      <p>Finanzexperten empfehlen, im Fall einer Berufsunf&auml;higkeit mindestens <b style="color:var(--tp)">75&ndash;80 %</b> des letzten Nettoeinkommens abzusichern.</p>
+      <p style="margin-top:10px">Die staatliche BU-Pension deckt je nach Alter und Versicherungsdauer oft nur <b style="color:var(--red)">30&ndash;60 %</b> des Bruttoeinkommens ab &ndash; bei jungen Arbeitnehmern deutlich weniger.</p>
+      <p style="margin-top:10px"><b style="color:var(--ac)">Je j&uuml;nger Sie sind, desto gr&ouml;&szlig;er die L&uuml;cke</b> &ndash; und desto g&uuml;nstiger ist eine private BU-Versicherung abzuschlie&szlig;en.</p>
+      <p style="margin-top:10px;padding-top:10px;border-top:1px solid var(--brd)"><b style="color:var(--tp)">Angestelle</b> haben Berufsschutz &ndash; die PVA verweist nur auf vergleichbare Berufe.<br><b style="color:var(--tp)">Arbeiter</b> k&ouml;nnen auf <em>jeden</em> zumutbaren Beruf am Arbeitsmarkt verwiesen werden.</p>
+    </div>
+  </div>
+</div>
+
+<script src="shared.js"></script>
+<script>
+/* ══════════════════════════════════
+   BU-RECHNER — Berufsunfaehigkeits-Lueckenrechner
+   Oesterreich, ASVG 2026
+   Design: 1:1 wie pensionsluecke.html
+══════════════════════════════════ */
+
+// ─── Zugriffsschutz ──────────────────────────────
+(function(){
+  const isLocal  = ['localhost','127.0.0.1',''].includes(location.hostname);
+  const validRef = document.referrer.includes('jasonschreiber.at');
+  const ACCESS_KEY = 'flv2025';
+  const urlKey   = new URLSearchParams(location.search).get('access');
+  if(!isLocal && !validRef && urlKey !== ACCESS_KEY){
+    document.body.style.cssText = 'margin:0;background:#0F0F0F;display:flex;align-items:center;justify-content:center;height:100vh;font-family:Inter,sans-serif;';
+    document.body.innerHTML = '<div style="color:#555;font-size:14px;text-align:center"><div style="font-size:32px;margin-bottom:12px">&#128274;</div>Zugriff nicht gestattet.</div>';
+    throw new Error('Access denied');
+  }
+})();
+
+// ─── State ───────────────────────────────────────
+let incomeType = 'netto'; // 'netto' | 'brutto'
+const TODAY = new Date();
+
+// ─── SV / Steuer (identisch zur pensionsluecke.html) ──────────────
+let SV_AN_RATE   = 0.1832;
+let HBGG_ASVG    = 6270;
+
+function applyBUConfig() {
+  if (!CONFIG) return;
+  const sv = CONFIG.sozialversicherung || {};
+  if (sv.an_sv_rate != null) SV_AN_RATE = sv.an_sv_rate;
+  if (sv.hbgg_asvg_monat_eur != null) HBGG_ASVG = sv.hbgg_asvg_monat_eur;
+}
+
+// ─── BU-spezifische Konstanten ───────────────────
+const STEIGERUNG_PRO_JAHR = 0.0178;     // 1,78 % pro Versicherungsjahr
+const MAX_STEIGERUNG       = 0.80;       // Deckel 80 %
+const ZURECHNUNGSZEIT_FAKTOR = 0.60;     // Zurechnungszeit-Faktor (~60 %)
+const ZURECHNUNGSZEIT_GRENZE = 60;       // Zurechnung bis Alter 60
+const KV_PENSIONIST_PCT     = 5.10;      // KV-Beitrag Pensionist
+const AUSGLEICHSZULAGE       = 1218;     // Mindestpension (Richtsatz Single, ~2025/2026)
+
+// ─── Formatter ───────────────────────────────────
+function fmt(n) {
+  return Math.round(n).toLocaleString('de-AT');
+}
+const fE = n => fmt(n) + ' \u20AC';
+
+// ─── Progressiver Lohnsteuertarif §33 EStG ──────
+function calcLohnsteuer(taxableAnnual) {
+  if (taxableAnnual <=  11693) return 0;
+  if (taxableAnnual <=  19134) return (taxableAnnual -  11693) * 0.20;
+  if (taxableAnnual <=  32075) return 1488.20  + (taxableAnnual -  19134) * 0.30;
+  if (taxableAnnual <=  62080) return 5370.50  + (taxableAnnual -  32075) * 0.40;
+  if (taxableAnnual <=  93120) return 17372.10 + (taxableAnnual -  62080) * 0.48;
+  return 32291.40 + (taxableAnnual - 93120) * 0.50;
+}
+
+// ─── Netto aus Brutto (monatlich, AN) ────────────
+function netFromGross(grossMonthly) {
+  const anzahlG  = getAnzahlGehaelter();
+  const svBase   = Math.min(grossMonthly, HBGG_ASVG);
+  const svMonthly = svBase * SV_AN_RATE;
+  const svAnn     = svMonthly * anzahlG;
+  const taxable12 = (grossMonthly - svMonthly) * 12;
+  const rawTax12  = calcLohnsteuer(taxable12);
+  const lst12     = Math.max(0, rawTax12 - 1542);
+  let lstSonderzahlung = 0;
+  if (anzahlG === 14) {
+    const sonderzahlungBrutto = (grossMonthly - svMonthly) * 2;
+    lstSonderzahlung = Math.max(0, sonderzahlungBrutto - 620) * 0.06;
+  }
+  const netAnn = grossMonthly * anzahlG - svAnn - lst12 - lstSonderzahlung;
+  return netAnn / anzahlG;
+}
+
+// ─── Brutto aus Netto (iterativ) ─────────────────
+function grossFromNet(netMonthly) {
+  if (netMonthly <= 0) return 0;
+  let g = netMonthly / 0.70;
+  for (let i = 0; i < 60; i++) {
+    const err = netFromGross(g) - netMonthly;
+    if (Math.abs(err) < 0.05) break;
+    g -= err * 0.6;
+    if (g < 1) g = 1;
+  }
+  return g;
+}
+
+// ─── Netto-Pension aus Brutto-Pension ────────────
+function pensionNetFromGross(grossMonthly) {
+  const grossAnn = grossMonthly * 14;
+  const kv       = grossAnn * 0.051;
+  const taxable  = grossAnn - kv;
+  const rawTax   = calcLohnsteuer(taxable);
+  let pab;
+  if      (grossAnn <= 25000)  pab = 954;
+  else if (grossAnn <= 29500)  pab = 954 * (29500 - grossAnn) / 4500;
+  else                          pab = 0;
+  const lst = Math.max(0, rawTax - 1121 - pab);
+  return (grossAnn - kv - lst) / 14;
+}
+
+// ─── Helpers ─────────────────────────────────────
+function getAge() {
+  const v = document.getElementById('p_geburt').value;
+  if (!v) return 36;
+  const b = new Date(v);
+  let age = TODAY.getFullYear() - b.getFullYear();
+  const m = TODAY.getMonth() - b.getMonth();
+  if (m < 0 || (m === 0 && TODAY.getDate() < b.getDate())) age--;
+  return Math.max(0, age);
+}
+
+function getAnzahlGehaelter() {
+  const el = document.querySelector('input[name="gehaelter"]:checked');
+  return el ? parseInt(el.value) : 14;
+}
+
+function getEffectiveGross() {
+  const val = parseFloat(document.getElementById('p_eink').value) || 2050;
+  return incomeType === 'brutto' ? val : grossFromNet(val);
+}
+
+function getEffectiveNet() {
+  const val = parseFloat(document.getElementById('p_eink').value) || 2050;
+  return incomeType === 'netto' ? val : netFromGross(val);
+}
+
+// ─── UI ──────────────────────────────────────────
+function toggleAcc(bodyId, arrowId) {
+  const body = document.getElementById(bodyId);
+  const isOpen = body.classList.toggle('open');
+  const arrow = document.getElementById(arrowId);
+  if (arrow) arrow.classList.toggle('open', isOpen);
+  setTimeout(sendHeight, 50);
+}
+
+function setIncomeType(type) {
+  if (incomeType === type) return;
+  const cur = parseFloat(document.getElementById('p_eink').value) || 0;
+  const newVal = type === 'brutto'
+    ? Math.round(grossFromNet(cur) / 10) * 10
+    : Math.round(netFromGross(cur) / 10) * 10;
+  document.getElementById('p_eink').value = newVal;
+  incomeType = type;
+  document.getElementById('btn_netto').classList.toggle('active', type === 'netto');
+  document.getElementById('btn_brutto').classList.toggle('active', type === 'brutto');
+  document.getElementById('eink_label').textContent =
+    type === 'netto' ? 'Aktuelles Nettoeinkommen' : 'Aktuelles Bruttoeinkommen';
+  onInput();
+}
+
+function toggleDetails() {
+  const body = document.getElementById('detail_body');
+  const arrow = document.getElementById('detail_arrow');
+  const isOpen = body.style.maxHeight !== '0px' && body.style.maxHeight !== '';
+  if (isOpen) {
+    body.style.maxHeight = '0px';
+    body.style.opacity = '0';
+    arrow.classList.remove('open');
+  } else {
+    body.style.maxHeight = body.scrollHeight + 'px';
+    body.style.opacity = '1';
+    arrow.classList.add('open');
+  }
+  setTimeout(sendHeight, 400);
+}
+
+function openInfoModal() {
+  document.getElementById('info_modal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeInfoModal() {
+  document.getElementById('info_modal').classList.remove('open');
+  document.body.style.overflow = '';
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeInfoModal(); });
+
+function onInput() { berechne(); }
+
+const setR = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+
+// ─── BU-Pension Berechnung ───────────────────────
+function calcBUPension(alter, einstiegsalter, grossMonat, karriereFaktor) {
+  const versicherungsjahre = Math.max(0, alter - einstiegsalter);
+  const zurechnungsjahreRaw = Math.max(0, ZURECHNUNGSZEIT_GRENZE - alter);
+  const zurechnungsjahreEff = zurechnungsjahreRaw * ZURECHNUNGSZEIT_FAKTOR;
+  const effektiveJahre = versicherungsjahre + zurechnungsjahreEff;
+  const steigerung = Math.min(effektiveJahre * STEIGERUNG_PRO_JAHR, MAX_STEIGERUNG);
+  const bgg = Math.min(grossMonat, HBGG_ASVG) * karriereFaktor;
+  let buBrutto = bgg * steigerung;
+  if (buBrutto > 0 && buBrutto < AUSGLEICHSZULAGE) {
+    buBrutto = AUSGLEICHSZULAGE;
+  }
+  return { versicherungsjahre, zurechnungsjahreRaw, zurechnungsjahreEff, effektiveJahre, steigerung, bgg, buBrutto };
+}
+
+// ─── Main Calculation ────────────────────────────
+function berechne() {
+  const alter       = getAge();
+  const einstieg    = parseInt(document.getElementById('bu_einstieg')?.value) || 20;
+  const zielPct     = parseFloat(document.getElementById('bu_ziel_pct')?.value) || 80;
+  const karrierePct = parseFloat(document.getElementById('bu_karriere_pct')?.value) || 85;
+  const grossCurrent = getEffectiveGross();
+  const netCurrent   = getEffectiveNet();
+  const anzahlG      = getAnzahlGehaelter();
+
+  // SV breakdown for detail display
+  const svBase    = Math.min(grossCurrent, HBGG_ASVG);
+  const svMonthly = svBase * SV_AN_RATE;
+  const taxable12 = (grossCurrent - svMonthly) * 12;
+  const rawTax12  = calcLohnsteuer(taxable12);
+  const lst12     = Math.max(0, rawTax12 - 1542);
+
+  // BU pension
+  const bu = calcBUPension(alter, einstieg, grossCurrent, karrierePct / 100);
+  const buNettoMo = pensionNetFromGross(bu.buBrutto);
+  const buKV      = bu.buBrutto * 14 * 0.051 / 14;
+  const buLstAnn  = Math.max(0, calcLohnsteuer(bu.buBrutto * 14 - bu.buBrutto * 14 * 0.051) - 1121 - (bu.buBrutto * 14 <= 25000 ? 954 : bu.buBrutto * 14 <= 29500 ? 954 * (29500 - bu.buBrutto * 14) / 4500 : 0));
+  const buLstMo   = buLstAnn / 14;
+
+  // Gaps
+  const lueckeMo  = Math.max(0, netCurrent - buNettoMo);
+  const deckung   = netCurrent > 0 ? Math.min(buNettoMo / netCurrent, 1) : 0;
+  const deckPct   = Math.round(deckung * 100);
+  const lueckePct = Math.max(0, 100 - deckPct);
+
+  // Empfehlung
+  const wunschNetto = netCurrent * (zielPct / 100);
+  const empfBURente = Math.max(0, wunschNetto - buNettoMo);
+  const empfRounded = Math.round(empfBURente / 50) * 50;
+
+  // Update conversion hint
+  const convertHint = document.getElementById('eink_convert_hint');
+  if (incomeType === 'netto') {
+    convertHint.textContent = '\u2248 Brutto: ' + fmt(grossCurrent) + ' \u20AC/Mo.';
+  } else {
+    convertHint.textContent = '\u2248 Netto: ' + fmt(netCurrent) + ' \u20AC/Mo.';
+  }
+
+  // Age / VJ display
+  const vj = Math.max(0, alter - einstieg);
+  setR('p_age_disp', alter + ' J.');
+  setR('p_vj_disp', vj + ' J.');
+
+  // ═══ DONUT ═══
+  const gaugeColor = deckung >= 1 ? 'var(--ac)' : deckung >= 0.7 ? 'var(--ora)' : 'var(--red)';
+  document.getElementById('wirkung_donut').style.background =
+    'conic-gradient(var(--ac) 0% ' + deckPct + '%, var(--red) ' + deckPct + '% 100%)';
+  document.getElementById('wirkung_pct').textContent = deckPct + '%';
+  document.getElementById('wirkung_pct').style.color = gaugeColor;
+
+  // ═══ WSIDE CARDS ═══
+  setR('wn_pension', fmt(buNettoMo) + ' \u20AC');
+  document.getElementById('wn_pension_sub').textContent =
+    bu.versicherungsjahre + ' VJ + ' + bu.zurechnungsjahreEff.toFixed(1).replace('.',',') + ' Zurechnung';
+  document.getElementById('wn_pension_detail').textContent =
+    'Brutto: ' + fmt(bu.buBrutto) + ' \u20AC \u2192 Netto: ' + fmt(buNettoMo) + ' \u20AC';
+
+  setR('wn_luecke', lueckeMo > 0 ? '\u2212' + fmt(lueckeMo) + ' \u20AC' : '0 \u20AC');
+  document.getElementById('wn_luecke').className = 'wside-val ' + (lueckeMo > 0 ? 'red' : 'ac');
+  document.getElementById('wn_luecke_sub').textContent = lueckeMo > 0
+    ? lueckePct + ' % des Einkommens fehlen'
+    : 'Pension deckt das Einkommen';
+  document.getElementById('wn_luecke_detail').textContent =
+    lueckeMo > 0 ? (fmt(lueckeMo * 14) + ' \u20AC pro Jahr') : '';
+
+  setR('wn_netto', fmt(netCurrent) + ' \u20AC');
+  setR('wn_netto_sub', anzahlG + '\u00D7 pro Jahr');
+
+  // ═══ INFO STRIP ═══
+  setR('is_vj', bu.versicherungsjahre + ' J.');
+  setR('is_steig', (bu.steigerung * 100).toFixed(1).replace('.',',') + ' %');
+  setR('is_zurech', '+' + bu.zurechnungsjahreEff.toFixed(1).replace('.',',') + ' J.');
+
+  // ═══ INCOME BAR ═══
+  const pensionBarPct = netCurrent > 0 ? Math.min(100, buNettoMo / netCurrent * 100) : 0;
+  document.getElementById('bar_pension').style.width = pensionBarPct + '%';
+  document.getElementById('bar_luecke').style.width  = (100 - pensionBarPct) + '%';
+  setR('bar_pension_val', fmt(buNettoMo) + ' \u20AC');
+  setR('bar_luecke_val', '\u2212' + fmt(lueckeMo) + ' \u20AC');
+  setR('bar_total_val', fmt(netCurrent) + ' \u20AC');
+
+  // ═══ EMPFEHLUNG ═══
+  setR('r_empfehlung', fmt(empfRounded) + ' \u20AC');
+  setR('r_ziel_text', zielPct.toFixed(0) + ' %');
+  setR('d_ziel_pct2', zielPct.toFixed(0));
+
+  // ═══ FACTORS ═══
+  setR('f_versicherungsjahre', bu.versicherungsjahre + ' J.');
+  setR('f_zurechnungszeit', '+' + bu.zurechnungsjahreEff.toFixed(1).replace('.',',') + ' J.');
+  setR('f_steigerung', (bu.steigerung * 100).toFixed(1).replace('.',',') + ' %');
+  setR('f_bemessung', fmt(bu.bgg) + ' \u20AC');
+
+  // ═══ DETAIL BREAKDOWN ═══
+  setR('d_brutto', fmt(grossCurrent) + ' \u20AC');
+  setR('d_sv', '\u2212' + fmt(svMonthly) + ' \u20AC');
+  setR('d_lst', '\u2212' + fmt(lst12 / 12) + ' \u20AC');
+  setR('d_netto', fmt(netCurrent) + ' \u20AC');
+
+  setR('d_vj_real', bu.versicherungsjahre + ' Jahre');
+  setR('d_vj_zurech', '+' + bu.zurechnungsjahreEff.toFixed(1).replace('.',',') + ' Jahre (Faktor ' + (ZURECHNUNGSZEIT_FAKTOR * 100).toFixed(0) + ' %)');
+  setR('d_vj', bu.effektiveJahre.toFixed(1).replace('.',',') + ' Jahre');
+  setR('d_steig', (bu.steigerung * 100).toFixed(2).replace('.',',') + ' %');
+  setR('d_bemess', fmt(bu.bgg) + ' \u20AC');
+  setR('d_bu_brutto', fmt(bu.buBrutto) + ' \u20AC');
+  setR('d_bu_kv', '\u2212' + fmt(buKV) + ' \u20AC');
+  setR('d_bu_lst', '\u2212' + fmt(buLstMo) + ' \u20AC');
+  setR('d_bu_netto', fmt(buNettoMo) + ' \u20AC');
+
+  setR('d_gap_netto', fmt(netCurrent) + ' \u20AC');
+  setR('d_gap_pension', '\u2212' + fmt(buNettoMo) + ' \u20AC');
+  setR('d_gap_total', '\u2212' + fmt(lueckeMo) + ' \u20AC');
+  setR('d_wunsch', fmt(wunschNetto) + ' \u20AC');
+  setR('d_wunsch_pension', '\u2212' + fmt(buNettoMo) + ' \u20AC');
+  setR('d_empf', fmt(empfRounded) + ' \u20AC');
+
+  // ═══ AXION BRIDGE ═══
+  if (window.__axionSendResult) window.__axionSendResult({
+    type: 'bu_rechner',
+    inputs: { alter, einstieg, brutto: grossCurrent, netto: netCurrent, zielPct, karrierePct },
+    results: {
+      netto_monat: netCurrent,
+      bu_pension_brutto: bu.buBrutto,
+      bu_pension_netto: buNettoMo,
+      luecke_monat: lueckeMo,
+      luecke_pct: lueckePct,
+      empfehlung_bu_rente: empfRounded,
+      versicherungsjahre: bu.versicherungsjahre,
+      steigerungssatz: bu.steigerung
+    }
+  });
+
+  setTimeout(updatePanelMaxHeight, 50);
+  setTimeout(sendHeight, 100);
+}
+
+// ─── Donut Repulsion (from pensionsluecke) ───────
+(function initRepulsion() {
+  const card   = document.querySelector('.wirkung-card');
+  const donut  = document.getElementById('wirkung_donut');
+  const col    = document.querySelector('.wirkung-donut-col');
+  if (!card || !donut) return;
+  let rafId = null, targetX = 0, targetY = 0, currentX = 0, currentY = 0, hovering = false;
+  const MAX = 22, PROXIMITY = 140;
+  function lerp(a, b, t) { return a + (b - a) * t; }
+  function animate() {
+    currentX = lerp(currentX, targetX, 0.1);
+    currentY = lerp(currentY, targetY, 0.1);
+    donut.style.transform = 'translate(' + currentX.toFixed(2) + 'px, ' + currentY.toFixed(2) + 'px)';
+    if (hovering || Math.abs(currentX) > 0.2 || Math.abs(currentY) > 0.2) {
+      rafId = requestAnimationFrame(animate);
+    } else { donut.style.transform = ''; rafId = null; }
+  }
+  card.addEventListener('mouseenter', () => { hovering = true; col.style.animationPlayState = 'paused'; if (!rafId) rafId = requestAnimationFrame(animate); });
+  card.addEventListener('mousemove', (e) => {
+    const rect = donut.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2, cy = rect.top + rect.height / 2;
+    const dx = e.clientX - cx, dy = e.clientY - cy;
+    const dist = Math.hypot(dx, dy) || 1;
+    if (dist > PROXIMITY) { targetX = 0; targetY = 0; return; }
+    const falloff = 1 - dist / PROXIMITY;
+    targetX = -(dx / dist) * falloff * MAX;
+    targetY = -(dy / dist) * falloff * MAX;
+  });
+  card.addEventListener('mouseleave', () => { hovering = false; targetX = 0; targetY = 0; col.style.animationPlayState = 'running'; if (!rafId) rafId = requestAnimationFrame(animate); });
+})();
+
+// ─── Boot ────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', async () => {
+  await loadConfig();
+  applyBUConfig();
+  berechne();
+  setTimeout(updatePanelMaxHeight, 100);
+  setTimeout(sendHeight, 150);
+});
+</script>
+</body>
+</html>

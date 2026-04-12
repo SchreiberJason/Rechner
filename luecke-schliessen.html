@@ -75,7 +75,7 @@ tbody td:first-child{text-align:center;color:var(--tm);font-weight:600;}
       <div class="sl">Deine Situation</div>
       <div class="f">
         <label>Geburtsdatum</label>
-        <input type="date" id="ls_geburt" value="2006-01-01">
+        <input type="date" id="ls_geburt" value="2006-01-01" onchange="berechne()">
       </div>
       <div class="f">
         <label>Monatliche Pensionslücke</label>
@@ -222,7 +222,7 @@ tbody td:first-child{text-align:center;color:var(--tm);font-weight:600;}
   </div>
 </div>
 
-<script src="shared.js?v=2"></script>
+<script src="shared.js?v=3"></script>
 <script>
 /* ══════════ ACCESS PROTECTION ══════════ */
 (function(){

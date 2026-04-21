@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<script>(function(){var p=new URLSearchParams(window.location.search),t=p.get('theme');if(t==='light')document.documentElement.classList.add('light');else if(t==='dark')document.documentElement.classList.add('dark');})()</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Kreditrechner | Jason Schreiber</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Inter+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<link rel="stylesheet" href="shared.css">
+<style>
+.params-panel{border-radius:20px;position:sticky;top:20px;max-height:calc(100vh - 40px);}
+.card{border-radius:20px;}
+.met{border-radius:20px;}
+.calc-layout{padding:20px 16px 80px;}
+
+/* Accordion */
+.acc-hdr{display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none;padding:10px 0;border-top:1px solid var(--brd);margin-top:4px;}
+.acc-hdr:first-child,.ps>.acc-hdr:first-child{border-top:none;margin-top:0;padding-top:0;}
+.acc-hdr-label{font-size:11.5px;font-weight:600;color:var(--ts);}
+.acc-arrow{font-size:13px;color:var(--tm);line-height:1;transition:transform .22s ease;display:inline-block;}
+.acc-arrow.open{transform:rotate(180deg);}
+.acc-body{overflow:hidden;max-height:0;transition:max-height .32s ease,opacity .25s ease;opacity:0;}
+.acc-body.open{max-height:800px;opacity:1;}
+.params-panel::-webkit-scrollbar{width:3px;}
+.params-panel::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:3px;}
+
+/* Hero Rate Card */
+.rate-hero{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:24px 20px 18px;flex-wrap:wrap;}
+.rate-val{font-size:clamp(30px,5.5vw,48px);font-weight:800;letter-spacing:-.04em;color:var(--ac);line-height:1;margin-bottom:4px;}
+.rate-sub{font-size:11px;color:var(--ts);line-height:1.5;}
+.rate-card{background:radial-gradient(ellipse 70% 90% at 90% 50%,rgba(56,217,163,.07) 0%,transparent 70%),var(--ss);}
+@media(prefers-color-scheme:light){:root:not(.dark) .rate-card{background:radial-gradient(ellipse 70% 90% at 90% 50%,rgba(3,159,107,.07) 0%,transparent 70%),var(--ss);}}
+:root.light .rate-card{background:radial-gradient(ellipse 70% 90% at 90% 50%,rgba(3,159,107,.07) 0%,transparent 70%),var(--ss);}
+
+/* KIM Badge */
+.kim-badge{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:6px 14px;border-radius:100px;white-space:nowrap;}
+.kim-ok{background:var(--gdim);color:var(--grn);}
+.kim-warn{background:var(--ydim);color:var(--y);}
+.kim-err{background:var(--rdim);color:var(--red);}
+.kim-na{background:rgba(255,255,255,.06);color:var(--tm);}
+
+/* Info Strip */
+.info-strip{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--brd);}
+.is-item{background:var(--ss);padding:12px 16px;}
+.is-label{font-size:9.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--tm);margin-bottom:4px;}
+.is-val{font-size:14px;font-weight:700;color:var(--tp);}
+.is-val.ac{color:var(--ac);}
+.is-val.red{color:var(--red);}
+.is-val.grn{color:var(--grn);}
+
+/* Chart */
+.chart-box{position:relative;height:280px;}
+.legend{display:flex;gap:8px;flex-wrap:wrap;padding:0 18px 14px;}
+.li{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--ts);cursor:pointer;padding:4px 10px;border-radius:20px;border:1px solid transparent;transition:all .15s;}
+.li.on{color:var(--tp);border-color:var(--brd);}
+.li.off{opacity:.4;}
+.ld{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+#chart-tip{position:fixed;z-index:100;pointer-events:none;background:var(--ss);border:1px solid var(--brd);border-radius:12px;padding:10px 14px;box-shadow:0 8px 24px rgba(0,0,0,.4);min-width:160px;display:none;}
+.ctt{font-size:10.5px;font-weight:700;color:var(--tp);margin-bottom:6px;}
+.cti{display:flex;align-items:center;gap:7px;font-size:11px;color:var(--ts);margin-top:3px;}
+.ctd{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+
+/* KIM-VO Check Card */
+.kim-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--brd);}
+.kim-row:last-child{border-bottom:none;}
+.kim-row-label{font-size:12px;color:var(--ts);flex:1;}
+.kim-row-val{font-size:13px;font-weight:700;}
+.kim-row-val.ok{color:var(--grn);}
+.kim-row-val.warn{color:var(--y);}
+.kim-row-val.err{color:var(--red);}
+.kim-row-val.na{color:var(--tm);}
+.kim-row-limit{font-size:10px;color:var(--tm);text-align:right;}
+
+/* DSTI bar */
+.dsti-track{height:8px;border-radius:100px;background:var(--st);overflow:hidden;margin:6px 0;}
+.dsti-fill{height:100%;border-radius:100px;transition:width .5s ease,background .3s;}
+
+/* Max-Kredit Box */
+.maxk-box{background:var(--adim);border-radius:12px;padding:14px 16px;margin-top:12px;}
+.maxk-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;}
+.maxk-row:last-child{margin-bottom:0;}
+.maxk-label{font-size:11.5px;color:var(--ts);}
+.maxk-val{font-size:14px;font-weight:700;color:var(--ac);}
+.maxk-note{font-size:10px;color:var(--tm);margin-top:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,.06);}
+
+/* Tilgungsart toggle */
+.ta-toggle{display:flex;border-radius:10px;overflow:hidden;border:1px solid var(--brd);width:fit-content;margin-bottom:8px;}
+.ta-btn{padding:5px 14px;font-size:11.5px;font-weight:600;cursor:pointer;background:transparent;color:var(--ts);border:none;font-family:inherit;transition:background .18s,color .18s;letter-spacing:.03em;}
+.ta-btn.active{background:var(--ac);color:#000;}
+.ta-btn:not(.active):hover{background:rgba(255,255,255,.06);color:var(--tp);}
+
+/* Endfällig note */
+.endfaellig-note{background:var(--ydim);border:1px solid rgba(251,191,36,.2);border-radius:10px;padding:10px 12px;font-size:11px;color:var(--y);line-height:1.5;margin-top:8px;display:none;}
+
+/* Responsive */
+@media(max-width:719px){
+  .calc-layout{padding:14px 12px 60px;grid-template-columns:1fr;}
+  .params-panel{position:static;max-height:none;}
+  .info-strip{grid-template-columns:1fr 1fr;}
+  .is-item:nth-child(3){grid-column:span 2;}
+}
+@media(max-width:479px){
+  .ps{padding:14px;}
+  .chart-box{height:220px;}
+}
+</style>
+</head>
+<body>
+<div id="chart-tip"></div>
+
+<div class="calc-layout">
+
+  <!-- ════ PARAMS PANEL ════ -->
+  <aside class="params-panel">
+
+    <div class="ps">
+      <div class="sl">Kredit</div>
+      <div class="f">
+        <label>Kreditsumme</label>
+        <div class="fu"><input type="number" id="k_betrag" value="300000" min="10000" max="5000000" step="5000" oninput="onInput()"><span class="ub">€</span></div>
+      </div>
+      <div class="f">
+        <label>Laufzeit</label>
+        <div class="fu"><input type="number" id="k_laufzeit" value="25" min="1" max="35" step="1" oninput="onInput()"><span class="ub">Jahre</span></div>
+        <div class="hint-sub">Max. 35 Jahre (KIM-VO / banküblich)</div>
+      </div>
+      <div class="f" style="margin-bottom:0">
+        <label>Nominalzinssatz p.a.</label>
+        <div class="fu"><input type="number" id="k_zins" value="4.0" min="0.1" max="20" step="0.1" oninput="onInput()"><span class="ub">%</span></div>
+        <div class="hint-sub">Derzeit üblich: variabel 4–5 %, fix (10 J.) 3,5–4,5 %</div>
+      </div>
+    </div>
+
+    <div class="ps">
+      <div class="sl">Tilgungsart</div>
+      <div class="ta-toggle">
+        <button class="ta-btn active" id="ta_annuitat" onclick="setTA('annuitat')">Annuität</button>
+        <button class="ta-btn" id="ta_endfaellig" onclick="setTA('endfaellig')">Endfällig</button>
+      </div>
+      <div class="hint-sub">Annuität: gleichbleibende monatliche Rate (Zins + Tilgung)</div>
+      <div class="endfaellig-note" id="endfaellig_note">
+        Endfällig: Sie zahlen monatlich nur Zinsen. Die gesamte Kreditsumme wird am Ende auf einmal fällig — z.&thinsp;B. durch einen Tilgungsträger (FLV). Höhere Gesamtzinskosten, aber niedrigere laufende Rate.
+      </div>
+    </div>
+
+    <div class="ps">
+      <div class="sl">Einkommen & Bonität</div>
+      <div class="f">
+        <label>Netto-Haushaltseinkommen (monatlich)</label>
+        <div class="fu"><input type="number" id="k_netto" value="3500" min="0" max="50000" step="100" oninput="onInput()"><span class="ub">€/Mo.</span></div>
+        <div class="hint-sub">Alle regelmäßigen Nettoeinkünfte im Haushalt</div>
+      </div>
+    </div>
+
+    <div class="ps">
+      <div class="acc-hdr" onclick="toggleAcc('immobilien_body','immobilien_arrow')" style="border-top:none;margin-top:0;padding-top:0">
+        <div class="sl" style="margin-bottom:0">Immobilienwert (LTV-Prüfung)</div>
+        <span class="acc-arrow" id="immobilien_arrow">▾</span>
+      </div>
+      <div id="immobilien_body" class="acc-body">
+        <div style="padding-top:10px">
+          <div class="f" style="margin-bottom:0">
+            <label>Kaufpreis / Marktwert der Immobilie</label>
+            <div class="fu"><input type="number" id="k_immwert" value="370000" min="0" max="10000000" step="5000" oninput="onInput()"><span class="ub">€</span></div>
+            <div class="hint-sub">Max. Beleihungsquote (LTV) banküblich: 90 % für Primärwohnraum</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ps">
+      <div class="acc-hdr" onclick="toggleAcc('nebenkosten_body','nebenkosten_arrow')" style="border-top:none;margin-top:0;padding-top:0">
+        <div class="sl" style="margin-bottom:0">Nebenkosten</div>
+        <span class="acc-arrow" id="nebenkosten_arrow">▾</span>
+      </div>
+      <div id="nebenkosten_body" class="acc-body">
+        <div style="padding-top:10px">
+          <div class="f">
+            <label>Grunderwerbsteuer</label>
+            <div class="fu"><input type="number" id="k_grest" value="3.5" min="0" max="10" step="0.1" oninput="onInput()"><span class="ub">%</span></div>
+            <div class="hint-sub">Österreich: 3,5 % des Kaufpreises</div>
+          </div>
+          <div class="f">
+            <label>Bearbeitungsgebühr / Provision</label>
+            <div class="fu"><input type="number" id="k_gebühr" value="1.0" min="0" max="5" step="0.1" oninput="onInput()"><span class="ub">%</span></div>
+          </div>
+          <div class="f" style="margin-bottom:0">
+            <label>Pfandrechtseintragung</label>
+            <div class="fu"><input type="number" id="k_pfand" value="1.2" min="0" max="5" step="0.1" oninput="onInput()"><span class="ub">%</span></div>
+            <div class="hint-sub">Österreich: 1,2 % der Darlehenssumme</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ps ps-sticky">
+      <button class="btn-calc" onclick="berechne()">Berechnen</button>
+    </div>
+
+  </aside>
+
+  <!-- ════ RESULTS ════ -->
+  <div class="rp">
+
+    <!-- Hero Rate Card -->
+    <div class="card rate-card">
+      <div class="rate-hero">
+        <div>
+          <div style="font-size:10px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:var(--ts);margin-bottom:8px" id="rate_mode_label">Monatliche Rate (Annuität)</div>
+          <div class="rate-val" id="r_rate">— €</div>
+          <div class="rate-sub" id="r_rate_sub">Laufzeit: 25 Jahre · Zins: 4,0 %</div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:10px">
+          <span class="kim-badge kim-na" id="r_kim_badge">Keine Einkommensdaten</span>
+          <div style="text-align:right">
+            <div style="font-size:9.5px;color:var(--tm);margin-bottom:2px">Schuldendienstquote</div>
+            <div style="font-size:16px;font-weight:700;color:var(--tp)" id="r_dsti_val">—</div>
+          </div>
+        </div>
+      </div>
+      <div class="dsti-track" style="margin:0 20px 0"><div class="dsti-fill" id="r_dsti_bar" style="width:0%;background:var(--ac)"></div></div>
+      <div style="display:flex;justify-content:space-between;padding:4px 20px 16px;font-size:10px;color:var(--tm)">
+        <span>0 %</span><span>20 %</span><span style="color:var(--y)">40 % (Limit)</span><span>60 %</span><span>80 %+</span>
+      </div>
+    </div>
+
+    <!-- Info Strip -->
+    <div class="card" style="overflow:hidden">
+      <div class="info-strip">
+        <div class="is-item"><div class="is-label">Gesamtzahlung</div><div class="is-val" id="r_gesamt">—</div></div>
+        <div class="is-item"><div class="is-label">davon Zinsen</div><div class="is-val red" id="r_zinsen">—</div></div>
+        <div class="is-item"><div class="is-label">Zinsanteil</div><div class="is-val" id="r_zinsanteil">—</div></div>
+      </div>
+    </div>
+
+    <!-- Kosten 3-spaltig -->
+    <div class="g3" id="r_kosten_grid">
+      <div class="met">
+        <div class="ml">Effektiver Jahreszins</div>
+        <div class="mv" id="r_effzins">—</div>
+        <div class="ms">inkl. Nebenkosten</div>
+      </div>
+      <div class="met">
+        <div class="ml">Nebenkosten gesamt</div>
+        <div class="mv" id="r_nebenkosten">—</div>
+        <div class="ms">Grunderwerbst. + Gebühren</div>
+      </div>
+      <div class="met">
+        <div class="ml">Gesamtaufwand</div>
+        <div class="mv" id="r_total_aufwand">—</div>
+        <div class="ms">Kredit + Zinsen + Nebenkosten</div>
+      </div>
+    </div>
+
+    <!-- Tilgungsplan Chart -->
+    <div class="card">
+      <div class="ch">
+        <span class="ct-title">Tilgungsplan</span>
+        <span class="ct-badge" id="r_chart_badge">—</span>
+      </div>
+      <div class="legend" id="chart-legend"></div>
+      <div class="cb2" style="padding-top:0">
+        <div class="chart-box"><canvas id="lineChart"></canvas></div>
+      </div>
+    </div>
+
+    <!-- KIM-VO / Bonitätsprüfung -->
+    <div class="card">
+      <div class="ch">
+        <span class="ct-title">Bonitätsprüfung</span>
+        <span class="ct-badge" id="r_bonitat_badge" style="background:rgba(255,255,255,.06);color:var(--tm)">KIM-VO / banküblich</span>
+      </div>
+      <div class="cb2">
+        <div class="kim-row">
+          <div class="kim-row-label">Schuldendienstquote (DSTI)<br><span style="font-size:10px;color:var(--tm)">Monatsrate ÷ Nettoeinkommen</span></div>
+          <div style="text-align:right">
+            <div class="kim-row-val na" id="kc_dsti_val">—</div>
+            <div class="kim-row-limit">Limit: ≤ 40 %</div>
+          </div>
+        </div>
+        <div class="kim-row">
+          <div class="kim-row-label">Beleihungsquote (LTV)<br><span style="font-size:10px;color:var(--tm)">Kredit ÷ Immobilienwert</span></div>
+          <div style="text-align:right">
+            <div class="kim-row-val na" id="kc_ltv_val">—</div>
+            <div class="kim-row-limit">Limit: ≤ 90 %</div>
+          </div>
+        </div>
+        <div class="kim-row">
+          <div class="kim-row-label">Laufzeit<br><span style="font-size:10px;color:var(--tm)">Max. 35 Jahre banküblich</span></div>
+          <div style="text-align:right">
+            <div class="kim-row-val ok" id="kc_lz_val">—</div>
+            <div class="kim-row-limit">Limit: ≤ 35 Jahre</div>
+          </div>
+        </div>
+
+        <div class="maxk-box" id="r_maxk_box" style="display:none">
+          <div class="maxk-row">
+            <span class="maxk-label">Max. Kreditbetrag bei diesem Einkommen</span>
+            <span class="maxk-val" id="r_maxk_val">—</span>
+          </div>
+          <div class="maxk-row">
+            <span class="maxk-label">Max. monatliche Rate (40 % von Netto)</span>
+            <span class="maxk-val" id="r_maxrate_val">—</span>
+          </div>
+          <div class="maxk-note" id="r_maxk_note"></div>
+        </div>
+
+        <div style="margin-top:14px;padding:10px 12px;border-radius:10px;background:rgba(255,255,255,.03);border:1px solid var(--brd)">
+          <div style="font-size:10px;color:var(--tm);line-height:1.6">
+            <b style="color:var(--ts)">Hinweis:</b> Die KIM-VO (Kreditinstitute-Immobilienfinanzierungs-Maßnahmen-Verordnung) war von 08/2022 bis 06/2023 in Kraft. Österreichische Banken wenden diese Richtwerte weiterhin intern an. Endgültige Kreditwürdigkeitsprüfung erfolgt durch die kreditgebende Bank.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Jahrestabelle (Accordion) -->
+    <div class="card">
+      <div class="ch" onclick="toggleAcc('tbl_body','tbl_arrow')" style="cursor:pointer">
+        <span class="ct-title">Jahresübersicht</span>
+        <span class="acc-arrow" id="tbl_arrow" style="font-size:16px;color:var(--tm)">▾</span>
+      </div>
+      <div id="tbl_body" class="acc-body" style="max-height:0">
+        <div class="cb2" style="padding-top:0;overflow-x:auto">
+          <table style="width:100%;border-collapse:collapse;font-size:12px;min-width:420px">
+            <thead>
+              <tr style="border-bottom:1px solid var(--brd)">
+                <th style="padding:7px 8px;text-align:left;font-size:9.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--tm)">Jahr</th>
+                <th style="padding:7px 8px;text-align:right;font-size:9.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--tm)">Zinsen</th>
+                <th style="padding:7px 8px;text-align:right;font-size:9.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--tm)">Tilgung</th>
+                <th style="padding:7px 8px;text-align:right;font-size:9.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--tm)">Restschuld</th>
+              </tr>
+            </thead>
+            <tbody id="tbl"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /rp -->
+</div><!-- /calc-layout -->
+
+<script src="shared.js"></script>
+<script>
+/* ══════════ ACCESS PROTECTION ══════════ */
+(function(){
+  const isLocal=['localhost','127.0.0.1',''].includes(location.hostname);
+  const validRef=document.referrer.includes('jasonschreiber.at');
+  const ACCESS_KEY='flv2025';
+  const urlKey=new URLSearchParams(location.search).get('access');
+  if(!isLocal&&!validRef&&urlKey!==ACCESS_KEY){
+    document.body.style.cssText='margin:0;background:#0F0F0F;display:flex;align-items:center;justify-content:center;height:100vh;font-family:Inter,sans-serif;';
+    document.body.innerHTML='<div style="color:#555;font-size:14px;text-align:center"><div style="font-size:32px;margin-bottom:12px">&#128274;</div>Zugriff nicht gestattet.</div>';
+    throw new Error('Access denied');
+  }
+})();
+
+let taMode = 'annuitat';
+let chartInst = null;
+const chartVis = { restschuld: true, kumZins: true, kumTilg: true };
+const LC = { restschuld: 'rgb(248,113,113)', kumZins: 'rgb(251,191,36)', kumTilg: 'rgb(56,217,163)' };
+const LL = { restschuld: 'Restschuld', kumZins: 'Kum. Zinsen', kumTilg: 'Kum. Tilgung' };
+
+function setTA(mode) {
+  taMode = mode;
+  document.getElementById('ta_annuitat').classList.toggle('active', mode === 'annuitat');
+  document.getElementById('ta_endfaellig').classList.toggle('active', mode === 'endfaellig');
+  document.getElementById('endfaellig_note').style.display = mode === 'endfaellig' ? 'block' : 'none';
+  document.getElementById('rate_mode_label').textContent = mode === 'annuitat' ? 'Monatliche Rate (Annuität)' : 'Monatliche Zinszahlung (endfällig)';
+  onInput();
+}
+
+function toggleAcc(bodyId, arrowId) {
+  const b = document.getElementById(bodyId), a = document.getElementById(arrowId);
+  const open = b.classList.toggle('open');
+  if (a) a.classList.toggle('open', open);
+}
+
+function monatsrate(K, n, i) {
+  if (i === 0) return K / n;
+  return K * (i * Math.pow(1 + i, n)) / (Math.pow(1 + i, n) - 1);
+}
+
+function maxKredit(M, n, i) {
+  if (i === 0) return M * n;
+  return M * (Math.pow(1 + i, n) - 1) / (i * Math.pow(1 + i, n));
+}
+
+function effektivzins(K, M, n, nebenkosten) {
+  const Kn = K - nebenkosten;
+  let lo = 0.0001 / 12, hi = 2 / 12;
+  for (let iter = 0; iter < 60; iter++) {
+    const mid = (lo + hi) / 2;
+    const calc = monatsrate(Kn, n, mid);
+    if (calc < M) lo = mid; else hi = mid;
+    if (Math.abs(hi - lo) < 1e-10) break;
+  }
+  return ((1 + (lo + hi) / 2) ** 12 - 1) * 100;
+}
+
+function amortPlan(K, M, i, n) {
+  const rows = [];
+  let rest = K, kumZ = 0, kumT = 0;
+  const years = Math.ceil(n / 12);
+  for (let y = 1; y <= years; y++) {
+    let jZ = 0, jT = 0;
+    for (let m = 0; m < 12; m++) {
+      if (rest <= 0.01) break;
+      const z = rest * i;
+      const t = Math.min(M - z, rest);
+      rest -= t;
+      jZ += z; jT += t;
+    }
+    kumZ += jZ; kumT += jT;
+    rows.push({ y, jZ, jT, kumZ, kumT, rest: Math.max(0, rest) });
+  }
+  return rows;
+}
+
+function amortEndfaellig(K, M_zins, i, n) {
+  const rows = [];
+  let kumZ = 0;
+  const years = Math.ceil(n / 12);
+  for (let y = 1; y <= years; y++) {
+    const jZ = M_zins * 12;
+    kumZ += jZ;
+    rows.push({ y, jZ, jT: 0, kumZ, kumT: 0, rest: y < years ? K : 0 });
+  }
+  return rows;
+}
+
+function fE(v) { return eur(v); }
+function fP(v, d = 1) { return v.toFixed(d).replace('.', ',') + ' %'; }
+
+function statusClass(val, limit, lowerIsBetter = true) {
+  if (val == null || isNaN(val)) return 'na';
+  if (lowerIsBetter) {
+    if (val <= limit * 0.85) return 'ok';
+    if (val <= limit) return 'warn';
+    return 'err';
+  } else {
+    if (val >= limit) return 'ok';
+    return 'err';
+  }
+}
+
+function onInput() { berechne(); }
+
+function berechne() {
+  const K = parseFloat(document.getElementById('k_betrag').value) || 0;
+  const lj = parseFloat(document.getElementById('k_laufzeit').value) || 0;
+  const zins_pa = parseFloat(document.getElementById('k_zins').value) || 0;
+  const netto = parseFloat(document.getElementById('k_netto').value) || 0;
+  const immwert = parseFloat(document.getElementById('k_immwert').value) || 0;
+  const grest_pct = parseFloat(document.getElementById('k_grest').value) || 0;
+  const gebühr_pct = parseFloat(document.getElementById('k_gebühr').value) || 0;
+  const pfand_pct = parseFloat(document.getElementById('k_pfand').value) || 0;
+
+  if (K <= 0 || lj <= 0 || zins_pa <= 0) return;
+
+  const i = zins_pa / 100 / 12;
+  const n = lj * 12;
+
+  let M, gesamtZahlung, gesamtZins;
+  if (taMode === 'annuitat') {
+    M = monatsrate(K, n, i);
+    gesamtZahlung = M * n;
+    gesamtZins = gesamtZahlung - K;
+  } else {
+    M = K * i;
+    gesamtZahlung = M * n + K;
+    gesamtZins = M * n;
+  }
+
+  const nebenkosten = K * (grest_pct + gebühr_pct + pfand_pct) / 100;
+  const eff = taMode === 'annuitat' && nebenkosten > 0 ? effektivzins(K, M, n, nebenkosten) : null;
+
+  // KIM-VO
+  const dsti = netto > 0 ? M / netto * 100 : null;
+  const ltv = immwert > 0 ? K / immwert * 100 : null;
+  const lzOk = lj <= 35;
+
+  // Max Kredit
+  const maxM = netto * 0.40;
+  const mkK = netto > 0 ? maxKredit(maxM, n, i) : 0;
+
+  // Update hero
+  document.getElementById('r_rate').textContent = fE(M);
+  document.getElementById('r_rate_sub').textContent = `Laufzeit: ${lj} Jahre · Zins: ${zins_pa.toFixed(1).replace('.', ',')} % p.a.`;
+  document.getElementById('r_gesamt').textContent = fE(gesamtZahlung);
+  document.getElementById('r_zinsen').textContent = fE(gesamtZins);
+  document.getElementById('r_zinsanteil').textContent = fP(gesamtZins / gesamtZahlung * 100);
+  document.getElementById('r_chart_badge').textContent = `${lj} Jahre`;
+
+  // Nebenkosten & Effektivzins
+  document.getElementById('r_nebenkosten').textContent = fE(nebenkosten);
+  document.getElementById('r_total_aufwand').textContent = fE(gesamtZahlung + nebenkosten);
+  document.getElementById('r_effzins').textContent = eff != null ? fP(eff, 2) : (zins_pa.toFixed(2).replace('.', ',') + ' %');
+
+  // DSTI bar & badge
+  if (dsti != null) {
+    const dstiColor = dsti <= 34 ? 'var(--grn)' : dsti <= 40 ? 'var(--y)' : 'var(--red)';
+    document.getElementById('r_dsti_val').textContent = fP(dsti);
+    document.getElementById('r_dsti_bar').style.width = Math.min(dsti / 80 * 100, 100) + '%';
+    document.getElementById('r_dsti_bar').style.background = dstiColor;
+    let badgeText, badgeClass;
+    if (dsti <= 34) { badgeText = 'Bonität gut'; badgeClass = 'kim-ok'; }
+    else if (dsti <= 40) { badgeText = 'Grenzwertig'; badgeClass = 'kim-warn'; }
+    else { badgeText = 'Über Limit (40 %)'; badgeClass = 'kim-err'; }
+    document.getElementById('r_kim_badge').textContent = badgeText;
+    document.getElementById('r_kim_badge').className = 'kim-badge ' + badgeClass;
+  } else {
+    document.getElementById('r_dsti_val').textContent = '—';
+    document.getElementById('r_dsti_bar').style.width = '0%';
+    document.getElementById('r_kim_badge').textContent = 'Einkommen eingeben';
+    document.getElementById('r_kim_badge').className = 'kim-badge kim-na';
+  }
+
+  // KIM detail
+  const dEl = document.getElementById('kc_dsti_val');
+  if (dsti != null) { dEl.textContent = fP(dsti); dEl.className = 'kim-row-val ' + statusClass(dsti, 40); }
+  else { dEl.textContent = 'Kein Einkommen'; dEl.className = 'kim-row-val na'; }
+
+  const lEl = document.getElementById('kc_ltv_val');
+  if (ltv != null) { lEl.textContent = fP(ltv); lEl.className = 'kim-row-val ' + statusClass(ltv, 90); }
+  else { lEl.textContent = 'Kein Immobilienwert'; lEl.className = 'kim-row-val na'; }
+
+  const lzEl = document.getElementById('kc_lz_val');
+  lzEl.textContent = lj + ' Jahre';
+  lzEl.className = 'kim-row-val ' + (lzOk ? 'ok' : 'err');
+
+  // Max Kredit Box
+  if (netto > 0) {
+    document.getElementById('r_maxk_box').style.display = 'block';
+    document.getElementById('r_maxrate_val').textContent = fE(maxM);
+    document.getElementById('r_maxk_val').textContent = fE(mkK);
+    const diff = mkK - K;
+    const noteEl = document.getElementById('r_maxk_note');
+    if (diff >= 0) {
+      noteEl.textContent = `Ihr Wunschkredit (${fE(K)}) liegt ${fE(diff)} unter dem Maximum — passt mit dem Einkommen.`;
+      noteEl.style.color = 'var(--ac)';
+    } else {
+      noteEl.textContent = `Ihr Wunschkredit (${fE(K)}) übersteigt das Maximum um ${fE(-diff)}. Höheres Eigenkapital oder längere Laufzeit prüfen.`;
+      noteEl.style.color = 'var(--red)';
+    }
+    const boniEl = document.getElementById('r_bonitat_badge');
+    if (dsti != null) {
+      if (dsti <= 34) { boniEl.textContent = 'Alles OK'; boniEl.style.background = 'var(--gdim)'; boniEl.style.color = 'var(--grn)'; }
+      else if (dsti <= 40) { boniEl.textContent = 'Grenzwertig'; boniEl.style.background = 'var(--ydim)'; boniEl.style.color = 'var(--y)'; }
+      else { boniEl.textContent = 'Über Limit'; boniEl.style.background = 'var(--rdim)'; boniEl.style.color = 'var(--red)'; }
+    }
+  } else {
+    document.getElementById('r_maxk_box').style.display = 'none';
+  }
+
+  // Amort plan
+  const plan = taMode === 'annuitat'
+    ? amortPlan(K, M, i, n)
+    : amortEndfaellig(K, M, i, n);
+
+  // Chart
+  updateChart(plan);
+
+  // Table
+  const tbody = document.getElementById('tbl');
+  tbody.innerHTML = plan.map(r => `
+    <tr style="border-bottom:1px solid rgba(255,255,255,.03)">
+      <td style="padding:6px 8px;color:var(--ts)">Jahr ${r.y}</td>
+      <td style="padding:6px 8px;text-align:right;color:var(--red)">${fE(r.jZ)}</td>
+      <td style="padding:6px 8px;text-align:right;color:var(--ac)">${fE(r.jT)}</td>
+      <td style="padding:6px 8px;text-align:right;font-weight:600;color:var(--tp)">${fE(r.rest)}</td>
+    </tr>`).join('');
+
+  window.__axionSendResult?.({
+    type: 'kreditrechner',
+    kreditsumme: K, laufzeit: lj, zinssatz: zins_pa,
+    monatsrate: Math.round(M), gesamtzins: Math.round(gesamtZins),
+    gesamtzahlung: Math.round(gesamtZahlung),
+    dsti: dsti ? Math.round(dsti * 10) / 10 : null,
+    max_kredit: Math.round(mkK)
+  });
+}
+
+/* ══════ CHART ══════ */
+function tc() {
+  const d = isDark();
+  return {
+    grid: d ? 'rgba(255,255,255,.08)' : 'rgba(0,0,0,.10)',
+    ticks: d ? '#666B78' : '#888888',
+    bg: d ? '#16171B' : '#F7F2EA',
+    tt: d ? '#F0EDE8' : '#1A1A1A',
+    ts: '#969696'
+  };
+}
+
+function externalTooltip({ chart, tooltip }) {
+  const el = document.getElementById('chart-tip');
+  if (!el) return;
+  if (!tooltip.opacity) { el.style.display = 'none'; return; }
+  const t = tc();
+  const title = tooltip.title?.[0] || '';
+  let html = `<div class="ctt">Jahr ${title}</div>`;
+  (tooltip.body || []).forEach((b, i) => {
+    const col = (tooltip.labelColors?.[i]?.backgroundColor) || '#888';
+    const line = (b.lines?.[0] || '').trim();
+    html += `<div class="cti"><span class="ctd" style="background:${col}"></span>${line}</div>`;
+  });
+  el.innerHTML = html;
+  el.style.display = 'block';
+  const r = chart.canvas.getBoundingClientRect();
+  let x = r.left + tooltip.caretX + 14, y = r.top + tooltip.caretY - el.offsetHeight / 2;
+  const w = el.offsetWidth, h = el.offsetHeight;
+  if (x + w > window.innerWidth - 8) x = r.left + tooltip.caretX - w - 14;
+  if (x < 8) x = 8;
+  if (y < 8) y = 8;
+  if (y + h > window.innerHeight - 8) y = window.innerHeight - h - 8;
+  el.style.left = x + 'px'; el.style.top = y + 'px';
+}
+
+const crosshairPlugin = {
+  id: 'crosshair',
+  afterDraw(chart) {
+    if (!chart.tooltip._active?.length) return;
+    const { ctx, chartArea: { top, bottom } } = chart;
+    const x = chart.tooltip._active[0].element.x;
+    ctx.save(); ctx.beginPath(); ctx.moveTo(x, top); ctx.lineTo(x, bottom);
+    ctx.lineWidth = 1; ctx.strokeStyle = isDark() ? 'rgba(255,255,255,.15)' : 'rgba(0,0,0,.08)';
+    ctx.setLineDash([4, 3]); ctx.stroke(); ctx.restore();
+  }
+};
+
+function buildLegend() {
+  const el = document.getElementById('chart-legend');
+  el.innerHTML = '';
+  for (const k of ['restschuld', 'kumZins', 'kumTilg']) {
+    const btn = document.createElement('span');
+    btn.className = 'li ' + (chartVis[k] ? 'on' : 'off');
+    btn.innerHTML = `<span class="ld" style="background:${LC[k]}"></span>${LL[k]}`;
+    btn.onclick = () => {
+      chartVis[k] = !chartVis[k];
+      btn.className = 'li ' + (chartVis[k] ? 'on' : 'off');
+      if (chartInst) {
+        const idx = ['restschuld', 'kumZins', 'kumTilg'].indexOf(k);
+        chartInst.data.datasets[idx].hidden = !chartVis[k];
+        chartInst.update('none');
+      }
+    };
+    el.appendChild(btn);
+  }
+}
+
+function updateChart(plan) {
+  const t = tc();
+  const labels = plan.map(r => r.y);
+  const ds = [
+    { label: LL.restschuld, data: plan.map(r => r.rest), borderColor: LC.restschuld, backgroundColor: 'rgba(248,113,113,.07)', borderWidth: 2.5, tension: .35, pointRadius: 0, fill: true, hidden: !chartVis.restschuld },
+    { label: LL.kumZins, data: plan.map(r => r.kumZ), borderColor: LC.kumZins, backgroundColor: 'rgba(251,191,36,.05)', borderWidth: 2, tension: .35, pointRadius: 0, fill: false, hidden: !chartVis.kumZins },
+    { label: LL.kumTilg, data: plan.map(r => r.kumT), borderColor: LC.kumTilg, backgroundColor: 'rgba(56,217,163,.06)', borderWidth: 2, tension: .35, pointRadius: 0, fill: false, hidden: !chartVis.kumTilg }
+  ];
+  if (chartInst) { chartInst.destroy(); chartInst = null; }
+  chartInst = new Chart(document.getElementById('lineChart').getContext('2d'), {
+    type: 'line', data: { labels, datasets: ds }, plugins: [crosshairPlugin],
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: { enabled: false, mode: 'index', intersect: false, external: externalTooltip,
+          callbacks: {
+            labelColor: c => ({ borderColor: 'transparent', backgroundColor: c.dataset.borderColor, borderRadius: 4 }),
+            label: c => ` ${c.dataset.label}: ${fE(c.parsed.y)}`
+          }
+        }
+      },
+      scales: {
+        x: { grid: { color: t.grid, drawTicks: false }, ticks: { color: t.ticks, font: { size: 10 } }, border: { color: 'transparent' }, title: { display: true, text: '(Jahre)', align: 'end', color: t.ticks, font: { size: 10 } } },
+        y: { grid: { color: t.grid, drawTicks: false }, ticks: { color: t.ticks, font: { size: 10 }, callback: v => eurShort(v) }, border: { color: 'transparent' }, title: { display: true, text: '(€)', align: 'end', color: t.ticks, font: { size: 10 } } }
+      },
+      interaction: { mode: 'index', intersect: false }
+    }
+  });
+  buildLegend();
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  berechne();
+});
+
+window.addEventListener('message', e => {
+  if (e.data?.type === 'axion-prefill') {
+    const d = e.data;
+    if (d.kreditsumme) { document.getElementById('k_betrag').value = d.kreditsumme; }
+    if (d.laufzeit) { document.getElementById('k_laufzeit').value = d.laufzeit; }
+    if (d.zinssatz) { document.getElementById('k_zins').value = d.zinssatz; }
+    if (d.einkommen) { document.getElementById('k_netto').value = d.einkommen; }
+    berechne();
+  }
+  if (e.data?.type === 'axion-save-request') { berechne(); }
+});
+</script>
+</body>
+</html>

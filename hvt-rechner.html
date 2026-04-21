@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<script>(function(){var p=new URLSearchParams(window.location.search),t=p.get('theme');if(t==='light')document.documentElement.classList.add('light');else if(t==='dark')document.documentElement.classList.add('dark');})()</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>HVT-Rechner – Hypothekarvortilgung | Jason Schreiber</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Inter+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<link rel="stylesheet" href="shared.css">
+<style>
+.params-panel{border-radius:20px;position:sticky;top:20px;max-height:calc(100vh - 40px);}
+.card{border-radius:20px;}
+.met{border-radius:20px;}
+.calc-layout{padding:20px 16px 80px;}
+
+/* Accordion */
+.acc-hdr{display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none;padding:10px 0;border-top:1px solid var(--brd);margin-top:4px;}
+.acc-hdr:first-child,.ps>.acc-hdr:first-child{border-top:none;margin-top:0;padding-top:0;}
+.acc-arrow{font-size:13px;color:var(--tm);line-height:1;transition:transform .22s ease;display:inline-block;}
+.acc-arrow.open{transform:rotate(180deg);}
+.acc-body{overflow:hidden;max-height:0;transition:max-height .4s ease,opacity .28s ease;opacity:0;}
+.acc-body.open{max-height:1000px;opacity:1;}
+.params-panel::-webkit-scrollbar{width:3px;}
+.params-panel::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:3px;}
+
+/* Einmal Rows */
+.er{display:grid;grid-template-columns:minmax(70px,1fr) 2fr 30px;gap:6px;margin-bottom:6px;align-items:end;}
+.er .ub{min-width:30px;}
+.btn-rm{background:none;border:1px solid var(--brd);color:var(--tm);width:30px;height:38px;border-radius:8px;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;font-family:inherit;transition:all .15s;}
+.btn-rm:active{border-color:#f87171;color:#f87171;background:rgba(248,113,113,.08);}
+.btn-add{background:none;border:1px dashed var(--brd);color:var(--ts);width:100%;padding:8px;border-radius:8px;cursor:pointer;font-family:inherit;font-size:12px;font-weight:600;transition:all .15s;margin-top:4px;}
+.btn-add:active{border-color:var(--ac);color:var(--ac);background:var(--adim);}
+
+/* Hero — HVT Ergebnis */
+.hero-card{
+  background:
+    radial-gradient(ellipse 70% 90% at 20% 20%,rgba(56,217,163,.12) 0%,transparent 60%),
+    radial-gradient(ellipse 60% 80% at 100% 80%,rgba(56,217,163,.06) 0%,transparent 60%),
+    var(--ss);
+  overflow:hidden;position:relative;
+}
+.hero-kicker{padding:16px 22px 0;font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--ts);display:flex;align-items:center;gap:10px;}
+.hero-kicker .dot{width:6px;height:6px;border-radius:50%;background:var(--ac);box-shadow:0 0 12px var(--ac);}
+.hero-main{padding:8px 22px 18px;display:grid;grid-template-columns:1.25fr 1fr;gap:22px;align-items:end;}
+.hero-big{display:flex;flex-direction:column;}
+.hero-big-label{font-size:11px;font-weight:600;color:var(--ts);letter-spacing:.02em;margin-bottom:6px;}
+.hero-big-val{font-size:clamp(38px,6.5vw,62px);font-weight:800;letter-spacing:-.045em;line-height:1;color:var(--ac);}
+.hero-big-val.red{color:var(--red);}
+.hero-big-sub{font-size:12.5px;color:var(--ts);margin-top:10px;line-height:1.55;}
+.hero-big-sub b{color:var(--tp);font-weight:700;}
+.hero-big-sub .ac{color:var(--ac);font-weight:700;}
+.hero-side{display:flex;flex-direction:column;gap:10px;}
+.hero-chip{background:rgba(255,255,255,.03);border:1px solid var(--brd);border-radius:14px;padding:12px 16px;}
+.hero-chip.accent{background:rgba(56,217,163,.08);border-color:rgba(56,217,163,.25);}
+.hero-chip-label{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--tm);margin-bottom:4px;}
+.hero-chip-val{font-size:19px;font-weight:700;letter-spacing:-.02em;color:var(--tp);line-height:1.15;}
+.hero-chip-val.ac{color:var(--ac);}
+.hero-chip-sub{font-size:10.5px;color:var(--ts);margin-top:3px;}
+
+/* Monatslast row */
+.mlast-row{
+  display:grid;grid-template-columns:1fr auto 1fr;gap:0;
+  background:rgba(0,0,0,.18);border-top:1px solid var(--brd);
+}
+.mlast-cell{padding:14px 22px;display:flex;flex-direction:column;gap:3px;}
+.mlast-cell.right{text-align:right;align-items:flex-end;}
+.mlast-cell-label{font-size:10px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--tm);}
+.mlast-cell-val{font-size:17px;font-weight:700;letter-spacing:-.02em;color:var(--tp);}
+.mlast-cell-val.ac{color:var(--ac);}
+.mlast-cell-sub{font-size:10.5px;color:var(--ts);}
+.mlast-sep{width:1px;background:var(--brd);}
+
+/* Chart */
+.chart-box{position:relative;height:300px;}
+.legend{display:flex;gap:8px;flex-wrap:wrap;padding:0 18px 14px;}
+.li{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--ts);cursor:pointer;padding:4px 10px;border-radius:20px;border:1px solid transparent;transition:all .15s;}
+.li.on{color:var(--tp);border-color:var(--brd);}
+.li.off{opacity:.4;}
+.ld{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+#chart-tip{position:fixed;z-index:100;pointer-events:none;background:var(--ss);border:1px solid var(--brd);border-radius:12px;padding:10px 14px;box-shadow:0 8px 24px rgba(0,0,0,.4);min-width:180px;display:none;}
+.ctt{font-size:10.5px;font-weight:700;color:var(--tp);margin-bottom:6px;}
+.cti{display:flex;align-items:center;gap:7px;font-size:11px;color:var(--ts);margin-top:3px;}
+.ctd{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+
+/* Vergleich-Table */
+.vgl-table{padding:4px 18px 18px;}
+.vgl-head{display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:0;padding:10px 14px;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--tm);border-bottom:1px solid var(--brd);}
+.vgl-head .h-n{text-align:right;color:var(--ts);}
+.vgl-head .h-h{text-align:right;color:var(--ac);}
+.vgl-trow{display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:0;padding:11px 14px;border-bottom:1px solid var(--brd);align-items:baseline;}
+.vgl-trow:last-child{border-bottom:none;}
+.vgl-trow.total{background:rgba(56,217,163,.06);border-radius:0 0 12px 12px;padding:14px;}
+.vgl-trow.total .t-n,.vgl-trow.total .t-h{font-size:16px;font-weight:800;}
+.vgl-tlabel{font-size:12px;color:var(--ts);}
+.vgl-trow.total .vgl-tlabel{color:var(--tp);font-weight:700;font-size:12.5px;}
+.t-n,.t-h{font-size:13px;font-weight:700;text-align:right;letter-spacing:-.01em;}
+.t-n{color:var(--tp);}
+.t-h{color:var(--ac);}
+.t-n.red{color:var(--red);}
+.t-h.red{color:var(--red);}
+.vgl-hint{font-size:10.5px;color:var(--tm);margin-top:12px;padding:0 14px;line-height:1.55;}
+
+/* FLV Beitrag Toggle */
+.flv-toggle{display:flex;border-radius:10px;overflow:hidden;border:1px solid var(--brd);width:fit-content;margin-bottom:8px;}
+.flv-btn{padding:5px 12px;font-size:11px;font-weight:600;cursor:pointer;background:transparent;color:var(--ts);border:none;font-family:inherit;transition:background .18s,color .18s;}
+.flv-btn.active{background:var(--ac);color:#000;}
+.flv-btn:not(.active):hover{background:rgba(255,255,255,.06);color:var(--tp);}
+
+/* Responsive */
+@media(max-width:899px){
+  .hero-main{grid-template-columns:1fr;gap:18px;}
+  .hero-side{flex-direction:row;}
+  .hero-chip{flex:1;}
+}
+@media(max-width:719px){
+  .calc-layout{padding:14px 12px 60px;grid-template-columns:1fr;}
+  .params-panel{position:static;max-height:none;}
+  .hero-side{flex-direction:column;}
+  .vgl-head,.vgl-trow{grid-template-columns:1.4fr 1fr 1fr;padding:10px 8px;}
+  .t-n,.t-h,.vgl-tlabel{font-size:11.5px;}
+  .vgl-trow.total .t-n,.vgl-trow.total .t-h{font-size:14px;}
+}
+@media(max-width:479px){
+  .ps{padding:14px;}
+  .chart-box{height:240px;}
+  .hero-big-val{font-size:34px;}
+  .mlast-row{grid-template-columns:1fr;gap:0;}
+  .mlast-cell.right{text-align:left;align-items:flex-start;}
+  .mlast-sep{display:none;}
+}
+</style>
+</head>
+<body>
+<div id="chart-tip"></div>
+
+<div class="calc-layout">
+
+  <!-- ════ PARAMS PANEL ════ -->
+  <aside class="params-panel">
+
+    <div class="ps">
+      <div class="sl">Kredit</div>
+      <div class="f">
+        <label>Kreditsumme</label>
+        <div class="fu"><input type="number" id="h_betrag" value="300000" min="10000" max="5000000" step="5000" oninput="onInput()"><span class="ub">€</span></div>
+      </div>
+      <div class="f">
+        <label>Nominalzinssatz p.a.</label>
+        <div class="fu"><input type="number" id="h_zins" value="4.0" min="0.1" max="20" step="0.1" oninput="onInput()"><span class="ub">%</span></div>
+      </div>
+      <div class="f">
+        <label>Normale Laufzeit (Vergleich)</label>
+        <div class="fu"><input type="number" id="h_lz_normal" value="20" min="5" max="35" step="1" oninput="onInput()"><span class="ub">Jahre</span></div>
+        <div class="hint-sub">Kreditlaufzeit ohne HVT-Strategie</div>
+      </div>
+      <div class="f" style="margin-bottom:0">
+        <label>HVT-Laufzeit (gestreckt)</label>
+        <div class="fu"><input type="number" id="h_lz_hvt" value="35" min="5" max="40" step="1" oninput="onInput()"><span class="ub">Jahre</span></div>
+        <div class="hint-sub">Längere Laufzeit → niedrigere Rate → mehr für FLV</div>
+      </div>
+    </div>
+
+    <div class="ps">
+      <div class="sl">FLV-Investment</div>
+      <div style="margin-bottom:8px">
+        <div class="flv-toggle">
+          <button class="flv-btn active" id="flv_btn_auto" onclick="setFLVMode('auto')">Auto (Differenz)</button>
+          <button class="flv-btn" id="flv_btn_manuell" onclick="setFLVMode('manuell')">Manuell</button>
+        </div>
+        <div class="hint-sub" id="flv_auto_hint">FLV-Beitrag = Differenz HVT-Rate vs. Normalrate</div>
+      </div>
+      <div class="f" id="flv_manuell_wrap" style="display:none">
+        <label>Monatlicher FLV-Beitrag</label>
+        <div class="fu"><input type="number" id="h_flv_mb" value="500" min="50" max="10000" step="50" oninput="onInput()"><span class="ub">€/Mo.</span></div>
+      </div>
+      <div class="f" style="margin-bottom:0">
+        <label>Erwartete FLV-Rendite p.a.</label>
+        <div class="fu"><input type="number" id="h_flv_rendite" value="7.0" min="1" max="15" step="0.1" oninput="onInput()"><span class="ub">%</span></div>
+        <div class="hint-sub">Klassischer Richtwert: 7 % p.a. (historische Marktrendite)</div>
+      </div>
+    </div>
+
+    <div class="ps">
+      <div class="sl">Zeitplan</div>
+      <div class="f">
+        <label>Kredit-Start (ab heute)</label>
+        <div class="fu"><input type="number" id="h_kredit_start" value="0" min="0" max="15" step="1" oninput="onInput()"><span class="ub">Jahre</span></div>
+        <div class="hint-sub">0 = sofort; z.B. 3 = Kredit beginnt in 3 Jahren</div>
+      </div>
+      <div class="f" id="flv_vorrate_wrap" style="display:none;margin-bottom:4px">
+        <label>Monatl. FLV-Rate bis Kredit-Start</label>
+        <div class="fu"><input type="number" id="h_flv_vorrate" value="0" min="0" max="10000" step="50" oninput="onInput()"><span class="ub">€/Mo.</span></div>
+        <div class="hint-sub">Bereits jetzt in die FLV einzahlen, bevor der Kredit beginnt</div>
+      </div>
+      <div class="sl" style="margin-top:10px">Sonderzahlungen in FLV</div>
+      <div id="einmal_c"></div>
+      <button class="btn-add" onclick="addEinmal()">+ Einmalzahlung hinzufügen</button>
+    </div>
+
+    <div class="ps ps-sticky">
+      <button class="btn-calc" onclick="berechne()">Berechnen</button>
+    </div>
+
+  </aside>
+
+  <!-- ════ RESULTS ════ -->
+  <div class="rp">
+
+    <!-- Hero: Ergebnis-Kacheln -->
+    <div class="card hero-card">
+      <div class="hero-kicker"><span class="dot"></span>HVT — Hypothekarvortilgung · Ergebnis</div>
+      <div class="hero-main">
+        <div class="hero-big">
+          <div class="hero-big-label">Zinsen gespart durch HVT</div>
+          <div class="hero-big-val ac" id="s_zinsen">—</div>
+          <div class="hero-big-sub" id="spar_headline">Bitte Berechnung starten.</div>
+        </div>
+        <div class="hero-side">
+          <div class="hero-chip accent">
+            <div class="hero-chip-label">Früher schuldenfrei</div>
+            <div class="hero-chip-val ac" id="s_jahre">—</div>
+            <div class="hero-chip-sub" id="s_jahre_sub">statt Normallaufzeit</div>
+          </div>
+          <div class="hero-chip">
+            <div class="hero-chip-label">Vortilgung möglich</div>
+            <div class="hero-chip-val" id="s_cross">—</div>
+            <div class="hero-chip-sub" id="s_cross_sub">FLV ≥ Restschuld</div>
+          </div>
+        </div>
+      </div>
+      <div class="mlast-row">
+        <div class="mlast-cell">
+          <div class="mlast-cell-label">Normaler Kredit</div>
+          <div class="mlast-cell-val" id="r_rate_normal">—</div>
+          <div class="mlast-cell-sub">nur Monatsrate</div>
+        </div>
+        <div class="mlast-sep"></div>
+        <div class="mlast-cell right">
+          <div class="mlast-cell-label" style="color:var(--ac)">HVT-Gesamtlast</div>
+          <div class="mlast-cell-val ac" id="r_rate_hvt_total">—</div>
+          <div class="mlast-cell-sub" id="r_rate_hvt_sub">Rate + FLV-Beitrag</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Verlauf-Chart -->
+    <div class="card">
+      <div class="ch">
+        <span class="ct-title">Verlauf: Kredit vs. FLV</span>
+        <span class="ct-badge" id="r_chart_badge">—</span>
+      </div>
+      <div class="legend" id="chart-legend"></div>
+      <div class="cb2" style="padding-top:0">
+        <div class="chart-box"><canvas id="lineChart"></canvas></div>
+      </div>
+    </div>
+
+    <!-- Kostenvergleich (Tabelle) -->
+    <div class="card">
+      <div class="ch"><span class="ct-title">Kostenvergleich</span></div>
+      <div class="vgl-table">
+        <div class="vgl-head">
+          <div>Position</div>
+          <div class="h-n">Normaler Kredit</div>
+          <div class="h-h">HVT-Strategie</div>
+        </div>
+        <div class="vgl-trow">
+          <div class="vgl-tlabel">Monatsrate Kredit</div>
+          <div class="t-n" id="v_normal_rate">—</div>
+          <div class="t-h" id="v_hvt_rate">—</div>
+        </div>
+        <div class="vgl-trow">
+          <div class="vgl-tlabel">FLV-Beitrag / Monat</div>
+          <div class="t-n" style="color:var(--tm)">—</div>
+          <div class="t-h" id="v_hvt_flv">—</div>
+        </div>
+        <div class="vgl-trow">
+          <div class="vgl-tlabel">Laufzeit bis schuldenfrei</div>
+          <div class="t-n" id="v_normal_lz">—</div>
+          <div class="t-h" id="v_hvt_cross">—</div>
+        </div>
+        <div class="vgl-trow">
+          <div class="vgl-tlabel">Zinsen an die Bank</div>
+          <div class="t-n red" id="v_normal_zins">—</div>
+          <div class="t-h red" id="v_hvt_zins">—</div>
+        </div>
+        <div class="vgl-trow">
+          <div class="vgl-tlabel">In FLV eingezahlt<div style="font-size:10px;color:var(--tm);margin-top:2px;font-weight:400">Summe aller Beiträge bis zur Vortilgung</div></div>
+          <div class="t-n" style="color:var(--tm)">—</div>
+          <div class="t-h" id="v_hvt_praem">—</div>
+        </div>
+        <div class="vgl-trow total">
+          <div class="vgl-tlabel">Effektiv­kosten gesamt</div>
+          <div class="t-n" id="v_normal_gesamt">—</div>
+          <div class="t-h" id="v_hvt_gesamt">—</div>
+        </div>
+        <div class="vgl-hint">
+          <b style="color:var(--tp)">Hinweis:</b> Effektivkosten = alle Geldabflüsse (Kreditraten + FLV-Beiträge) minus zurückgezahltes Kapital. Die HVT-Strategie funktioniert nur, wenn die FLV-Rendite langfristig den Kreditzinssatz übersteigt. Hochrechnung ohne Steuer- und Gebühreneffekte.
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /rp -->
+</div><!-- /calc-layout -->
+
+<script src="shared.js"></script>
+<script>
+/* ══════════ ACCESS PROTECTION ══════════ */
+(function(){
+  const isLocal=['localhost','127.0.0.1',''].includes(location.hostname);
+  const validRef=document.referrer.includes('jasonschreiber.at');
+  const ACCESS_KEY='flv2025';
+  const urlKey=new URLSearchParams(location.search).get('access');
+  if(!isLocal&&!validRef&&urlKey!==ACCESS_KEY){
+    document.body.style.cssText='margin:0;background:#0F0F0F;display:flex;align-items:center;justify-content:center;height:100vh;font-family:Inter,sans-serif;';
+    document.body.innerHTML='<div style="color:#555;font-size:14px;text-align:center"><div style="font-size:32px;margin-bottom:12px">&#128274;</div>Zugriff nicht gestattet.</div>';
+    throw new Error('Access denied');
+  }
+})();
+
+let flvMode = 'auto';
+let einmalList = [];
+let chartInst = null;
+const chartVis = { restNormal: true, restHvt: true, flv: true };
+const LC = { restNormal: 'rgb(150,150,150)', restHvt: 'rgb(248,113,113)', flv: 'rgb(56,217,163)' };
+const LL = { restNormal: 'Restschuld (Normal)', restHvt: 'Restschuld (HVT)', flv: 'FLV-Wertstand' };
+
+/* ══════ EINMAL LIST ══════ */
+function renderEinmal() {
+  const c = document.getElementById('einmal_c');
+  c.innerHTML = '';
+  einmalList.forEach((e, i) => {
+    const row = document.createElement('div');
+    row.className = 'er';
+    row.innerHTML = `
+      <div>${i === 0 ? '<label>Jahr</label>' : '<label style="visibility:hidden">J</label>'}
+        <div class="fu"><input type="number" value="${e.j}" min="0" step="1" onchange="einmalList[${i}].j=Math.max(0,Math.round(+this.value||0));this.value=einmalList[${i}].j;berechne()" style="border-radius:8px 0 0 8px;border-right:none"><span class="ub">J.</span></div></div>
+      <div>${i === 0 ? '<label>Betrag</label>' : '<label style="visibility:hidden">B</label>'}
+        <div class="fu"><input type="number" value="${e.b}" min="0" step="1000" onchange="einmalList[${i}].b=Math.max(0,Math.round(+this.value||0));this.value=einmalList[${i}].b;berechne()" style="border-radius:8px 0 0 8px;border-right:none"><span class="ub">€</span></div></div>
+      <div style="display:flex;align-items:flex-end"><button class="btn-rm" onclick="removeEinmal(${i})">×</button></div>`;
+    c.appendChild(row);
+  });
+}
+
+function addEinmal() { einmalList.push({ j: 0, b: 0 }); renderEinmal(); }
+function removeEinmal(i) { einmalList.splice(i, 1); renderEinmal(); berechne(); }
+
+/* ══════ HELPERS ══════ */
+function setFLVMode(mode) {
+  flvMode = mode;
+  document.getElementById('flv_btn_auto').classList.toggle('active', mode === 'auto');
+  document.getElementById('flv_btn_manuell').classList.toggle('active', mode === 'manuell');
+  document.getElementById('flv_manuell_wrap').style.display = mode === 'manuell' ? 'block' : 'none';
+  document.getElementById('flv_auto_hint').style.display = mode === 'auto' ? 'block' : 'none';
+  onInput();
+}
+
+function toggleAcc(bodyId, arrowId) {
+  const b = document.getElementById(bodyId), a = document.getElementById(arrowId);
+  const open = b.classList.toggle('open');
+  if (a) a.classList.toggle('open', open);
+}
+
+function monatsrate(K, n, i) {
+  if (i < 1e-9) return K / n;
+  return K * (i * Math.pow(1 + i, n)) / (Math.pow(1 + i, n) - 1);
+}
+
+function flvWert(vorRate, mbHaupt, kreditStart, rendite_pa, jahrAktuell) {
+  const r = rendite_pa / 100 / 12;
+  let fv = 0;
+
+  // Vor-Kredit-Phase: monatliche Rate von Jahr 0 bis min(kreditStart, jahrAktuell)
+  if (vorRate > 0 && kreditStart > 0 && jahrAktuell > 0) {
+    const vorMonths = Math.min(jahrAktuell, kreditStart) * 12;
+    let fvVor = Math.abs(r) < 1e-9 ? vorRate * vorMonths : vorRate * ((Math.pow(1 + r, vorMonths) - 1) / r);
+    // Nach Kredit-Start weiter verzinst (keine neuen Einzahlungen mehr aus dieser Rate)
+    const compMonths = Math.max(0, jahrAktuell - kreditStart) * 12;
+    if (compMonths > 0) fvVor *= Math.pow(1 + r, compMonths);
+    fv += fvVor;
+  }
+
+  // Haupt-Rate ab Kredit-Start
+  if (mbHaupt > 0 && jahrAktuell > kreditStart) {
+    const m = (jahrAktuell - kreditStart) * 12;
+    fv += Math.abs(r) < 1e-9 ? mbHaupt * m : mbHaupt * ((Math.pow(1 + r, m) - 1) / r);
+  }
+
+  // Einmalzahlungen
+  for (const e of einmalList) {
+    if (e.b > 0 && e.j <= jahrAktuell) {
+      fv += e.b * Math.pow(1 + r, (jahrAktuell - e.j) * 12);
+    }
+  }
+  return fv;
+}
+
+function kreditRest(K, M, i, nMax, jahrNachStart) {
+  if (jahrNachStart <= 0) return K;
+  const m = Math.min(jahrNachStart * 12, nMax);
+  if (i < 1e-9) return Math.max(0, K - M * m);
+  const f = Math.pow(1 + i, m);
+  return Math.max(0, K * f - M * (f - 1) / i);
+}
+
+function fE(v) { return eur(v); }
+function fP(v, d = 1) { return v.toFixed(d).replace('.', ',') + ' %'; }
+function fJ(v) { return v === 1 ? '1 Jahr' : Math.round(v) + ' Jahre'; }
+function fJM(fracYears) {
+  if (fracYears == null || isNaN(fracYears) || fracYears < 0) return '—';
+  const totalM = Math.round(fracYears * 12);
+  const y = Math.floor(totalM / 12), m = totalM % 12;
+  if (y === 0) return m + ' Mon.';
+  if (m === 0) return y + (y === 1 ? ' Jahr' : ' Jahre');
+  return y + (y === 1 ? ' Jahr ' : ' Jahre ') + m + ' Mon.';
+}
+
+function onInput() { berechne(); }
+
+/* ══════ MAIN CALC ══════ */
+function berechne() {
+  const K = parseFloat(document.getElementById('h_betrag').value) || 0;
+  const zins_pa = parseFloat(document.getElementById('h_zins').value) || 0;
+  const lzNormal = parseFloat(document.getElementById('h_lz_normal').value) || 0;
+  const lzHvt = parseFloat(document.getElementById('h_lz_hvt').value) || 0;
+  const kreditStart = parseFloat(document.getElementById('h_kredit_start').value) || 0;
+  const vorRate = parseFloat(document.getElementById('h_flv_vorrate').value) || 0;
+  const rendite = parseFloat(document.getElementById('h_flv_rendite').value) || 0;
+
+  // Vor-Rate-Feld nur sichtbar wenn Kredit später startet
+  document.getElementById('flv_vorrate_wrap').style.display = kreditStart > 0 ? 'block' : 'none';
+
+  if (K <= 0 || lzNormal <= 0 || lzHvt <= 0 || zins_pa <= 0 || rendite <= 0) return;
+  if (lzHvt < lzNormal) return;
+
+  const i = zins_pa / 100 / 12;
+  const nNormal = lzNormal * 12;
+  const nHvt = lzHvt * 12;
+
+  const rateNormal = monatsrate(K, nNormal, i);
+  const rateHvt = monatsrate(K, nHvt, i);
+  const rateDiff = rateNormal - rateHvt;
+
+  let flvMb;
+  if (flvMode === 'auto') {
+    flvMb = Math.max(0, rateDiff);
+    document.getElementById('flv_auto_hint').textContent =
+      `FLV-Beitrag = ${fE(rateNormal)} − ${fE(rateHvt)} = ${fE(flvMb)}/Mo.`;
+  } else {
+    flvMb = parseFloat(document.getElementById('h_flv_mb').value) || 0;
+  }
+
+  const gesamtLastHvt = rateHvt + flvMb;
+
+  // Build timeline (annual steps, enough years to find crossover)
+  const maxJahre = Math.max(lzHvt + kreditStart, 50);
+  const years = [];
+  let crossYear = null, crossRestschuld = null, crossFlv = null;
+  let exactCrossYearFraction = null;
+
+  for (let j = 0; j <= maxJahre; j++) {
+    const jnk = j - kreditStart; // years after loan start
+    const rest_hvt = jnk <= 0 ? K : jnk >= lzHvt ? 0 : kreditRest(K, rateHvt, i, nHvt, jnk);
+    const rest_normal = jnk <= 0 ? K : jnk >= lzNormal ? 0 : kreditRest(K, rateNormal, i, nNormal, jnk);
+    const flv = flvWert(vorRate, flvMb, kreditStart, rendite, j);
+
+    years.push({ j, rest_hvt, rest_normal, flv });
+
+    // Detect crossover (first year where FLV >= HVT restschuld, after loan started)
+    if (crossYear === null && jnk > 0 && rest_hvt > 0 && flv >= rest_hvt) {
+      crossYear = j;
+      crossRestschuld = rest_hvt;
+      crossFlv = flv;
+
+      // Linear interpolation for exact fractional year
+      const prev = years[years.length - 2];
+      if (prev) {
+        const gapPrev = prev.flv - prev.rest_hvt; // negative
+        const gapCur  = flv - rest_hvt;            // positive or zero
+        const denom = gapCur - gapPrev;
+        exactCrossYearFraction = denom !== 0 ? (j - 1) + (-gapPrev / denom) : j;
+      } else {
+        exactCrossYearFraction = j;
+      }
+    }
+  }
+
+  // Savings — use exact fractional crossover year for all calculations
+  const zinsenNormal = rateNormal * nNormal - K;
+  let zinsenBisTilgung = 0, praemienGesamt = 0, hvtNetCost = 0;
+  let jahreGewonnen = null, exactJahreNachKS = null, zinsenGespart = null;
+
+  if (exactCrossYearFraction != null) {
+    exactJahreNachKS = exactCrossYearFraction - kreditStart;
+    const mBisExact = Math.max(0, exactJahreNachKS * 12);
+    const restAtExact = kreditRest(K, rateHvt, i, nHvt, exactJahreNachKS);
+    // Bank interest only (for Kostenvergleich table)
+    zinsenBisTilgung = Math.max(0, rateHvt * mBisExact - (K - restAtExact));
+    jahreGewonnen = Math.max(0, lzNormal - exactJahreNachKS);
+
+    const einmalTotal = einmalList.reduce((s, e) => s + (e.j <= exactCrossYearFraction ? e.b : 0), 0);
+    const vorMonate = Math.min(exactCrossYearFraction, kreditStart) * 12;
+    const hauptMonate = Math.max(0, (exactCrossYearFraction - kreditStart) * 12);
+    praemienGesamt = vorRate * vorMonate + flvMb * hauptMonate + einmalTotal;
+
+    // True effective cost: everything paid out minus principal received
+    hvtNetCost = rateHvt * mBisExact + praemienGesamt - K;
+    zinsenGespart = zinsenNormal - hvtNetCost;
+  }
+
+  // At exact crossing FLV = Restschuld → surplus is 0 by definition
+  const ueberschuss = 0;
+  const aufwandHvt = exactCrossYearFraction != null ? zinsenBisTilgung + praemienGesamt : null;
+
+  // ── Hero: Hauptzahl Zinsen gespart ──
+  const sZinsEl = document.getElementById('s_zinsen');
+  if (zinsenGespart != null) {
+    sZinsEl.textContent = fE(Math.max(0, zinsenGespart));
+    sZinsEl.classList.toggle('red', zinsenGespart < 0);
+  } else {
+    sZinsEl.textContent = '—';
+    sZinsEl.classList.remove('red');
+  }
+
+  // ── Hero: Headline-Story ──
+  const hlEl = document.getElementById('spar_headline');
+  if (exactCrossYearFraction != null && zinsenGespart != null) {
+    if (zinsenGespart >= 0) {
+      hlEl.innerHTML = `Nach <b>${fJM(exactJahreNachKS)}</b> Kreditlaufzeit kann die FLV den Restkredit tilgen — Sie sind <span class="ac">${fJM(jahreGewonnen)} früher schuldenfrei</span> und sparen sich ${fE(zinsenGespart)} gegenüber dem ${lzNormal}-jährigen Normalkredit.`;
+    } else {
+      hlEl.innerHTML = `Nach <b>${fJM(exactJahreNachKS)}</b> wäre Vortilgung möglich — aber die FLV-Rendite (${fP(rendite)}) ist zu niedrig, um die längere HVT-Laufzeit zu kompensieren. Mehr Beitrag oder höhere Rendite-Annahme nötig.`;
+    }
+  } else {
+    hlEl.innerHTML = `<span style="color:var(--tm)">Kein Schnittpunkt — die FLV erreicht die Restschuld innerhalb der Laufzeit nicht. Beitrag oder Rendite erhöhen.</span>`;
+  }
+
+  // ── Hero: Side-Chips ──
+  document.getElementById('s_jahre').textContent     = jahreGewonnen != null ? fJM(jahreGewonnen) : '—';
+  document.getElementById('s_jahre_sub').textContent = `statt ${lzNormal}-jähriger Normallaufzeit`;
+  document.getElementById('s_cross').textContent     = exactCrossYearFraction != null ? `nach ${fJM(exactJahreNachKS)}` : '—';
+  document.getElementById('s_cross_sub').textContent = exactCrossYearFraction != null ? `FLV-Wert ≈ ${fE(crossFlv)}` : 'FLV reicht nicht';
+
+  // ── Monatslast ──
+  document.getElementById('r_rate_normal').textContent    = fE(rateNormal) + '/Mo.';
+  document.getElementById('r_rate_hvt_total').textContent = fE(gesamtLastHvt) + '/Mo.';
+  document.getElementById('r_rate_hvt_sub').textContent   = `${fE(rateHvt)} Rate + ${fE(flvMb)} FLV`;
+
+  // ── Vergleich-Tabelle ──
+  document.getElementById('v_normal_rate').textContent   = fE(rateNormal);
+  document.getElementById('v_normal_lz').textContent     = fJ(lzNormal);
+  document.getElementById('v_normal_gesamt').textContent = fE(zinsenNormal);
+  document.getElementById('v_normal_zins').textContent   = fE(zinsenNormal);
+  document.getElementById('v_hvt_rate').textContent      = fE(rateHvt);
+  document.getElementById('v_hvt_flv').textContent       = fE(flvMb);
+  document.getElementById('v_hvt_cross').textContent     = exactCrossYearFraction != null ? fJM(exactJahreNachKS) : '>50 Jahre';
+  document.getElementById('v_hvt_zins').textContent      = exactCrossYearFraction != null ? fE(zinsenBisTilgung) : '—';
+  document.getElementById('v_hvt_praem').textContent     = fE(praemienGesamt);
+  document.getElementById('v_hvt_gesamt').textContent    = exactCrossYearFraction != null ? fE(hvtNetCost) : '—';
+
+  // ── Chart: ganze Kurve bis Ende ──
+  const chartMaxJahre = lzHvt + kreditStart;
+  updateChart(years.filter(y => y.j <= chartMaxJahre), exactCrossYearFraction);
+  document.getElementById('r_chart_badge').textContent =
+    crossYear != null ? `Vortilgung: Jahr ${crossYear}` : 'Kein Schnittpunkt';
+
+  window.__axionSendResult?.({
+    type: 'hvt-rechner',
+    kreditsumme: K, zinssatz: zins_pa,
+    laufzeit_normal: lzNormal, laufzeit_hvt: lzHvt,
+    flv_mb: Math.round(flvMb), flv_rendite: rendite,
+    vortilgung_jahr: crossYear,
+    zinsen_gespart: zinsenGespart ? Math.round(zinsenGespart) : null,
+    jahre_gewonnen: jahreGewonnen,
+    ueberschuss: Math.round(ueberschuss)
+  });
+}
+
+/* ══════ CHART ══════ */
+function tc() {
+  const d = isDark();
+  return {
+    grid: d ? 'rgba(255,255,255,.08)' : 'rgba(0,0,0,.10)',
+    ticks: d ? '#666B78' : '#888888'
+  };
+}
+
+function externalTooltip({ chart, tooltip }) {
+  const el = document.getElementById('chart-tip');
+  if (!el) return;
+  if (!tooltip.opacity) { el.style.display = 'none'; return; }
+  let html = `<div class="ctt">Jahr ${tooltip.title?.[0] || ''}</div>`;
+  (tooltip.body || []).forEach((b, i) => {
+    const col = (tooltip.labelColors?.[i]?.backgroundColor) || '#888';
+    const line = (b.lines?.[0] || '').trim();
+    html += `<div class="cti"><span class="ctd" style="background:${col}"></span>${line}</div>`;
+  });
+  el.innerHTML = html;
+  el.style.display = 'block';
+  const r = chart.canvas.getBoundingClientRect();
+  let x = r.left + tooltip.caretX + 14, y = r.top + tooltip.caretY - el.offsetHeight / 2;
+  const w = el.offsetWidth, h = el.offsetHeight;
+  if (x + w > window.innerWidth - 8) x = r.left + tooltip.caretX - w - 14;
+  if (x < 8) x = 8;
+  if (y < 8) y = 8;
+  if (y + h > window.innerHeight - 8) y = window.innerHeight - h - 8;
+  el.style.left = x + 'px'; el.style.top = y + 'px';
+}
+
+const crosshairPlugin = {
+  id: 'crosshair',
+  afterDraw(chart) {
+    if (!chart.tooltip._active?.length) return;
+    const { ctx, chartArea: { top, bottom } } = chart;
+    const x = chart.tooltip._active[0].element.x;
+    ctx.save(); ctx.beginPath(); ctx.moveTo(x, top); ctx.lineTo(x, bottom);
+    ctx.lineWidth = 1; ctx.strokeStyle = isDark() ? 'rgba(255,255,255,.15)' : 'rgba(0,0,0,.08)';
+    ctx.setLineDash([4, 3]); ctx.stroke(); ctx.restore();
+  }
+};
+
+let _exactCrossYear = null;
+const crossAnnotationPlugin = {
+  id: 'crossAnnotation',
+  afterDraw(chart) {
+    if (_exactCrossYear == null) return;
+    const xScale = chart.scales.x;
+    if (!xScale) return;
+    const x = xScale.getPixelForValue(_exactCrossYear);
+    const { ctx, chartArea: { top, bottom } } = chart;
+    ctx.save();
+    ctx.beginPath(); ctx.moveTo(x, top); ctx.lineTo(x, bottom);
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = isDark() ? 'rgba(56,217,163,.55)' : 'rgba(3,159,107,.55)';
+    ctx.setLineDash([6, 3]); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = isDark() ? 'rgba(56,217,163,.95)' : 'rgba(3,159,107,.95)';
+    ctx.font = '700 10px Inter, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Vortilgung', x, top + 12);
+    ctx.restore();
+  }
+};
+
+function buildLegend() {
+  const el = document.getElementById('chart-legend');
+  el.innerHTML = '';
+  for (const k of ['restNormal', 'restHvt', 'flv']) {
+    const btn = document.createElement('span');
+    btn.className = 'li ' + (chartVis[k] ? 'on' : 'off');
+    btn.innerHTML = `<span class="ld" style="background:${LC[k]}"></span>${LL[k]}`;
+    btn.onclick = () => {
+      chartVis[k] = !chartVis[k];
+      btn.className = 'li ' + (chartVis[k] ? 'on' : 'off');
+      if (chartInst) {
+        const idx = ['restNormal', 'restHvt', 'flv'].indexOf(k);
+        chartInst.data.datasets[idx].hidden = !chartVis[k];
+        chartInst.update('none');
+      }
+    };
+    el.appendChild(btn);
+  }
+}
+
+function updateChart(data, exactCross) {
+  _exactCrossYear = exactCross;
+  const t = tc();
+  const labels = data.map(r => r.j);
+  const ds = [
+    { label: LL.restNormal, data: data.map(r => r.rest_normal), borderColor: LC.restNormal, backgroundColor: 'transparent', borderWidth: 1.5, borderDash: [6, 4], tension: 0, pointRadius: 0, fill: false, hidden: !chartVis.restNormal },
+    { label: LL.restHvt,    data: data.map(r => r.rest_hvt),    borderColor: LC.restHvt,    backgroundColor: 'rgba(248,113,113,.06)', borderWidth: 2.5, tension: 0, pointRadius: 0, fill: true,  hidden: !chartVis.restHvt },
+    { label: LL.flv,        data: data.map(r => r.flv),         borderColor: LC.flv,        backgroundColor: 'rgba(56,217,163,.07)',  borderWidth: 2.5, tension: 0, pointRadius: 0, fill: true,  hidden: !chartVis.flv }
+  ];
+  if (chartInst) { chartInst.destroy(); chartInst = null; }
+  chartInst = new Chart(document.getElementById('lineChart').getContext('2d'), {
+    type: 'line', data: { labels, datasets: ds },
+    plugins: [crosshairPlugin, crossAnnotationPlugin],
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          enabled: false, mode: 'index', intersect: false, external: externalTooltip,
+          callbacks: {
+            labelColor: c => ({ borderColor: 'transparent', backgroundColor: c.dataset.borderColor, borderRadius: 4 }),
+            label: c => ` ${c.dataset.label}: ${fE(c.parsed.y)}`
+          }
+        }
+      },
+      scales: {
+        x: {
+          type: 'linear',
+          grid: { color: t.grid, drawTicks: false },
+          ticks: { color: t.ticks, font: { size: 10 }, stepSize: 1 },
+          border: { color: 'transparent' },
+          title: { display: true, text: '(Jahre ab heute)', align: 'end', color: t.ticks, font: { size: 10 } }
+        },
+        y: {
+          grid: { color: t.grid, drawTicks: false },
+          ticks: { color: t.ticks, font: { size: 10 }, callback: v => eurShort(v) },
+          border: { color: 'transparent' }, min: 0,
+          title: { display: true, text: '(€)', align: 'end', color: t.ticks, font: { size: 10 } }
+        }
+      },
+      interaction: { mode: 'index', intersect: false }
+    }
+  });
+  buildLegend();
+}
+
+document.addEventListener('DOMContentLoaded', () => { berechne(); });
+
+window.addEventListener('message', e => {
+  if (e.data?.type === 'axion-prefill') {
+    const d = e.data;
+    if (d.kreditsumme) document.getElementById('h_betrag').value = d.kreditsumme;
+    if (d.zinssatz)    document.getElementById('h_zins').value = d.zinssatz;
+    if (d.laufzeit)    document.getElementById('h_lz_normal').value = d.laufzeit;
+    berechne();
+  }
+  if (e.data?.type === 'axion-save-request') berechne();
+});
+</script>
+</body>
+</html>

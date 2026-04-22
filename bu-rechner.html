@@ -385,7 +385,7 @@
                 i<span class="info-tip">Wie viel % Ihres Nettos m&ouml;chten Sie abgesichert haben?</span>
               </span>
             </label>
-            <div class="fu"><input type="number" id="bu_ziel_pct" value="80" min="50" max="100" step="5" oninput="onInput()"><span class="ub">% vom Netto</span></div>
+            <div class="fu"><input type="number" id="bu_ziel_pct" value="100" min="50" max="100" step="5" oninput="onInput()"><span class="ub">% vom Netto</span></div>
           </div>
           <div class="f">
             <label style="display:flex;align-items:center;gap:6px">
@@ -508,7 +508,7 @@
     <div class="empf-card">
       <div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ts);margin-bottom:12px">&#10004; Empfohlene private BU-Rente</div>
       <div class="empf-val" id="r_empfehlung">&mdash;</div>
-      <div class="empf-sub">monatliche BU-Rente empfohlen, um <span id="r_ziel_text">80 %</span> des Nettoeinkommens abzusichern</div>
+      <div class="empf-sub">monatliche BU-Rente empfohlen, um <span id="r_ziel_text">100 %</span> des Nettoeinkommens abzusichern</div>
     </div>
 
     <!-- ═══ WARNUNG: Ablehnungsquote ═══ -->
@@ -582,7 +582,7 @@
           <div class="detail-row"><span>&minus; Staatliche BU-Pension netto</span><span id="d_gap_pension" style="color:var(--y)">&mdash;</span></div>
           <div class="detail-total"><span>= Monatliche L&uuml;cke</span><span id="d_gap_total" style="color:var(--red)">&mdash;</span></div>
           <div class="detail-sep"></div>
-          <div class="detail-row"><span>Wunsch-Absicherung (<span id="d_ziel_pct2">80</span> % vom Netto)</span><span id="d_wunsch">&mdash;</span></div>
+          <div class="detail-row"><span>Wunsch-Absicherung (<span id="d_ziel_pct2">100</span> % vom Netto)</span><span id="d_wunsch">&mdash;</span></div>
           <div class="detail-row"><span>&minus; Staatliche BU-Pension netto</span><span id="d_wunsch_pension" style="color:var(--y)">&mdash;</span></div>
           <div class="detail-total" style="font-size:14px"><span>= Empfohlene private BU-Rente</span><span id="d_empf" style="color:var(--ac)">&mdash;</span></div>
         </div>
@@ -817,7 +817,7 @@ function calcBUPension(alter, einstiegsalter, grossMonat, karriereFaktor) {
 function berechne() {
   const alter       = getAge();
   const einstieg    = parseInt(document.getElementById('bu_einstieg')?.value) || 20;
-  const zielPct     = parseFloat(document.getElementById('bu_ziel_pct')?.value) || 80;
+  const zielPct     = parseFloat(document.getElementById('bu_ziel_pct')?.value) || 100;
   const karrierePct = parseFloat(document.getElementById('bu_karriere_pct')?.value) || 85;
   const grossCurrent = getEffectiveGross();
   const netCurrent   = getEffectiveNet();

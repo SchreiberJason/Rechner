@@ -713,9 +713,13 @@ document.addEventListener('DOMContentLoaded', () => { berechne(); });
 window.addEventListener('message', e => {
   if (e.data?.type === 'axion-prefill') {
     const d = e.data;
-    if (d.kreditsumme) document.getElementById('h_betrag').value = d.kreditsumme;
-    if (d.zinssatz)    document.getElementById('h_zins').value = d.zinssatz;
-    if (d.laufzeit)    document.getElementById('h_lz_normal').value = d.laufzeit;
+    if (d.kreditsumme)    document.getElementById('h_betrag').value = d.kreditsumme;
+    if (d.zinssatz)       document.getElementById('h_zins').value = d.zinssatz;
+    if (d.laufzeit)       document.getElementById('h_lz_normal').value = d.laufzeit;
+    if (d.laufzeit_normal) document.getElementById('h_lz_normal').value = d.laufzeit_normal;
+    if (d.laufzeit_hvt)   document.getElementById('h_lz_hvt').value = d.laufzeit_hvt;
+    if (d.flv_mb)         document.getElementById('h_flv_mb').value = d.flv_mb;
+    if (d.flv_rendite)    document.getElementById('h_flv_rendite').value = d.flv_rendite;
     berechne();
   }
   if (e.data?.type === 'axion-save-request') berechne();

@@ -13,6 +13,12 @@ body{padding:0 5px;}
 .tw{max-height:320px;overflow-y:auto;}
 thead th:first-child{text-align:center;}
 tbody td:first-child{text-align:center;color:var(--tm);font-weight:600;}
+
+/* Jahresübersicht collapsible */
+.ch.ch-toggle{cursor:pointer;display:flex;align-items:center;justify-content:space-between;-webkit-tap-highlight-color:transparent;user-select:none;}
+.ch.ch-toggle .ca{font-size:10px;color:var(--tm);transition:transform .2s;}
+.ch.ch-toggle.open .ca{transform:rotate(180deg);}
+.tw.collapsed{display:none;}
 @media(min-width:1024px){.params-panel{max-height:calc(100vh - 48px);position:sticky;top:24px;}}
 
 /* ══════════ BEITRAG VISUAL ══════════ */
@@ -25,14 +31,11 @@ tbody td:first-child{text-align:center;color:var(--tm);font-weight:600;}
 .bv-track{height:32px;border-radius:100px;background:var(--st);overflow:hidden;display:flex;position:relative;}
 .bv-seg{height:100%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;letter-spacing:.03em;transition:width .4s ease;}
 .bv-seg.tax{background:#1C8764;color:#fff;}
-.bv-seg.sv{background:rgba(248,113,113,0.35);color:var(--ts);}
 .bv-seg.net{background:var(--st);color:var(--ts);}
 @media(prefers-color-scheme:light){
   :root:not(.dark) .bv-seg.tax{background:#1C8764;color:#fff;}
-  :root:not(.dark) .bv-seg.sv{background:rgba(239,68,68,0.25);color:#555;}
 }
 :root.light .bv-seg.tax{background:#1C8764;color:#fff;}
-:root.light .bv-seg.sv{background:rgba(239,68,68,0.25);color:#555;}
 .bv-labels{display:flex;justify-content:space-between;margin-top:8px;font-size:11px;color:var(--ts);}
 .bv-labels b{color:var(--ac);}
 .bv-stat{text-align:right;flex-shrink:0;min-width:100px;}
@@ -251,9 +254,8 @@ tbody td:first-child{text-align:center;color:var(--tm);font-weight:600;}
       <div class="bv-bar">
         <div class="ml">Dein 25 &euro; Brutto-Beitrag</div>
         <div class="bv-track">
-          <div class="bv-seg tax" id="bv-tax" style="width:30%">Steuer</div>
-          <div class="bv-seg sv" id="bv-sv" style="width:18%">SV</div>
-          <div class="bv-seg net" id="bv-net" style="width:52%">Netto</div>
+          <div class="bv-seg tax" id="bv-tax" style="width:40%">Steuer</div>
+          <div class="bv-seg net" id="bv-net" style="width:60%">Netto</div>
         </div>
         <div class="bv-labels">
           <span><b id="bv-save-val">12,03 &euro;</b> Steuerersparnis</span>
@@ -311,8 +313,11 @@ tbody td:first-child{text-align:center;color:var(--tm);font-weight:600;}
 
     <!-- Table -->
     <div class="card">
-      <div class="ch"><span class="ct-title">Jahres&uuml;bersicht</span></div>
-      <div class="tw">
+      <div class="ch ch-toggle" id="tbl-head" onclick="toggleTable()">
+        <span class="ct-title">Jahres&uuml;bersicht</span>
+        <span class="ca">&#9660;</span>
+      </div>
+      <div class="tw collapsed" id="tbl-wrap">
         <table>
           <thead><tr><th>Alter</th><th>Eingezahlt</th><th>BAV-Guthaben</th><th>Privat</th><th>Vorteil</th></tr></thead>
           <tbody id="tbl"></tbody>
@@ -680,12 +685,9 @@ function calculate() {
 
   // Beitrag bar
   const txPct = (tax.txSav / BAV * 100);
-  const svPct = (tax.svDue / BAV * 100);
-  const investPct = 100 - txPct - svPct;
+  const investPct = 100 - txPct;
   document.getElementById('bv-tax').style.width = txPct + '%';
   document.getElementById('bv-tax').textContent = txPct >= 12 ? 'Steuer' : '';
-  document.getElementById('bv-sv').style.width = svPct + '%';
-  document.getElementById('bv-sv').textContent = svPct >= 8 ? 'SV' : '';
   document.getElementById('bv-net').style.width = investPct + '%';
   document.getElementById('bv-net').textContent = investPct >= 15 ? 'Netto' : '';
   document.getElementById('bv-save-val').textContent = fE(tax.txSav);
@@ -775,6 +777,11 @@ function toggleDetails() {
   body.classList.toggle('open');
   document.getElementById('dt-text').textContent =
     body.classList.contains('open') ? 'Bestandteile ausblenden' : 'Bestandteile anzeigen';
+  setTimeout(sendHeight, 50);
+}
+function toggleTable() {
+  document.getElementById('tbl-head').classList.toggle('open');
+  document.getElementById('tbl-wrap').classList.toggle('collapsed');
   setTimeout(sendHeight, 50);
 }
 function toggleEwDetails() {

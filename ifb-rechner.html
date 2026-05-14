@@ -187,10 +187,12 @@ function berechneGFB() {
   const estMit = berechneESt(gewinn - totalFB);
   const steuerVorteil = estOhne - estMit;
 
+  // GFB reduziert NUR die ESt-Bemessungsgrundlage, NICHT die SVS-Beitragsgrundlage
+  // (§25 GSVG: Bezugnahme auf Gewinn aus Gewerbebetrieb vor Freibeträgen).
   const svsOhne = berechneSVS(gewinn);
-  const svsMit = berechneSVS(gewinn - totalFB);
-  const svsVorteil = svsOhne - svsMit;
-  const gesamtVorteil = steuerVorteil + svsVorteil;
+  const svsMit = svsOhne;
+  const svsVorteil = 0;
+  const gesamtVorteil = steuerVorteil;
 
   /* ── UI UPDATE ── */
   document.getElementById('r_gfb_total').textContent = eur(totalFB);
@@ -202,8 +204,8 @@ function berechneGFB() {
   document.getElementById('r_gesamt_vorteil').textContent = eur(gesamtVorteil);
   document.getElementById('r_steuer_vorteil').textContent = eur(steuerVorteil);
   document.getElementById('r_steuer_sub').textContent = 'bei ' + (grenz * 100) + ' % Grenzsteuersatz';
-  document.getElementById('r_svs_vorteil').textContent = eur(svsVorteil);
-  document.getElementById('r_svs_sub').textContent = 'PV ' + (SVS_PV * 100).toFixed(1) + ' % + KV ' + (SVS_KV * 100).toFixed(1) + ' %';
+  document.getElementById('r_svs_vorteil').textContent = eur(0);
+  document.getElementById('r_svs_sub').textContent = 'GFB reduziert keine SVS-Beiträge (§25 GSVG)';
 
   document.getElementById('r_est_ohne').textContent = eur(estOhne);
   document.getElementById('r_est_mit').textContent = eur(estMit);

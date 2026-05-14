@@ -791,28 +791,53 @@ let pkStandManual = false;
 
 const TODAY = new Date('2026-03-16');
 
-// ─── Österreichisches Steuer- & SV-Modell 2024 ───────────────────────────────
+// ─── Österreichisches Steuer- & SV-Modell ───────────────────────────────
+// Defaults entsprechen Stand 2026 — werden von config.json überschrieben.
 //
-// Quellen: §33 EStG 2024, ASVG §108a, GSVG §25, Sozialministerium.at
-//
-let SV_AN_RATE   = 0.1832;   // AN-SV: PV 10,25 % + KV 3,87 % + UV 1,2 % + AV 3,0 %
-let HBGG_ASVG    = 6270;     // ASVG Höchstbeitragsgrundlage 2024 (€/Monat)
-let HBGG_GSVG    = 6930;     // GSVG Höchstbeitragsgrundlage 2024 (€/Monat)
-let MINDEST_GSVG = 518.44;   // GSVG Mindestbeitragsgrundlage 2024 (€/Monat)
-let KEZ_BASIS    = 2055.47;  // Kindererziehungszeiten-Beitragsgrundlage 2024 (€/Monat)
-let AUFWERTUNG   = 1.022;    // Durchschn. jährlicher PK-Aufwertungsfaktor (~2,2 %)
+let SV_AN_RATE   = 0.1807;   // AN-SV gesamt
+let HBGG_ASVG    = 6930;     // ASVG Höchstbeitragsgrundlage (€/Monat)
+let HBGG_GSVG    = 6930;     // GSVG Höchstbeitragsgrundlage
+let MINDEST_GSVG = 518.44;   // GSVG Mindestbeitragsgrundlage
+let KEZ_BASIS    = 2055.47;  // Kindererziehungszeiten-Beitragsgrundlage (€/Monat)
+let AUFWERTUNG   = 1.022;    // PK-Aufwertungsfaktor §108 ASVG (~2,2 %)
+
+// Lohnsteuer-Tarif §33 EStG
+let TAX_BRACKETS = [
+  {bis: 13539,   satz: 0    },
+  {bis: 21992,   satz: 0.20 },
+  {bis: 36458,   satz: 0.30 },
+  {bis: 70365,   satz: 0.40 },
+  {bis: 104859,  satz: 0.48 },
+  {bis: 1000000, satz: 0.50 }
+];
+let VERKEHR_AB    = 496;
+let ZUSCHLAG_AB   = 804;
+let ZUSCHLAG_VON  = 19761;
+let ZUSCHLAG_BIS  = 30259;
+let SZ_FREIBETRAG = 620;
+let SZ_SATZ       = 0.06;
+let PENSIONIST_AB = 1121;
 
 // ─── Config integration ──────────────────────
 function applyPensionConfig() {
   if (!CONFIG) return;
   const sv = CONFIG.sozialversicherung || {};
   const pe = CONFIG.pension || {};
+  const st = CONFIG.steuern || {};
   if (sv.an_sv_rate != null) SV_AN_RATE = sv.an_sv_rate;
   if (sv.hbgg_asvg_monat_eur != null) HBGG_ASVG = sv.hbgg_asvg_monat_eur;
   if (sv.hbgg_gsvg_monat_eur != null) HBGG_GSVG = sv.hbgg_gsvg_monat_eur;
   if (sv.mindest_bgg_gsvg_monat_eur != null) MINDEST_GSVG = sv.mindest_bgg_gsvg_monat_eur;
   if (sv.kindererziehungszeiten_bgg_monat_eur != null) KEZ_BASIS = sv.kindererziehungszeiten_bgg_monat_eur;
   if (pe.aufwertungsfaktor_jährlich != null) AUFWERTUNG = pe.aufwertungsfaktor_jährlich;
+  if (st.lohnsteuer_tarifstufen) TAX_BRACKETS = st.lohnsteuer_tarifstufen.map(s => ({bis: s.bis, satz: s.satz}));
+  if (st.verkehrsabsetzbetrag_eur != null) VERKEHR_AB = st.verkehrsabsetzbetrag_eur;
+  if (st.zuschlag_verkehrsabsetzbetrag_eur != null) ZUSCHLAG_AB = st.zuschlag_verkehrsabsetzbetrag_eur;
+  if (st.zuschlag_einschleif_von != null) ZUSCHLAG_VON = st.zuschlag_einschleif_von;
+  if (st.zuschlag_einschleif_bis != null) ZUSCHLAG_BIS = st.zuschlag_einschleif_bis;
+  if (st.sonderzahlung_freibetrag_eur != null) SZ_FREIBETRAG = st.sonderzahlung_freibetrag_eur;
+  if (st.sonderzahlung_pauschalsatz_pct != null) SZ_SATZ = st.sonderzahlung_pauschalsatz_pct / 100;
+  if (st.pensionisten_absetzbetrag_eur != null) PENSIONIST_AB = st.pensionisten_absetzbetrag_eur;
 }
 
 // ─── Boot ─────────────────────────────────────
@@ -966,38 +991,43 @@ function getKarriereEink(ytp) {
 
 // ─── Progressiver Lohnsteuertarif §33 EStG (Jahresbetrag) ──────────────
 function calcLohnsteuer(taxableAnnual) {
-  if (taxableAnnual <=  11693) return 0;
-  if (taxableAnnual <=  19134) return (taxableAnnual -  11693) * 0.20;
-  if (taxableAnnual <=  32075) return 1488.20  + (taxableAnnual -  19134) * 0.30;
-  if (taxableAnnual <=  62080) return 5370.50  + (taxableAnnual -  32075) * 0.40;
-  if (taxableAnnual <=  93120) return 17372.10 + (taxableAnnual -  62080) * 0.48;
-  return 32291.40 + (taxableAnnual - 93120) * 0.50;
+  let steuer = 0, prev = 0;
+  for (const s of TAX_BRACKETS) {
+    const band = Math.max(0, Math.min(taxableAnnual, s.bis) - prev);
+    steuer += band * s.satz;
+    prev = s.bis;
+    if (taxableAnnual <= s.bis) break;
+  }
+  if (taxableAnnual > 1000000) steuer += (taxableAnnual - 1000000) * 0.55;
+  return steuer;
+}
+
+function getAbsetzAN(taxableAnnual) {
+  let a = VERKEHR_AB;
+  if (taxableAnnual <= ZUSCHLAG_VON) a += ZUSCHLAG_AB;
+  else if (taxableAnnual < ZUSCHLAG_BIS) a += ZUSCHLAG_AB * (ZUSCHLAG_BIS - taxableAnnual) / (ZUSCHLAG_BIS - ZUSCHLAG_VON);
+  return a;
 }
 
 // Netto aus Brutto (monatlich, AN, Einzelveranlagung, Standardabzüge)
-// Berücksichtigt: SV-Deckelung bei HBGG, Jahressechstel-Begünstigung (13./14.)
 function netFromGross(grossMonthly) {
   const hbgg     = getBeschaeft() === 'gsvg' ? HBGG_GSVG : HBGG_ASVG;
   const anzahlG  = getAnzahlGehaelter();
   const svBase   = Math.min(grossMonthly, hbgg);
-
-  // ── SV auf alle Gehälter (12 oder 14) ──
   const svMonthly = svBase * SV_AN_RATE;
   const svAnn     = svMonthly * anzahlG;
 
-  // ── Lohnsteuer auf 12 reguläre Monatsgehälter ──
   const taxable12 = (grossMonthly - svMonthly) * 12;
   const rawTax12  = calcLohnsteuer(taxable12);
-  // Allgemeiner Absetzbetrag €1.121 + Arbeitnehmerabsetzbetrag €421 = €1.542
-  const lst12     = Math.max(0, rawTax12 - 1542);
+  const lst12     = Math.max(0, rawTax12 - getAbsetzAN(taxable12));
 
-  // ── Jahressechstel (13./14. Gehalt): begünstigte Besteuerung ──
   let lstSonderzahlung = 0;
   if (anzahlG === 14) {
-    const sonderzahlungBrutto = (grossMonthly - svMonthly) * 2;  // 2 Sonderzahlungen
-    const freibetrag = 620;
-    const steuerpflichtig = Math.max(0, sonderzahlungBrutto - freibetrag);
-    lstSonderzahlung = steuerpflichtig * 0.06;  // Pauschal 6 %
+    // Hinweis: AV-Staffelung gilt nur für laufende Bezüge — auf SZ wäre voller AV-Satz fällig.
+    // Da SV hier pauschal via SV_AN_RATE läuft, sind die Auswirkungen klein; siehe brutto-netto.html für AV-Staffelung.
+    const sonderzahlungBrutto = (grossMonthly - svMonthly) * 2;
+    const steuerpflichtig = Math.max(0, sonderzahlungBrutto - SZ_FREIBETRAG);
+    lstSonderzahlung = steuerpflichtig * SZ_SATZ;
   }
 
   const netAnn = grossMonthly * anzahlG - svAnn - lst12 - lstSonderzahlung;
@@ -1022,16 +1052,16 @@ function grossFromNet(netMonthly) {
 //   Lohnsteuer mit Allg. Absetzbetrag + Pensionistenabsetzbetrag (max €954,
 //   Einschleifregelung €25.000–€29.500 Jahrespension)
 function pensionNetFromGross(grossMonthly) {
-  const grossAnn = grossMonthly * 14;   // 14 Bezüge/Jahr
+  const grossAnn = grossMonthly * 14;
   const kv       = grossAnn * 0.051;
   const taxable  = grossAnn - kv;
   const rawTax   = calcLohnsteuer(taxable);
-  // Pensionistenabsetzbetrag (Einschleifregelung)
+  // Pensionistenabsetzbetrag (Einschleifregelung) — Basiswert aus Config
   let pab;
-  if      (grossAnn <= 25000)  pab = 954;
-  else if (grossAnn <= 29500)  pab = 954 * (29500 - grossAnn) / 4500;
+  if      (grossAnn <= 25000)  pab = PENSIONIST_AB;
+  else if (grossAnn <= 29500)  pab = PENSIONIST_AB * (29500 - grossAnn) / 4500;
   else                          pab = 0;
-  const lst = Math.max(0, rawTax - 1121 - pab); // nur Allg. AB + Pensionisten-AB
+  const lst = Math.max(0, rawTax - pab);
   return (grossAnn - kv - lst) / 14;
 }
 
@@ -1069,8 +1099,8 @@ function getPKVorhandene(grossCurrent, anzahlG) {
 function calcPKData(grossCurrent, anzahlG, ytp, karriereR) {
   const hbgg = getBeschaeft() === 'gsvg' ? HBGG_GSVG : HBGG_ASVG;
   const pkPast = getPKVorhandene(grossCurrent, anzahlG);
-  // Aufwertung nur anwenden wenn Inflation aktiviert ist
-  const aufwertung = inflAn ? AUFWERTUNG : 1;
+  // Aufwertungsfaktor §108 ASVG gilt immer — Inflation-Toggle wirkt nur auf die Kaufkraft-Anzeige
+  const aufwertung = AUFWERTUNG;
   const contribPerYear = [];
   let pkFuture = 0;
   for (let i = 0; i < ytp; i++) {

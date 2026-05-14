@@ -638,24 +638,52 @@
 let incomeType = 'netto'; // 'netto' | 'brutto'
 const TODAY = new Date();
 
-// ─── SV / Steuer (identisch zur pensionsluecke.html) ──────────────
-let SV_AN_RATE   = 0.1832;
-let HBGG_ASVG    = 6270;
+// ─── SV / Steuer ──────────────
+// Defaults entsprechen Stand 2026 — werden von config.json überschrieben.
+let SV_AN_RATE   = 0.1807;
+let HBGG_ASVG    = 6930;
+
+let TAX_BRACKETS = [
+  {bis: 13539,   satz: 0    },
+  {bis: 21992,   satz: 0.20 },
+  {bis: 36458,   satz: 0.30 },
+  {bis: 70365,   satz: 0.40 },
+  {bis: 104859,  satz: 0.48 },
+  {bis: 1000000, satz: 0.50 }
+];
+let VERKEHR_AB    = 496;
+let ZUSCHLAG_AB   = 804;
+let ZUSCHLAG_VON  = 19761;
+let ZUSCHLAG_BIS  = 30259;
+let SZ_FREIBETRAG = 620;
+let SZ_SATZ       = 0.06;
+let PENSIONIST_AB = 1121;
+let ZURECHNUNGSZEIT_GRENZE = 65; // Zurechnung bis Regelpensionsalter (Pensionsharmonisierung 2014)
 
 function applyBUConfig() {
   if (!CONFIG) return;
   const sv = CONFIG.sozialversicherung || {};
+  const st = CONFIG.steuern || {};
+  const pe = CONFIG.pension || {};
   if (sv.an_sv_rate != null) SV_AN_RATE = sv.an_sv_rate;
   if (sv.hbgg_asvg_monat_eur != null) HBGG_ASVG = sv.hbgg_asvg_monat_eur;
+  if (st.lohnsteuer_tarifstufen) TAX_BRACKETS = st.lohnsteuer_tarifstufen.map(s => ({bis: s.bis, satz: s.satz}));
+  if (st.verkehrsabsetzbetrag_eur != null) VERKEHR_AB = st.verkehrsabsetzbetrag_eur;
+  if (st.zuschlag_verkehrsabsetzbetrag_eur != null) ZUSCHLAG_AB = st.zuschlag_verkehrsabsetzbetrag_eur;
+  if (st.zuschlag_einschleif_von != null) ZUSCHLAG_VON = st.zuschlag_einschleif_von;
+  if (st.zuschlag_einschleif_bis != null) ZUSCHLAG_BIS = st.zuschlag_einschleif_bis;
+  if (st.sonderzahlung_freibetrag_eur != null) SZ_FREIBETRAG = st.sonderzahlung_freibetrag_eur;
+  if (st.sonderzahlung_pauschalsatz_pct != null) SZ_SATZ = st.sonderzahlung_pauschalsatz_pct / 100;
+  if (st.pensionisten_absetzbetrag_eur != null) PENSIONIST_AB = st.pensionisten_absetzbetrag_eur;
+  if (pe.regelpensionsalter_maenner != null) ZURECHNUNGSZEIT_GRENZE = pe.regelpensionsalter_maenner;
 }
 
 // ─── BU-spezifische Konstanten ───────────────────
 const STEIGERUNG_PRO_JAHR = 0.0178;     // 1,78 % pro Versicherungsjahr
 const MAX_STEIGERUNG       = 0.80;       // Deckel 80 %
 const ZURECHNUNGSZEIT_FAKTOR = 0.60;     // Zurechnungszeit-Faktor (~60 %)
-const ZURECHNUNGSZEIT_GRENZE = 60;       // Zurechnung bis Alter 60
 const KV_PENSIONIST_PCT     = 5.10;      // KV-Beitrag Pensionist
-const AUSGLEICHSZULAGE       = 1218;     // Mindestpension (Richtsatz Single, ~2025/2026)
+const AUSGLEICHSZULAGE       = 1218;     // Mindestpension (Richtsatz Single)
 
 // ─── Formatter ───────────────────────────────────
 function fmt(n) {
@@ -665,12 +693,22 @@ const fE = n => fmt(n) + ' \u20AC';
 
 // ─── Progressiver Lohnsteuertarif §33 EStG ──────
 function calcLohnsteuer(taxableAnnual) {
-  if (taxableAnnual <=  11693) return 0;
-  if (taxableAnnual <=  19134) return (taxableAnnual -  11693) * 0.20;
-  if (taxableAnnual <=  32075) return 1488.20  + (taxableAnnual -  19134) * 0.30;
-  if (taxableAnnual <=  62080) return 5370.50  + (taxableAnnual -  32075) * 0.40;
-  if (taxableAnnual <=  93120) return 17372.10 + (taxableAnnual -  62080) * 0.48;
-  return 32291.40 + (taxableAnnual - 93120) * 0.50;
+  let steuer = 0, prev = 0;
+  for (const s of TAX_BRACKETS) {
+    const band = Math.max(0, Math.min(taxableAnnual, s.bis) - prev);
+    steuer += band * s.satz;
+    prev = s.bis;
+    if (taxableAnnual <= s.bis) break;
+  }
+  if (taxableAnnual > 1000000) steuer += (taxableAnnual - 1000000) * 0.55;
+  return steuer;
+}
+
+function getAbsetzAN(taxableAnnual) {
+  let a = VERKEHR_AB;
+  if (taxableAnnual <= ZUSCHLAG_VON) a += ZUSCHLAG_AB;
+  else if (taxableAnnual < ZUSCHLAG_BIS) a += ZUSCHLAG_AB * (ZUSCHLAG_BIS - taxableAnnual) / (ZUSCHLAG_BIS - ZUSCHLAG_VON);
+  return a;
 }
 
 // ─── Netto aus Brutto (monatlich, AN) ────────────
@@ -681,11 +719,11 @@ function netFromGross(grossMonthly) {
   const svAnn     = svMonthly * anzahlG;
   const taxable12 = (grossMonthly - svMonthly) * 12;
   const rawTax12  = calcLohnsteuer(taxable12);
-  const lst12     = Math.max(0, rawTax12 - 1542);
+  const lst12     = Math.max(0, rawTax12 - getAbsetzAN(taxable12));
   let lstSonderzahlung = 0;
   if (anzahlG === 14) {
     const sonderzahlungBrutto = (grossMonthly - svMonthly) * 2;
-    lstSonderzahlung = Math.max(0, sonderzahlungBrutto - 620) * 0.06;
+    lstSonderzahlung = Math.max(0, sonderzahlungBrutto - SZ_FREIBETRAG) * SZ_SATZ;
   }
   const netAnn = grossMonthly * anzahlG - svAnn - lst12 - lstSonderzahlung;
   return netAnn / anzahlG;
@@ -711,10 +749,10 @@ function pensionNetFromGross(grossMonthly) {
   const taxable  = grossAnn - kv;
   const rawTax   = calcLohnsteuer(taxable);
   let pab;
-  if      (grossAnn <= 25000)  pab = 954;
-  else if (grossAnn <= 29500)  pab = 954 * (29500 - grossAnn) / 4500;
+  if      (grossAnn <= 25000)  pab = PENSIONIST_AB;
+  else if (grossAnn <= 29500)  pab = PENSIONIST_AB * (29500 - grossAnn) / 4500;
   else                          pab = 0;
-  const lst = Math.max(0, rawTax - 1121 - pab);
+  const lst = Math.max(0, rawTax - pab);
   return (grossAnn - kv - lst) / 14;
 }
 

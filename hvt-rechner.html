@@ -6,7 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>HVT-Rechner – Hypothekarvortilgung | Jason Schreiber</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Inter+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.1/dist/chart.umd.min.js" integrity="sha384-jb8JQMbMoBUzgWatfe6COACi2ljcDdZQ2OxczGA3bGNeWe+6DChMTBJemed7ZnvJ" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <link rel="stylesheet" href="shared.css">
 <style>
 .params-panel{border-radius:20px;position:sticky;top:20px;max-height:calc(100vh - 40px);}
@@ -309,7 +309,7 @@
 /* ══════════ ACCESS PROTECTION ══════════ */
 (function(){
   const isLocal=['localhost','127.0.0.1',''].includes(location.hostname);
-  const validRef=document.referrer.includes('jasonschreiber.at');
+  let validRef=false;try{const u=new URL(document.referrer);validRef=u.hostname==='jasonschreiber.at'||u.hostname.endsWith('.jasonschreiber.at');}catch{}
   const ACCESS_KEY='flv2025';
   const urlKey=new URLSearchParams(location.search).get('access');
   if(!isLocal&&!validRef&&urlKey!==ACCESS_KEY){
@@ -393,6 +393,10 @@ function flvWert(vorRate, mbHaupt, kreditStart, rendite_pa, jahrAktuell) {
       fv += e.b * Math.pow(1 + r, (jahrAktuell - e.j) * 12);
     }
   }
+  // Rückkaufabschlag bei vorzeitiger Vortilgung (Use-Case des HVT).
+  // Donau/WS-Annahme: 1 % Abschlag in den ersten 5 Jahren der FLV-Laufzeit.
+  const flvLaufzeitJahre = jahrAktuell - kreditStart;
+  if (flvLaufzeitJahre > 0 && flvLaufzeitJahre <= 5) fv *= 0.99;
   return fv;
 }
 

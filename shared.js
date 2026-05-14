@@ -204,7 +204,10 @@ function calcFLV(mb, lj, rpa, ein, flv, dep, dynamik, flvTer, flvRefTer, tables)
   function rwr(m, n) { return Math.abs(ref) < 1e-8 ? m * n : m * ((Math.pow(qr, n) - 1) / (qr - 1)); }
   const b1 = tables?.mb100 || { 0: 0, 1: 618.06, 2: 1270.27, 3: 1961.42, 4: 2693.89, 5: 3470.10, 10: 11062.82, 15: 21209.92, 20: 34766.96, 25: 52875.92, 30: 77060, 35: 109352.45, 40: 152464.60 };
   const b5 = tables?.mb500 || { 0: 0, 1: 3204.64, 2: 6597.50, 3: 10192.99, 4: 14003.30, 5: 18041.10, 10: 56149.33, 15: 108933.69, 20: 178401.14, 25: 271203.42, 30: 395157.38, 35: 560699.45 };
-  const qf = Math.pow(1 + rpaAdj, 1 / 12), qd = Math.pow(1 + rpa - dep.ter - (dep.dg || 0), 1 / 12);
+  // Floors verhindern NaN bei extremen Kosteneingaben (>100% TER/dg)
+  const qfBase = Math.max(0.0001, 1 + rpaAdj);
+  const qdBase = Math.max(0.0001, 1 + rpa - dep.ter - (dep.dg || 0));
+  const qf = Math.pow(qfBase, 1 / 12), qd = Math.pow(qdBase, 1 / 12);
   function rwf(m, n) { return Math.abs(rpaAdj) < 1e-8 ? m * n : m * ((Math.pow(qf, n) - 1) / (qf - 1)); }
   const res = []; let kum = 0, fm = 0, kt = 0, bt = 0, ka = 0, ba = 0;
   const sp = dep.spread || 0;

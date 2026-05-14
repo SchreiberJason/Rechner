@@ -5,7 +5,7 @@
 <script>(function(){var p=new URLSearchParams(window.location.search),t=p.get('theme');if(t==='light')document.documentElement.classList.add('light');else if(t==='dark')document.documentElement.classList.add('dark');})()</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Pensionslücke schließen | Jason Schreiber</title>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.1/dist/chart.umd.min.js" integrity="sha384-jb8JQMbMoBUzgWatfe6COACi2ljcDdZQ2OxczGA3bGNeWe+6DChMTBJemed7ZnvJ" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Inter+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="shared.css">
 <style>
@@ -233,7 +233,7 @@ tbody td:first-child{text-align:center;color:var(--tm);font-weight:600;}
 /* ══════════ ACCESS PROTECTION ══════════ */
 (function(){
   const isLocal=['localhost','127.0.0.1',''].includes(location.hostname);
-  const validRef=document.referrer.includes('jasonschreiber.at');
+  let validRef=false;try{const u=new URL(document.referrer);validRef=u.hostname==='jasonschreiber.at'||u.hostname.endsWith('.jasonschreiber.at');}catch{}
   const ACCESS_KEY='flv2025';
   const urlKey=new URLSearchParams(location.search).get('access');
   if(!isLocal&&!validRef&&urlKey!==ACCESS_KEY){

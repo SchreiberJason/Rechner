@@ -775,7 +775,8 @@ input[type="range"]::-moz-range-thumb{
 ══════════════════════════════════ */
 (function(){
   const isLocal  = ['localhost','127.0.0.1',''].includes(location.hostname);
-  const validRef = document.referrer.includes('jasonschreiber.at');
+  let validRef = false;
+try { const u = new URL(document.referrer); validRef = u.hostname === 'jasonschreiber.at' || u.hostname.endsWith('.jasonschreiber.at'); } catch {}
   const ACCESS_KEY = 'flv2025';
   const urlKey   = new URLSearchParams(location.search).get('access');
   if(!isLocal && !validRef && urlKey !== ACCESS_KEY){

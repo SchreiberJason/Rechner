@@ -6,7 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>BAV-Rechner §3(1)15 | Jason Schreiber</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Inter+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.1/dist/chart.umd.min.js" integrity="sha384-jb8JQMbMoBUzgWatfe6COACi2ljcDdZQ2OxczGA3bGNeWe+6DChMTBJemed7ZnvJ" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <link rel="stylesheet" href="shared.css">
 <style>
 body{padding:0 5px;}
@@ -351,7 +351,8 @@ tbody td:first-child{text-align:center;color:var(--tm);font-weight:600;}
 /* ══════════ ACCESS PROTECTION ══════════ */
 (function(){
   const isLocal = ['localhost','127.0.0.1',''].includes(location.hostname);
-  const validRef = document.referrer.includes('jasonschreiber.at');
+  let validRef = false;
+try { const u = new URL(document.referrer); validRef = u.hostname === 'jasonschreiber.at' || u.hostname.endsWith('.jasonschreiber.at'); } catch {}
   const ACCESS_KEY = 'bav2026';
   const urlKey = new URLSearchParams(location.search).get('access');
   if(!isLocal && !validRef && urlKey !== ACCESS_KEY){
@@ -732,7 +733,10 @@ function calculate() {
     lz = pension - alter;
   }
   const tax = calcTax(gross), privNet = tax.privNet;
-  const rBAV = (perf - zmind) / 12, rP = perf / 12;
+  // Geometrische Monatsverzinsung statt arithmetischer Pa/12-Approximation
+  // — konsistent mit shared.js calcFLV.
+  const rBAV = Math.pow(Math.max(0.0001, 1 + perf - zmind), 1/12) - 1;
+  const rP   = Math.pow(Math.max(0.0001, 1 + perf), 1/12) - 1;
 
   // Convert hint
   const hintEl = document.getElementById('eink_convert_hint');

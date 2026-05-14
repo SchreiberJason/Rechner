@@ -333,23 +333,45 @@ function nettoFromBrutto(brutto) {
   const kinderO18 = parseInt(document.getElementById('bn_kinder_ab18')?.value) || 0;
   absetz += kinderU18 * FBONUS_U18 + kinderO18 * FBONUS_O18;
 
-  const lst12 = Math.max(0, rawTax12 - absetz);
+  // Lohnsteuer 12 Monate (gekappt bei 0). Negativsteuer wird unten separat
+  // berechnet — bis zu 55 % der SV-Beiträge erstattet, gedeckelt auf
+  // Höhe nicht-genutzter Familienbonus-Anteile + AN-Absetzbetrag (§33(8) EStG).
+  const lst12Raw = rawTax12 - absetz;
+  const lst12 = Math.max(0, lst12Raw);
   const grenz = getGrenzsteuersatz(taxable12);
 
+  // Negativsteuer / SV-Rückerstattung gem. §33(8) EStG:
+  // Wenn Familienbonus oder AN-Absetzbetrag rechnerisch ungenutzt sind,
+  // werden bis zu 55 % der SV-Beiträge zurückerstattet (Deckel: 463 € + 700 €/Kind).
+  let negSteuer = 0;
+  if (lst12Raw < 0) {
+    const ungenutzt = -lst12Raw;
+    const familienbonusGenutzt = kinderU18 * FBONUS_U18 + kinderO18 * FBONUS_O18;
+    const familienbonusDeckel = familienbonusGenutzt; // 100% Familienbonus erstattbar
+    const anDeckel = 463; // AN-Absetzbetrag/SV-Rückerstattung
+    const maxErstattung = Math.min(ungenutzt, 0.55 * sv.total * 12, familienbonusDeckel + anDeckel);
+    negSteuer = Math.max(0, maxErstattung);
+  }
+
   // Sonderzahlung (13./14.)
+  // WICHTIG: AV-Staffelung gilt nur für laufende Bezüge — auf Sonderzahlungen
+  // wird immer der volle AV-Satz angewendet. sv.total enthält bei niedrigem
+  // Einkommen die reduzierte AV-Rate → separates szSV mit voller AV berechnen.
   let szLst = 0, szNetto = 0;
   if (gehaelter === 14) {
     const szBrutto = brutto * 2;
-    const szSV = sv.total * 2;
+    const szSvBasis = Math.min(brutto, HBGG);
+    const avMissing = (AV - (sv.avRate ?? AV)) / 100; // Differenz volle AV vs. gestaffelt
+    const szSV = sv.total * 2 + szSvBasis * avMissing * 2;
     const steuerpflichtig = Math.max(0, (szBrutto - szSV) - SZ_FREIBETRAG);
     szLst = steuerpflichtig * SZ_SATZ;
     szNetto = szBrutto - szSV - szLst;
   }
 
-  const nettoMo = brutto - sv.total - lst12 / 12;
-  const jahrNetto = brutto * gehaelter - sv.total * gehaelter - lst12 - szLst;
+  const nettoMo = brutto - sv.total - lst12 / 12 + negSteuer / 12;
+  const jahrNetto = brutto * gehaelter - sv.total * gehaelter - lst12 - szLst + negSteuer;
 
-  return { brutto, sv, taxable12, rawTax12, absetz, lst12, lstMo: lst12/12, grenz, szLst, szNetto, nettoMo, jahrNetto };
+  return { brutto, sv, taxable12, rawTax12, absetz, lst12, lstMo: lst12/12, grenz, szLst, szNetto, nettoMo, jahrNetto, negSteuer };
 }
 
 // Brutto from Netto (iterative)

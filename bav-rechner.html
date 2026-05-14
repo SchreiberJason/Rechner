@@ -529,10 +529,18 @@ function zushLookup(table, szen, year) {
   for (const k of keys) { if (k <= year) lo = k; }
   for (let i = keys.length - 1; i >= 0; i--) { if (keys[i] >= year) hi = keys[i]; }
   if (year > hi) {
-    // Extrapolieren mit den letzten beiden Stützstellen
-    const a = keys[keys.length - 2], b = keys[keys.length - 1];
+    // Extrapolation: die letzten beiden Stützstellen liefern bei ZUSH einen negativen
+    // Slope (Jahr-42-Endwert-Knick durch Auszahlung). Verwende stattdessen die letzten
+    // VERLÄSSLICHEN Wachstums-Stützstellen (Jahre n-2 zu n-1), sonst clampen auf hi.
+    const lastIdx = keys.length - 1;
+    let aIdx = lastIdx - 1, bIdx = lastIdx;
+    // Wenn der allerletzte Schritt fällt: einen Schritt zurück
+    if (lastIdx >= 2 && t[keys[bIdx]] < t[keys[aIdx]]) { aIdx = lastIdx - 2; bIdx = lastIdx - 1; }
+    const a = keys[aIdx], b = keys[bIdx];
     const slope = (t[b] - t[a]) / (b - a);
-    return (t[b] + slope * (year - b)) * scale;
+    const extrapolated = t[keys[lastIdx]] + slope * (year - keys[lastIdx]);
+    // Konservativer Floor: nie unter den letzten Tabellenwert fallen
+    return Math.max(extrapolated, t[keys[lastIdx]]) * scale;
   }
   if (lo === hi) return t[lo] * scale;
   const frac = (year - lo) / (hi - lo);
@@ -745,7 +753,10 @@ function calculate() {
       bavGuthaben = zushLookup('veranlagungswert', szen, y) ?? 0;
       bavRk = zushLookup('rueckkaufswert', szen, y) ?? 0;
     } else {
-      for (let m = 0; m < 12; m++) { bG = bG * (1 + rBAV) + BAV; }
+      // Manueller Tarif: 4 % Versicherungssteuer wird vom Beitrag abgezogen,
+      // bevor der Sparanteil verzinst wird (analog ZUSH/FLV-Tarife).
+      const bavNet = BAV / 1.04;
+      for (let m = 0; m < 12; m++) { bG = bG * (1 + rBAV) + bavNet; }
       bavGuthaben = bG;
       bavRk = y < BAV_RK_JAHRE ? bG * (1 - BAV_RK_ABSCHLAG / 100) : bG;
     }

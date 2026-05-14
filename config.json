@@ -100,23 +100,23 @@
     "_hinweis": "Gewinnfreibetrag §10 EStG + ESt-Tarif §33 EStG für Selbständige — bei Gesetzesänderung hier anpassen",
     "est_stufen_selbstaendig": [
       {
-        "bis": 13308,
+        "bis": 13539,
         "satz": 0.0
       },
       {
-        "bis": 21617,
+        "bis": 21992,
         "satz": 0.2
       },
       {
-        "bis": 35836,
+        "bis": 36458,
         "satz": 0.3
       },
       {
-        "bis": 69166,
+        "bis": 70365,
         "satz": 0.4
       },
       {
-        "bis": 103072,
+        "bis": 104859,
         "satz": 0.48
       },
       {
@@ -128,7 +128,7 @@
         "satz": 0.55
       }
     ],
-    "_hinweis_est": "ESt-Tarif 2025 für Selbständige (§33 EStG). bis=null bedeutet unbegrenzt (>1 Mio).",
+    "_hinweis_est": "ESt-Tarif 2026 für Selbständige (§33 EStG). Identisch zu lohnsteuer_tarifstufen. bis=null bedeutet unbegrenzt (>1 Mio).",
     "gfb_stufen": [
       {
         "name": "Grundfreibetrag",
@@ -166,7 +166,8 @@
     "_hinweis_gfb": "GFB-Staffelung §10 EStG. Max GFB = 4.950 + 18.850 + 12.250 + 10.350 = 46.400 €.",
     "svs_pensionsversicherung_pct": 18.5,
     "svs_krankenversicherung_pct": 6.8,
-    "svs_hbgl_jahr_eur": 97020,
+    "_svs_hbgl_hinweis": "GSVG-HBGG Monatswert × 12 (KEIN 14er-Faktor wie ASVG). 2026: 7.700 €/Mo × 12 = 92.400 €/J — bei SVS-Update verifizieren.",
+    "svs_hbgl_jahr_eur": 92400,
     "svs_mbgl_jahr_eur": 6613
   },
   "bav": {

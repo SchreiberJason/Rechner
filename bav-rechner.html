@@ -213,7 +213,8 @@ tbody td:first-child{text-align:center;color:var(--tm);font-weight:600;}
     <div class="cb">
       <div class="f">
         <label>Pensionsantritt</label>
-        <div class="fu"><input type="number" id="pension" value="65" min="55" max="70" step="1"><span class="ub">Jahre</span></div>
+        <div class="fu"><input type="number" id="pension" value="65" min="55" max="65" step="1"><span class="ub">Jahre</span></div>
+        <div class="hint-sub">Max. 65 &mdash; BAV ist auf Regelpensionsalter ausgelegt.</div>
       </div>
     </div>
     <div class="ct" onclick="toggleSection(this)">
@@ -222,18 +223,35 @@ tbody td:first-child{text-align:center;color:var(--tm);font-weight:600;}
     </div>
     <div class="cb">
       <div class="f">
+        <label>Tarif (BAV-Anbieter)</label>
+        <select id="bav_tarif" onchange="setBavTarif()">
+          <option value="zush" selected>&Ouml;BV ZUSH-M (Modellrechnung)</option>
+          <option value="manuell">Manuell (Formel)</option>
+        </select>
+        <div class="hint-sub" id="bav_tarif_hint">Original-Modellrechnung der &Ouml;BV (&sect;3 LV-InfoV 2018).</div>
+      </div>
+      <div class="f" id="bav_szen_wrap">
+        <label>Szenario</label>
+        <select id="bav_szen" onchange="calculate()">
+          <option value="3pct" selected>3 % Fonds + 3,5 % Deckungstock (Annahme)</option>
+          <option value="0pct">0 % Fonds + 2,5 % Deckungstock (Neutral)</option>
+          <option value="minus3pct">&minus;3 % Fonds + 1,5 % Deckungstock (Stress)</option>
+          <option value="6pct">6 % Fonds + 3,5 % Deckungstock (Optimistisch)</option>
+        </select>
+      </div>
+      <div class="f" id="bav_perf_wrap" style="display:none">
+        <label>Fondsperformance p.a.</label>
+        <div class="fu"><input type="number" id="perf" value="6" min="-5" max="15" step="0.5"><span class="ub">%</span></div>
+      </div>
+      <div class="f" id="bav_zmind_wrap" style="display:none">
+        <label>Versicherungskosten (Zinsminderung)</label>
+        <div class="fu"><input type="number" id="zmind" value="1.3" min="0" max="5" step="0.1"><span class="ub">% p.a.</span></div>
+      </div>
+      <div class="f">
         <label>Depotanbieter (Privatvergleich)</label>
         <select id="bav_anbieter" onchange="setBAVAnbieter()">
           <option value="manuell">Manuell</option>
         </select>
-      </div>
-      <div class="f">
-        <label>Fondsperformance p.a.</label>
-        <div class="fu"><input type="number" id="perf" value="6" min="-5" max="15" step="0.5"><span class="ub">%</span></div>
-      </div>
-      <div class="f">
-        <label>Versicherungskosten (Zinsminderung)</label>
-        <div class="fu"><input type="number" id="zmind" value="1.3" min="0" max="5" step="0.1"><span class="ub">% p.a.</span></div>
       </div>
       <div class="f">
         <label>KESt privat</label>
@@ -319,7 +337,7 @@ tbody td:first-child{text-align:center;color:var(--tm);font-weight:600;}
       </div>
       <div class="tw collapsed" id="tbl-wrap">
         <table>
-          <thead><tr><th>Alter</th><th>Eingezahlt</th><th>BAV-Guthaben</th><th>Privat</th><th>Vorteil</th></tr></thead>
+          <thead><tr><th>Alter</th><th>Eingezahlt</th><th>BAV-Guthaben</th><th>R&uuml;ckkauf</th><th>Privat</th><th>Vorteil</th></tr></thead>
           <tbody id="tbl"></tbody>
         </table>
       </div>
@@ -356,6 +374,7 @@ let BAV_ZMIND = 1.3, BAV_PERF = 6.0, BAV_KEST = 27.5, BAV_PENSION = 65;
 let BAV_KOSTEN = { spar: 76.25, versstg: 3.84, risiko: 1.83, kosten: 18.08 };
 let BAV_RK_ABSCHLAG = 2.0, BAV_RK_JAHRE = 10;
 let DEPOTANBIETER = { manuell: { name: 'Manuell', etf: null, fonds: null } };
+let BAV_ZUSH = null; // {_basis_beitrag_monatlich_eur, _szenarien, veranlagungswert, rueckkaufswert}
 
 function applyBavConfig() {
   if (!CONFIG) return;
@@ -393,6 +412,7 @@ function applyBavConfig() {
       kosten: bav.kostenstruktur.kosten_pct || 18.08
     };
   }
+  if (bav.zush_tabellen) BAV_ZUSH = bav.zush_tabellen;
 
   // Depot-Anbieter aus Config laden
   if (CFG.depot_anbieter) {
@@ -476,6 +496,47 @@ function getEffectiveGross() {
 function getEffectiveNet() {
   const val = parseFloat(document.getElementById('einkommen').value) || 1800;
   return incomeType === 'netto' ? val : netFromGross(val);
+}
+
+/* ══════════ BAV-TARIF (ZUSH vs Manuell) ══════════ */
+function setBavTarif() {
+  const tarif = document.getElementById('bav_tarif').value;
+  const zushAvail = !!BAV_ZUSH;
+  const showZush = tarif === 'zush' && zushAvail;
+  document.getElementById('bav_szen_wrap').style.display = showZush ? '' : 'none';
+  document.getElementById('bav_perf_wrap').style.display = showZush ? 'none' : '';
+  document.getElementById('bav_zmind_wrap').style.display = showZush ? 'none' : '';
+  document.getElementById('bav_tarif_hint').textContent = showZush
+    ? 'ÖBV-Originaltabelle gem. §3 LV-InfoV 2018 (Quelle: ' + (BAV_ZUSH._quelle || 'OEBV ZUSH') + ').'
+    : 'Klassische Formel: Sparbeitrag wird mit (Performance − Zinsminderung) verzinst.';
+  if (!zushAvail) document.getElementById('bav_tarif').value = 'manuell';
+  calculate();
+}
+
+/* Lookup-Helfer: Wert pro Jahr per Szenario, skaliert auf user-Monatsbeitrag */
+function zushLookup(table, szen, year) {
+  if (!BAV_ZUSH) return null;
+  const t = (BAV_ZUSH[table] || {})[szen];
+  if (!t) return null;
+  const beitragBasis = BAV_ZUSH._basis_beitrag_monatlich_eur || 25;
+  const scale = BAV / beitragBasis;
+  // Direkte Lookup nach Jahr; bei Lücken linear interpolieren; über Tabellenrand: letzten Step linear weiterführen
+  const keys = Object.keys(t).map(Number).sort((a,b)=>a-b);
+  if (year <= 0) return 0;
+  if (t[year] !== undefined) return t[year] * scale;
+  // Find bounding years
+  let lo = keys[0], hi = keys[keys.length - 1];
+  for (const k of keys) { if (k <= year) lo = k; }
+  for (let i = keys.length - 1; i >= 0; i--) { if (keys[i] >= year) hi = keys[i]; }
+  if (year > hi) {
+    // Extrapolieren mit den letzten beiden Stützstellen
+    const a = keys[keys.length - 2], b = keys[keys.length - 1];
+    const slope = (t[b] - t[a]) / (b - a);
+    return (t[b] + slope * (year - b)) * scale;
+  }
+  if (lo === hi) return t[lo] * scale;
+  const frac = (year - lo) / (hi - lo);
+  return (t[lo] + frac * (t[hi] - t[lo])) * scale;
 }
 
 /* ══════════ DEPOT ANBIETER ══════════ */
@@ -643,8 +704,14 @@ function calculate() {
   const gebdat = document.getElementById('gebdat').value;
   const startdat = document.getElementById('startdat').value;
   const gross = getEffectiveGross();
-  const pension = Math.min(70, Math.max(56, vv('pension')));
-  const perf = vv('perf') / 100, zmind = vv('zmind') / 100, kest = vv('kest') / 100;
+  const pension = Math.min(65, Math.max(56, vv('pension')));
+  const tarif = document.getElementById('bav_tarif')?.value || 'zush';
+  const szen = document.getElementById('bav_szen')?.value || '3pct';
+  const useZush = tarif === 'zush' && BAV_ZUSH;
+  const szenFonds = useZush ? (BAV_ZUSH._szenarien?.[szen]?.fonds_pa_pct ?? 3) : vv('perf');
+  const perf = useZush ? szenFonds / 100 : (vv('perf') / 100);
+  const zmind = useZush ? 0 : (vv('zmind') / 100);
+  const kest = vv('kest') / 100;
   const alter = getAge(gebdat);
   if (alter < 15 || alter >= pension) return;
   let lz;
@@ -670,10 +737,21 @@ function calculate() {
   let bG = 0, pG = 0;
   const yrs = [];
   for (let y = 1; y <= lz; y++) {
-    for (let m = 0; m < 12; m++) { bG = bG * (1 + rBAV) + BAV; pG = pG * (1 + rP) + privNet; }
+    // Privat-Depot: kontinuierliche Verzinsung mit perf
+    for (let m = 0; m < 12; m++) { pG = pG * (1 + rP) + privNet; }
+    // BAV-Guthaben + Rückkaufswert
+    let bavGuthaben, bavRk;
+    if (useZush) {
+      bavGuthaben = zushLookup('veranlagungswert', szen, y) ?? 0;
+      bavRk = zushLookup('rueckkaufswert', szen, y) ?? 0;
+    } else {
+      for (let m = 0; m < 12; m++) { bG = bG * (1 + rBAV) + BAV; }
+      bavGuthaben = bG;
+      bavRk = y < BAV_RK_JAHRE ? bG * (1 - BAV_RK_ABSCHLAG / 100) : bG;
+    }
     const ein = BAV * 12 * y, nEin = privNet * 12 * y;
     const pGew = pG - nEin, pKest = nEin + pGew * (1 - kest);
-    yrs.push({ y, age: alter + y, ein, bG, rk: y < BAV_RK_JAHRE ? bG * (1 - BAV_RK_ABSCHLAG / 100) : bG, pKest, vt: bG - pKest, nEin });
+    yrs.push({ y, age: alter + y, ein, bG: bavGuthaben, rk: bavRk, pKest, vt: bavGuthaben - pKest, nEin });
   }
   const L = yrs[yrs.length - 1];
   const vtPct = L.pKest > 0 ? ((L.bG / L.pKest - 1) * 100) : 0;
@@ -749,7 +827,7 @@ function calculate() {
 
   // Table
   document.getElementById('tbl').innerHTML = yrs.map(r =>
-    `<tr><td>${r.age}</td><td>${fE(r.ein)}</td><td class="hl">${fE(r.bG)}</td><td>${fE(r.pKest)}</td><td class="${r.vt >= 0 ? 'hl' : ''}">${r.vt >= 0 ? '+' : ''}${fE(r.vt)}</td></tr>`
+    `<tr><td>${r.age}</td><td>${fE(r.ein)}</td><td class="hl">${fE(r.bG)}</td><td>${fE(r.rk)}</td><td>${fE(r.pKest)}</td><td class="${r.vt >= 0 ? 'hl' : ''}">${r.vt >= 0 ? '+' : ''}${fE(r.vt)}</td></tr>`
   ).join('');
 
   // Axion Bridge
@@ -812,7 +890,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Build depot anbieter select
   buildAnbieterSelect();
   buildLegend();
-  calculate();
+  // Tarif-UI initial wiring (toggles Szenario- vs Performance-Feld)
+  setBavTarif();
   // Initial iframe height
   setTimeout(sendHeight, 200);
 });

@@ -99,8 +99,27 @@ document.addEventListener('blur', e => {
   }
 }, true);
 
+/* ══════════ ORIGIN-WHITELIST FÜR postMessage ══════════
+   Axion läuft auf tauri:// (Tauri Desktop) → origin === 'null' oder 'tauri://localhost'.
+   jasonschreiber.at-Domains, sowie schreiberjason.github.io (Self-Embed) sind erlaubt.
+   ohne Validierung könnte jede Origin per window.open() innerHTML-Payloads via
+   axion-prefill (zielname, einmalzahlungen) injizieren. */
+function __isTrustedAxionOrigin(origin) {
+  if (!origin || origin === 'null') return true; // file:// und Tauri liefern 'null'
+  try {
+    const u = new URL(origin);
+    if (u.hostname === 'localhost' || u.hostname === '127.0.0.1') return true;
+    if (u.hostname === 'tauri.localhost' || u.hostname === 'localhost.tauri') return true;
+    if (u.hostname === 'jasonschreiber.at' || u.hostname.endsWith('.jasonschreiber.at')) return true;
+    if (u.hostname === 'schreiberjason.github.io') return true;
+    if (u.protocol === 'tauri:') return true;
+  } catch {}
+  return false;
+}
+
 /* ══════════ AXION THEME BRIDGE ══════════ */
 window.addEventListener('message', function (e) {
+  if (!__isTrustedAxionOrigin(e.origin)) return;
   if (e.data && e.data.type === 'axion-theme') {
     var t = e.data.theme;
     document.documentElement.classList.toggle('light', t === 'light');
@@ -246,8 +265,11 @@ function bisectionFlv(zielKapital, laufzeit, rpa, tables, einmalArr) {
 
 /* ══════════ AXION PREFILL — empfaengt Kundendaten ══════════ */
 window.addEventListener('message', function (e) {
+  if (!__isTrustedAxionOrigin(e.origin)) return;
   if (e.data?.type === 'axion-prefill') {
     var d = e.data;
+    // zielname auf reinen Text begrenzen (kein <, >, " — verhindert HTML-Attribut-Break)
+    if (typeof d.zielname === 'string') d.zielname = d.zielname.replace(/[<>"'`]/g, '').slice(0, 80);
     if (d.geburtsdatum) {
       // Pensionsluecke
       var el = document.getElementById('p_geburt') || document.getElementById('gebdat');
@@ -303,14 +325,17 @@ window.addEventListener('message', function (e) {
     }
     if (d.einmalzahlungen !== undefined) {
       if (typeof lsEinmal !== 'undefined') {
-        lsEinmal = Array.isArray(d.einmalzahlungen) ? d.einmalzahlungen : [];
+        // Strikte numerische Coercion — verhindert HTML-Attribut-Break via {j:'"><script>...'}
+        lsEinmal = Array.isArray(d.einmalzahlungen)
+          ? d.einmalzahlungen.map(x => ({ j: Number(x?.j) || 0, b: Number(x?.b) || 0 }))
+          : [];
         if (typeof renderLsEinmal === 'function') renderLsEinmal();
       }
     }
     // Legacy single value support
-    if (d.einmalinvestment !== undefined && d.einmalinvestment > 0) {
+    if (d.einmalinvestment !== undefined && Number(d.einmalinvestment) > 0) {
       if (typeof lsEinmal !== 'undefined') {
-        lsEinmal = [{ j: 0, b: d.einmalinvestment }];
+        lsEinmal = [{ j: 0, b: Number(d.einmalinvestment) || 0 }];
         if (typeof renderLsEinmal === 'function') renderLsEinmal();
       }
     }

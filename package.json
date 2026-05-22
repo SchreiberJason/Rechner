@@ -1,0 +1,9 @@
+{
+  "name": "rechner",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Finanzrechner-Sammlung (jasonschreiber.at) — Pension, BU, FLV, bAV, Brutto/Netto.",
+  "scripts": {
+    "test": "node --test tests/*.test.mjs"
+  }
+}

@@ -1100,8 +1100,10 @@ function getPKVorhandene(grossCurrent, anzahlG) {
 function calcPKData(grossCurrent, anzahlG, ytp, karriereR) {
   const hbgg = getBeschaeft() === 'gsvg' ? HBGG_GSVG : HBGG_ASVG;
   const pkPast = getPKVorhandene(grossCurrent, anzahlG);
-  // Aufwertungsfaktor §108 ASVG gilt immer — Inflation-Toggle wirkt nur auf die Kaufkraft-Anzeige
-  const aufwertung = AUFWERTUNG;
+  // Aufwertung nur anwenden wenn Inflation aktiv ist — sonst entsteht eine
+  // Asymmetrie zwischen nominal aufgewerteter Pension und Wunsch in heutiger
+  // Kaufkraft (Wunsch wird nicht inflationiert), die Deckung künstlich erhöht.
+  const aufwertung = inflAn ? AUFWERTUNG : 1;
   const contribPerYear = [];
   let pkFuture = 0;
   for (let i = 0; i < ytp; i++) {
@@ -1251,7 +1253,10 @@ function berechne() {
   const inflRate = inflAn ? (parseFloat(document.getElementById('p_inflation').value) || 2.1) / 100 : 0;
   const kkFaktor = ytp > 0 && inflAn ? Math.pow(1 + inflRate, ytp) : 1;
   const kkPension = pension / kkFaktor;
-  const kkWunsch  = eink * wunschPct / 100; // aktuelles Einkommen als Massstab (heutige Kaufkraft)
+  // kkWunsch nimmt finalEink (Netto inkl. Karriereleiter) als Massstab — Karriere
+  // wird als REALE Lohnsteigerung interpretiert (heutige Kaufkraft). finalEink ist
+  // immer Netto, das eliminiert auch die Brutto/Netto-Asymmetrie des rohen `eink`.
+  const kkWunsch  = finalEink * wunschPct / 100;
   const kkLuecke  = Math.max(kkWunsch - kkPension, 0);
   const kkPct     = kkWunsch > 0 ? Math.min(kkPension / kkWunsch, 1) * 100 : 0;
 
@@ -1278,12 +1283,12 @@ function berechne() {
   document.getElementById('wn_luecke').textContent = showLuecke > 0 ? '\u2212' + fmt(showLuecke) + ' \u20AC' : '0 \u20AC';
   document.getElementById('wn_luecke').className   = 'wside-val ' + (showLuecke > 0 ? 'red' : 'ac');
   document.getElementById('wn_luecke_sub').textContent = showLuecke > 0
-    ? showLueckePct + ' % des ' + (inflAn ? 'aktuellen' : 'Wunsch') + 'einkommens fehlt'
-    : 'Pension deckt das ' + (inflAn ? 'aktuelle Einkommen' : 'Wunscheinkommen');
+    ? showLueckePct + ' % des Wunscheinkommens fehlt'
+    : 'Pension deckt das Wunscheinkommen';
 
   document.getElementById('wn_wunsch').textContent = fmt(showWunsch) + ' \u20AC';
   document.getElementById('wn_wunsch_sub').textContent = inflAn
-    ? 'aktuelles Einkommen (heutige \u20AC)'
+    ? Math.round(wunschPct) + ' % des Endeinkommens (heutige \u20AC)'
     : Math.round(wunschPct) + ' % des Einkommens bei Pensionsantritt';
 
   // ── Info strip ──

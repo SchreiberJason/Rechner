@@ -635,10 +635,10 @@ const crossAnnotationPlugin = {
     ctx.save();
     ctx.beginPath(); ctx.moveTo(x, top); ctx.lineTo(x, bottom);
     ctx.lineWidth = 2;
-    ctx.strokeStyle = isDark() ? 'rgba(56,217,163,.55)' : 'rgba(3,159,107,.55)';
+    ctx.strokeStyle = isDark() ? 'rgba(56,217,163,.55)' : 'rgba(0,118,74,.55)';
     ctx.setLineDash([6, 3]); ctx.stroke();
     ctx.setLineDash([]);
-    ctx.fillStyle = isDark() ? 'rgba(56,217,163,.95)' : 'rgba(3,159,107,.95)';
+    ctx.fillStyle = isDark() ? 'rgba(56,217,163,.95)' : 'rgba(0,118,74,.95)';
     ctx.font = '700 10px Inter, sans-serif';
     ctx.textAlign = 'center';
     ctx.fillText('Vortilgung', x, top + 12);
@@ -729,5 +729,6 @@ window.addEventListener('message', e => {
   if (e.data?.type === 'axion-save-request') berechne();
 });
 </script>
+<footer class="calc-disclaimer"><b>Unverbindliche Modellrechnung.</b> Alle Ergebnisse sind Schätzwerte ohne Gewähr und ersetzen keine individuelle Beratung. Jason Schreiber · Gewerblicher Vermögensberater · GISA 38611308</footer>
 </body>
 </html>

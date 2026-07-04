@@ -30,8 +30,8 @@
 .rate-val{font-size:clamp(30px,5.5vw,48px);font-weight:800;letter-spacing:-.04em;color:var(--ac);line-height:1;margin-bottom:4px;}
 .rate-sub{font-size:11px;color:var(--ts);line-height:1.5;}
 .rate-card{background:radial-gradient(ellipse 70% 90% at 90% 50%,rgba(56,217,163,.07) 0%,transparent 70%),var(--ss);}
-@media(prefers-color-scheme:light){:root:not(.dark) .rate-card{background:radial-gradient(ellipse 70% 90% at 90% 50%,rgba(3,159,107,.07) 0%,transparent 70%),var(--ss);}}
-:root.light .rate-card{background:radial-gradient(ellipse 70% 90% at 90% 50%,rgba(3,159,107,.07) 0%,transparent 70%),var(--ss);}
+@media(prefers-color-scheme:light){:root:not(.dark) .rate-card{background:radial-gradient(ellipse 70% 90% at 90% 50%,rgba(0,118,74,.07) 0%,transparent 70%),var(--ss);}}
+:root.light .rate-card{background:radial-gradient(ellipse 70% 90% at 90% 50%,rgba(0,118,74,.07) 0%,transparent 70%),var(--ss);}
 
 /* KIM Badge */
 .kim-badge{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:6px 14px;border-radius:100px;white-space:nowrap;}
@@ -697,5 +697,6 @@ window.addEventListener('message', e => {
   if (e.data?.type === 'axion-save-request') { berechne(); }
 });
 </script>
+<footer class="calc-disclaimer"><b>Unverbindliche Modellrechnung.</b> Alle Ergebnisse sind Schätzwerte ohne Gewähr und ersetzen keine individuelle Beratung. Jason Schreiber · Gewerblicher Vermögensberater · GISA 38611308</footer>
 </body>
 </html>

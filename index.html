@@ -968,7 +968,7 @@ function tc(){
   const d=isDark();
   return{grid:d?'rgba(255,255,255,.12)':'rgba(0,0,0,.28)',ticks:d?'#666B78':'#777777',
     bg:d?'#16171B':'#F7F2EA',st:d?'#282930':'#FFFEFC',bdr:d?'#282930':'#DEDAD3',tt:d?'#F0EDE8':'#1A1A1A',ts:'#969696',
-    ac:d?'#38D9A3':'#039F6B',acFill:d?'rgba(56,217,163,.07)':'rgba(3,159,107,.07)'};
+    ac:d?'#38D9A3':'#00764A',acFill:d?'rgba(56,217,163,.07)':'rgba(0,118,74,.07)'};
 }
 const crosshairPlugin={
   id:'crosshair',
@@ -1595,5 +1595,6 @@ window.matchMedia('(prefers-color-scheme:dark)').addEventListener('change',()=>{
 });
 </script>
 <div id="chart-tip"></div>
+<footer class="calc-disclaimer"><b>Unverbindliche Modellrechnung.</b> Alle Ergebnisse sind Schätzwerte ohne Gewähr und ersetzen keine individuelle Beratung. Jason Schreiber · Gewerblicher Vermögensberater · GISA 38611308</footer>
 </body>
 </html>

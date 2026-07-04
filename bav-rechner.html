@@ -58,10 +58,10 @@ tbody td:first-child{text-align:center;color:var(--tm);font-weight:600;}
 }
 .ew-vorteil.neg{color:var(--r);background:rgba(248,113,113,.08);border-color:rgba(248,113,113,.18);}
 @media(prefers-color-scheme:light){
-  :root:not(.dark) .ew-vorteil{background:rgba(3,159,107,.08);border-color:rgba(3,159,107,.18);color:#039F6B;}
+  :root:not(.dark) .ew-vorteil{background:rgba(0,118,74,.08);border-color:rgba(0,118,74,.18);color:#00764A;}
   :root:not(.dark) .ew-vorteil.neg{background:rgba(239,68,68,.08);border-color:rgba(239,68,68,.18);color:#ef4444;}
 }
-:root.light .ew-vorteil{background:rgba(3,159,107,.08);border-color:rgba(3,159,107,.18);color:#039F6B;}
+:root.light .ew-vorteil{background:rgba(0,118,74,.08);border-color:rgba(0,118,74,.18);color:#00764A;}
 :root.light .ew-vorteil.neg{background:rgba(239,68,68,.08);border-color:rgba(239,68,68,.18);color:#ef4444;}
 .ew-sub{font-size:11px;color:var(--ts);margin-top:10px;}
 .ew-details-toggle{
@@ -592,7 +592,8 @@ function getAge(d) {
 }
 function getMargRate(mg) {
   const sv = Math.min(mg, SV_HBGL) * SV_RATE;
-  const taxable = Math.max(0, mg * 12 - sv * 12);
+  // Grenzsteuersatz auf Basis des Jahresbruttos mit 14 Gehältern (inkl. 13./14.).
+  const taxable = Math.max(0, mg * 14 - sv * 14);
   for (const b of TAX_BRACKETS) if (taxable <= b.limit) return b.rate;
   return 0.5;
 }
@@ -615,8 +616,8 @@ function tc() {
     ticks: d ? '#666B78' : '#777777',
     bg: d ? '#16171B' : '#F7F2EA', st: d ? '#282930' : '#FFFEFC',
     bdr: d ? '#282930' : '#DEDAD3', tt: d ? '#F0EDE8' : '#1A1A1A',
-    ts: '#969696', ac: d ? '#38D9A3' : '#039F6B',
-    acFill: d ? 'rgba(56,217,163,.07)' : 'rgba(3,159,107,.07)'
+    ts: '#969696', ac: d ? '#38D9A3' : '#00764A',
+    acFill: d ? 'rgba(56,217,163,.07)' : 'rgba(0,118,74,.07)'
   };
 }
 
@@ -696,7 +697,8 @@ function updateInfoExample() {
   const gross = getEffectiveGross();
   const tax = calcTax(gross);
   const svM = Math.min(gross, SV_HBGL) * SV_RATE;
-  const taxableAnn = Math.max(0, (gross - svM) * 12);
+  // Jahresbrutto mit 14 Gehältern — konsistent zur Grenzsteuersatz-Ermittlung.
+  const taxableAnn = Math.max(0, (gross - svM) * 14);
 
   document.getElementById('ie-brutto').textContent = fE(gross);
   document.getElementById('ie-sv-label').textContent = `SV-Abzug (${(SV_RATE * 100).toFixed(2).replace('.', ',')} %)`;
@@ -911,5 +913,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   setTimeout(sendHeight, 200);
 });
 </script>
+<footer class="calc-disclaimer"><b>Unverbindliche Modellrechnung.</b> Alle Ergebnisse sind Schätzwerte ohne Gewähr und ersetzen keine individuelle Beratung. Jason Schreiber · Gewerblicher Vermögensberater · GISA 38611308</footer>
 </body>
 </html>

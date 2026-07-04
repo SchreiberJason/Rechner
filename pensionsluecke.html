@@ -1517,13 +1517,10 @@ function updateTaxExample() {
   const net = (grossAnn - sv - lst) / 12;
   const effAbzug = gross > 0 ? (1 - net / gross) * 100 : 0;
 
-  // Determine marginal bracket
-  let marginalRate = 0;
-  if      (taxable >  93120) marginalRate = 50;
-  else if (taxable >  62080) marginalRate = 48;
-  else if (taxable >  32075) marginalRate = 40;
-  else if (taxable >  19134) marginalRate = 30;
-  else if (taxable >  11693) marginalRate = 20;
+  // Grenzsteuersatz aus den (config-gesteuerten) Tarifstufen ableiten —
+  // bleibt so automatisch synchron mit TAX_BRACKETS / config.json.
+  let marginalRate = 50;
+  for (const b of TAX_BRACKETS) { if (taxable <= b.bis) { marginalRate = b.satz * 100; break; } }
 
   document.getElementById('tex_gross').textContent   = fmt(gross) + ' €';
   document.getElementById('tex_sv').textContent      = '−' + fmt(sv / 12) + ' €/Mo.';
@@ -1712,12 +1709,12 @@ document.addEventListener('keydown', e => {
         <table class="tax-table" id="tax_bracket_table">
           <thead><tr><th>Jahresbezug (versteuert)</th><th>Monatlich</th><th>Grenzsteuersatz</th><th></th></tr></thead>
           <tbody>
-            <tr id="tb0"><td>bis 11.693 €</td><td style="color:var(--ts)">bis 974 €</td><td style="font-weight:700;color:var(--ac)">0 %</td><td><div class="tax-rate-bar" style="width:0px;background:var(--ac)"></div></td></tr>
-            <tr id="tb1"><td>11.694 – 19.134 €</td><td style="color:var(--ts)">974 – 1.595 €</td><td style="font-weight:700;color:#4ade80">20 %</td><td><div class="tax-rate-bar" style="width:24px;background:#4ade80"></div></td></tr>
-            <tr id="tb2"><td>19.135 – 32.075 €</td><td style="color:var(--ts)">1.595 – 2.673 €</td><td style="font-weight:700;color:#86efac">30 %</td><td><div class="tax-rate-bar" style="width:36px;background:#86efac"></div></td></tr>
-            <tr id="tb3"><td>32.076 – 62.080 €</td><td style="color:var(--ts)">2.673 – 5.173 €</td><td style="font-weight:700;color:var(--ora)">40 %</td><td><div class="tax-rate-bar" style="width:48px;background:var(--ora)"></div></td></tr>
-            <tr id="tb4"><td>62.081 – 93.120 €</td><td style="color:var(--ts)">5.173 – 7.760 €</td><td style="font-weight:700;color:#f97316">48 %</td><td><div class="tax-rate-bar" style="width:58px;background:#f97316"></div></td></tr>
-            <tr id="tb5"><td>über 93.120 €</td><td style="color:var(--ts)">über 7.760 €</td><td style="font-weight:700;color:var(--red)">50 %</td><td><div class="tax-rate-bar" style="width:60px;background:var(--red)"></div></td></tr>
+            <tr id="tb0"><td>bis 13.539 €</td><td style="color:var(--ts)">bis 1.128 €</td><td style="font-weight:700;color:var(--ac)">0 %</td><td><div class="tax-rate-bar" style="width:0px;background:var(--ac)"></div></td></tr>
+            <tr id="tb1"><td>13.540 – 21.992 €</td><td style="color:var(--ts)">1.128 – 1.833 €</td><td style="font-weight:700;color:#4ade80">20 %</td><td><div class="tax-rate-bar" style="width:24px;background:#4ade80"></div></td></tr>
+            <tr id="tb2"><td>21.993 – 36.458 €</td><td style="color:var(--ts)">1.833 – 3.038 €</td><td style="font-weight:700;color:#86efac">30 %</td><td><div class="tax-rate-bar" style="width:36px;background:#86efac"></div></td></tr>
+            <tr id="tb3"><td>36.459 – 70.365 €</td><td style="color:var(--ts)">3.038 – 5.864 €</td><td style="font-weight:700;color:var(--ora)">40 %</td><td><div class="tax-rate-bar" style="width:48px;background:var(--ora)"></div></td></tr>
+            <tr id="tb4"><td>70.366 – 104.859 €</td><td style="color:var(--ts)">5.864 – 8.738 €</td><td style="font-weight:700;color:#f97316">48 %</td><td><div class="tax-rate-bar" style="width:58px;background:#f97316"></div></td></tr>
+            <tr id="tb5"><td>über 104.859 €</td><td style="color:var(--ts)">über 8.738 €</td><td style="font-weight:700;color:var(--red)">50 %</td><td><div class="tax-rate-bar" style="width:60px;background:var(--red)"></div></td></tr>
           </tbody>
         </table>
         <div style="font-size:10px;color:var(--ts);margin-top:8px;line-height:1.6">
@@ -1750,5 +1747,6 @@ document.addEventListener('keydown', e => {
   </div>
 </div>
 
+<footer class="calc-disclaimer"><b>Unverbindliche Modellrechnung.</b> Alle Ergebnisse sind Schätzwerte ohne Gewähr und ersetzen keine individuelle Beratung. Jason Schreiber · Gewerblicher Vermögensberater · GISA 38611308</footer>
 </body>
 </html>

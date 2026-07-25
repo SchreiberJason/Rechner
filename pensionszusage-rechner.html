@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<script>(function(){var p=new URLSearchParams(window.location.search),t=p.get('theme');if(t==='light')document.documentElement.classList.add('light');else if(t==='dark')document.documentElement.classList.add('dark');})()</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Pensionszusage-Rechner | Jason Schreiber</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Inter+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.1/dist/chart.umd.min.js" integrity="sha384-jb8JQMbMoBUzgWatfe6COACi2ljcDdZQ2OxczGA3bGNeWe+6DChMTBJemed7ZnvJ" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<link rel="stylesheet" href="shared.css">
+<style>
+body{padding:0 5px;}
+.tw{max-height:340px;overflow-y:auto;}
+thead th:first-child{text-align:center;}
+tbody td:first-child{text-align:center;color:var(--tm);font-weight:600;}
+.ch.ch-toggle{cursor:pointer;display:flex;align-items:center;justify-content:space-between;-webkit-tap-highlight-color:transparent;user-select:none;}
+.ch.ch-toggle .ca{font-size:10px;color:var(--tm);transition:transform .2s;}
+.ch.ch-toggle.open .ca{transform:rotate(180deg);}
+.tw.collapsed{display:none;}
+/* Eigenes Scrollen der Eingabespalte.
+   shared.js:76 setzt maxHeight inline auf die Höhe der Ergebnisspalte — die ist hier
+   deutlich höher als der Viewport, wodurch das sticky Panel unten unerreichbar würde.
+   Deshalb muss die Begrenzung !important sein, um die Inline-Höhe zu schlagen. */
+@media(min-width:1024px){
+  .params-panel{
+    max-height:calc(100vh - 48px) !important;
+    position:sticky; top:24px;
+    overflow-y:auto; overscroll-behavior:contain;
+  }
+  .params-panel::-webkit-scrollbar{width:4px;}
+  .params-panel::-webkit-scrollbar-thumb{background:var(--brd);border-radius:3px;}
+}
+
+/* ══════════ HERO / VORTEIL ══════════ */
+.pz-hero{background:var(--ss);border-radius:32px;box-shadow:0 2px 10px var(--sh);padding:24px 28px;text-align:center;}
+.pz-big{font-weight:700;font-size:clamp(34px,6vw,50px);color:var(--ac);letter-spacing:-.03em;line-height:1;margin-bottom:4px;}
+.pz-big.neg{color:var(--r);}
+.pz-label{font-size:12px;color:var(--ts);margin-bottom:12px;}
+.pz-pill{display:inline-flex;align-items:center;gap:6px;background:rgba(74,222,128,.08);border:1px solid rgba(74,222,128,.18);border-radius:100px;padding:6px 16px;font-size:13px;font-weight:600;color:#4ade80;}
+.pz-pill.neg{color:var(--r);background:rgba(248,113,113,.08);border-color:rgba(248,113,113,.18);}
+@media(prefers-color-scheme:light){
+  :root:not(.dark) .pz-pill{background:rgba(0,118,74,.08);border-color:rgba(0,118,74,.18);color:#00764A;}
+  :root:not(.dark) .pz-pill.neg{background:rgba(239,68,68,.08);border-color:rgba(239,68,68,.18);color:#ef4444;}
+}
+:root.light .pz-pill{background:rgba(0,118,74,.08);border-color:rgba(0,118,74,.18);color:#00764A;}
+:root.light .pz-pill.neg{background:rgba(239,68,68,.08);border-color:rgba(239,68,68,.18);color:#ef4444;}
+.pz-sub{font-size:11px;color:var(--ts);margin-top:10px;line-height:1.6;}
+
+/* ══════════ HINWEIS-BANNER ══════════ */
+.pz-note{border-radius:14px;padding:12px 15px;font-size:11.5px;line-height:1.6;margin-bottom:12px;}
+.pz-note.warn{background:rgba(251,191,36,.09);border:1px solid rgba(251,191,36,.22);color:var(--y);}
+.pz-note.err{background:rgba(248,113,113,.09);border:1px solid rgba(248,113,113,.22);color:var(--r);}
+.pz-note.info{background:var(--adim);border:1px solid var(--brd);color:var(--ts);}
+.pz-note b{display:block;margin-bottom:3px;}
+.pz-note.hidden{display:none;}
+
+/* Gesperrte Auszahlungsform */
+.bn-btn.locked{opacity:.38;cursor:not-allowed;position:relative;}
+.bn-btn.locked::after{content:'\1F512';font-size:9px;margin-left:4px;}
+
+/* ══════════ AMPEL-CHECKLISTE ══════════ */
+.chk{display:flex;align-items:flex-start;gap:9px;padding:7px 0;font-size:12px;line-height:1.55;border-bottom:1px solid var(--brd);}
+.chk:last-child{border-bottom:none;}
+.chk-ic{flex-shrink:0;width:16px;height:16px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;margin-top:1px;}
+.chk-ic.ok{background:rgba(74,222,128,.16);color:#4ade80;}
+.chk-ic.no{background:rgba(248,113,113,.16);color:var(--r);}
+.chk-tx{flex:1;color:var(--ts);}
+.chk-tx b{color:var(--tp);font-weight:600;}
+
+/* ══════════ WASSERFALL ══════════ */
+.wf{display:flex;flex-direction:column;gap:9px;}
+.wf-row{display:flex;align-items:center;gap:10px;font-size:12px;}
+.wf-lb{flex:0 0 40%;color:var(--ts);line-height:1.4;}
+.wf-tr{flex:1;height:15px;background:var(--st);border-radius:100px;overflow:hidden;}
+.wf-fl{height:100%;border-radius:100px;transition:width .4s ease;}
+.wf-vl{flex:0 0 88px;text-align:right;font-weight:600;color:var(--tp);font-variant-numeric:tabular-nums;}
+.wf-row.total{border-top:1px solid var(--brd);padding-top:10px;margin-top:2px;}
+.wf-row.total .wf-lb,.wf-row.total .wf-vl{color:var(--ac);font-weight:700;}
+
+/* ══════════ VERGLEICHSSPALTEN ══════════ */
+.cmp{width:100%;border-collapse:collapse;font-size:12px;}
+.cmp th,.cmp td{padding:8px 9px;text-align:right;border-bottom:1px solid var(--brd);white-space:nowrap;}
+.cmp th:first-child,.cmp td:first-child{text-align:left;white-space:normal;color:var(--ts);}
+.cmp thead th{color:var(--tp);font-weight:600;font-size:11px;border-bottom:1px solid var(--brd);}
+.cmp thead th.hi{color:var(--ac);}
+.cmp tr.sum td{font-weight:700;color:var(--tp);border-top:1px solid var(--brd);border-bottom:none;padding-top:11px;}
+.cmp tr.sum td.hi{color:var(--ac);}
+.cmp td.dim{color:var(--tm);}
+
+/* ══════════ BERECHNUNGSBLATT ══════════ */
+.rb-actions{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;}
+.rb-btn{font-family:inherit;font-size:11px;font-weight:600;color:var(--ac);background:var(--adim);
+  border:1px solid var(--brd);border-radius:100px;padding:7px 15px;cursor:pointer;-webkit-tap-highlight-color:transparent;}
+.rb-btn:hover{background:var(--adim2);}
+.rb{font-size:12px;line-height:1.5;}
+.rb-sec{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--ac);
+  margin:20px 0 8px;padding-bottom:5px;border-bottom:1px solid var(--brd);}
+.rb-sec:first-child{margin-top:0;}
+.rb-row{display:grid;grid-template-columns:1fr auto auto;gap:10px;align-items:baseline;padding:3px 0;}
+.rb-lb{color:var(--ts);min-width:0;}
+.rb-fx{color:var(--tm);font-size:10.5px;font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap;}
+.rb-vl{color:var(--tp);font-weight:600;font-variant-numeric:tabular-nums;text-align:right;
+  white-space:nowrap;min-width:104px;}
+.rb-row.sum{border-top:1px solid var(--brd);margin-top:5px;padding-top:7px;}
+.rb-row.sum .rb-lb{color:var(--tp);font-weight:600;}
+.rb-row.sum .rb-vl{color:var(--ac);}
+.rb-row.neg .rb-vl{color:var(--r);}
+.rb-note{color:var(--tm);font-size:10.5px;line-height:1.6;padding:5px 0 3px;}
+.rb-ok{color:#4ade80;} .rb-no{color:var(--r);}
+@media(prefers-color-scheme:light){:root:not(.dark) .rb-ok{color:#00764A;}}
+:root.light .rb-ok{color:#00764A;}
+
+@media print{
+  body *{visibility:hidden;}
+  #rb-card,#rb-card *{visibility:visible;}
+  #rb-card{position:absolute;left:0;top:0;width:100%;box-shadow:none;background:#fff;color:#000;}
+  #rb-wrap.collapsed{display:block !important;}
+  .rb-actions,.ca{display:none !important;}
+  .rb-lb,.rb-fx,.rb-vl,.rb-note{color:#000 !important;}
+  .rb-sec{color:#000 !important;border-bottom:1px solid #999;}
+  .rb-row{page-break-inside:avoid;}
+}
+
+@media(max-width:599px){
+  .rb-row{grid-template-columns:1fr auto;}
+  .rb-fx{grid-column:1/-1;text-align:left;}
+  .pz-hero{padding:20px 18px;}
+  .wf-lb{flex:0 0 34%;font-size:11px;}
+  .wf-vl{flex:0 0 74px;font-size:11px;}
+}
+</style>
+</head>
+<body>
+<div id="chart-tip"></div>
+
+<!-- ══════════ INFO MODAL: RECHENWEG ══════════ -->
+<div class="info-overlay" id="info_overlay" onclick="if(event.target===this){closeModal('info_overlay');}">
+  <div class="info-box">
+    <div class="info-hdr">
+      <div>
+        <div class="info-hdr-title">Rechenweg &amp; Grundlagen</div>
+        <div class="info-hdr-sub">Pensionszusage / direkte Leistungszusage &ndash; &Ouml;sterreich</div>
+      </div>
+      <button class="info-close" onclick="closeModal('info_overlay')">&times;</button>
+    </div>
+    <div class="info-body">
+      <div class="info-section">
+        <div class="info-section-title">Steuerliche Systematik</div>
+        <div class="info-note">Eine Pensionszusage ist in der Ansparphase <b>doppelt beg&uuml;nstigt</b> und wird erst bei Auszahlung besteuert:</div>
+        <table class="info-table">
+          <tr><td>1. Einzahlung (Pr&auml;mie / R&uuml;ckstellung)</td><td style="color:#4ade80">steuerfrei</td></tr>
+          <tr><td>2. Thesaurierung (Wertzuwachs)</td><td style="color:#4ade80">steuerfrei &ndash; keine KESt</td></tr>
+          <tr><td>3. Auszahlung</td><td style="color:var(--r)">steuerpflichtig</td></tr>
+        </table>
+        <div class="info-note">Der gesamte Vorteil entsteht aus <b>Steuerstundung</b>, <b>Progressionsgef&auml;lle</b> und &ndash; bei mehr als 25 % Beteiligung &ndash; dem <b>H&auml;lftesteuersatz</b>.</div>
+      </div>
+      <div class="info-section">
+        <div class="info-section-title">Lohnsteuertarif (&sect; 33 EStG)</div>
+        <table class="info-table" id="info-tax-table"></table>
+      </div>
+      <div class="info-section">
+        <div class="info-section-title">Lohnnebenkosten Dienstgeber</div>
+        <table class="info-table" id="info-lnk-table"></table>
+        <div class="info-note">Die Dienstgeber-Sozialversicherung f&auml;llt nur bis zur H&ouml;chstbeitragsgrundlage an. Oberhalb bleiben DB, DZ, KommSt und MVK &ndash; deshalb sinken die Lohnnebenkosten bei hohen Bez&uuml;gen deutlich.</div>
+      </div>
+      <div class="info-section">
+        <div class="info-section-title">R&uuml;ckstellung nach &sect; 14 EStG (Teilwertverfahren)</div>
+        <div class="info-note">
+          Rechnungszins <b>6 %</b> (gesetzlich fix). Der Aufwand wird als <b>gleichbleibender Jahresbetrag</b> von der Zusageerteilung bis zum Pensionsantritt verteilt:
+        </div>
+        <table class="info-table">
+          <tr><td>Jahresbetrag JB</td><td>P &middot; D<sub>y</sub> &middot; &auml;<sub>y</sub> / (N<sub>x</sub> &minus; N<sub>y</sub>)</td></tr>
+          <tr><td>Teilwert nach t Jahren</td><td>P &middot; (D<sub>y</sub>/D<sub>x+t</sub>) &middot; &auml;<sub>y</sub> &minus; JB &middot; (N<sub>x+t</sub>&minus;N<sub>y</sub>)/D<sub>x+t</sub></td></tr>
+        </table>
+        <div class="info-note">x = Alter bei Zusage, y = Pensionsalter, P = zugesagte Jahrespension, D/N = Kommutationszahlen, &auml; = Rentenbarwertfaktor (monatlich vorsch&uuml;ssig).</div>
+      </div>
+      <div class="info-section">
+        <div class="info-section-title">Sterbetafel &ndash; wichtiger Vorbehalt</div>
+        <div class="info-note" id="info-sterbetafel"></div>
+      </div>
+      <div class="info-section">
+        <div class="info-section-title">H&auml;lftesteuersatz &sect; 37 EStG</div>
+        <table class="info-table">
+          <tr><td>Durchschnittssteuersatz</td><td>DSS = ESt(Gesamteinkommen) / Gesamteinkommen</td></tr>
+          <tr><td>Steuer</td><td>ESt(Gesamteinkommen) &minus; Kapital &middot; DSS/2</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ MODAL: HÄLFTESTEUERSATZ-CHECK ══════════ -->
+<div class="info-overlay" id="hst_overlay" onclick="if(event.target===this){closeModal('hst_overlay');}">
+  <div class="info-box">
+    <div class="info-hdr">
+      <div>
+        <div class="info-hdr-title">H&auml;lftesteuersatz &ndash; Voraussetzungen</div>
+        <div class="info-hdr-sub">&sect; 37 EStG bei Kapitalabfindung</div>
+      </div>
+      <button class="info-close" onclick="closeModal('hst_overlay')">&times;</button>
+    </div>
+    <div class="info-body">
+      <div class="info-section">
+        <div class="info-section-title">Pr&uuml;fung deiner Eingaben</div>
+        <div id="hst-checks"></div>
+      </div>
+      <div class="info-section">
+        <div class="info-note" id="hst-summary"></div>
+      </div>
+      <div class="info-section">
+        <div class="info-section-title">Rechtsgrundlage</div>
+        <div class="info-note">
+          Halber Durchschnittssteuersatz aus dem Titel <b>au&szlig;erordentlicher Eink&uuml;nfte</b> (&sect; 37 Abs. 1 iVm Abs. 5 EStG), ausgel&ouml;st durch Betriebsver&auml;u&szlig;erung oder Betriebsaufgabe &ndash; also Verkauf der Anteile oder Beendigung der T&auml;tigkeit als GGF &ndash; aus einem dieser Gr&uuml;nde:
+        </div>
+        <div class="chk"><span class="chk-ic ok">&bull;</span><span class="chk-tx">Tod des Steuerpflichtigen</span></div>
+        <div class="chk"><span class="chk-ic ok">&bull;</span><span class="chk-tx">Eintritt der Erwerbsunf&auml;higkeit</span></div>
+        <div class="chk"><span class="chk-ic ok">&bull;</span><span class="chk-tx">Einstellung der Erwerbst&auml;tigkeit bei vollendetem 60. Lebensjahr</span></div>
+        <div class="info-note" style="margin-top:10px">
+          Der erm&auml;&szlig;igte Steuersatz steht <b>nur &uuml;ber Antrag an die Finanz</b> zu. Der Steuerpflichtige muss mindestens <b>sieben Jahre selbst&auml;ndiger Unternehmer</b> gewesen sein &ndash; die Frist bezieht sich auf die T&auml;tigkeit, nicht auf die Laufzeit der Zusage. Ma&szlig;geblich ist der halbe Durchschnittssteuersatz des <b>Gesamteinkommens</b> im Rahmen einer Abschlussbilanz.
+        </div>
+        <div class="info-note" style="margin-top:10px">
+          F&uuml;r die Anwendbarkeit auf eine Pensionszusage sprechen die Erkenntnisse des Verwaltungsgerichtshofes <b>2011/15/0101</b> (2014) und <b>Ro 2016/15/0017</b> (2018) sowie die Aufnahme in die Einkommensteuerrichtlinien. Entscheidend ist, dass die <b>Forderung VOR Beendigung der T&auml;tigkeit entsteht</b>.
+        </div>
+      </div>
+      <div class="info-section">
+        <div class="info-section-title">Hinweis zum Berufsverbot</div>
+        <div class="info-note">Die Gesch&auml;ftsf&uuml;hrung muss eingestellt werden &ndash; die <b>Gesellschaftsanteile d&uuml;rfen behalten werden</b>. Laut Regierungsprogramm ist der Entfall dieses Berufsverbots <b>ab 01.01.2027</b> geplant. Das ist noch nicht in Kraft und wird hier nicht als Rechenannahme verwendet.</div>
+      </div>
+      <div class="info-section">
+        <div class="info-section-title">Wenn die Voraussetzungen nicht erf&uuml;llt sind</div>
+        <div class="info-note">Der Rechner blockiert nicht, sondern rechnet mit dem <b>vollen Tarif</b> weiter. Die Kapitalabfindung ist dann zur G&auml;nze progressiv steuerpflichtig.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ MODAL: ABFINDUNGSVERBOT BPG ══════════ -->
+<div class="info-overlay" id="bpg_overlay" onclick="if(event.target===this){closeModal('bpg_overlay');}">
+  <div class="info-box">
+    <div class="info-hdr">
+      <div>
+        <div class="info-hdr-title">Abfindungsverbot</div>
+        <div class="info-hdr-sub">&sect; 5 Betriebspensionsgesetz</div>
+      </div>
+      <button class="info-close" onclick="closeModal('bpg_overlay')">&times;</button>
+    </div>
+    <div class="info-body">
+      <div class="info-section">
+        <div class="info-note">Anwartschaften und laufende Leistungen aus einer direkten Leistungszusage <b>d&uuml;rfen nicht abgefunden werden</b>. Zul&auml;ssig ist eine Abfindung nur, wenn der Barwert die Kleinbetragsgrenze nicht &uuml;bersteigt.</div>
+      </div>
+      <div class="info-section">
+        <div class="info-section-title">Wer f&auml;llt unter das BPG?</div>
+        <div class="chk"><span class="chk-ic no">&#10005;</span><span class="chk-tx"><b>Arbeitnehmer und Prokuristen</b> &ndash; BPG gilt, Abfindung gesperrt, damit auch kein H&auml;lftesteuersatz.</span></div>
+        <div class="chk"><span class="chk-ic no">&#10005;</span><span class="chk-tx"><b>Gesellschafter-GF bis 25 %</b> &ndash; arbeitsrechtlich wie ein Angestellter zu behandeln.</span></div>
+        <div class="chk"><span class="chk-ic ok">&#10003;</span><span class="chk-tx"><b>Gesellschafter-GF &uuml;ber 25 %</b> &ndash; kein Arbeitnehmer im Sinn des BPG, Eink&uuml;nfte nach &sect; 22 Z 2 EStG. Nur hier ist die Kapitalabfindung m&ouml;glich.</span></div>
+      </div>
+      <div class="info-section">
+        <div class="info-section-title">Was bleibt f&uuml;r Arbeitnehmer?</div>
+        <div class="info-note">Die <b>Firmenpension</b> als laufende Rente, oder die <b>&Uuml;bertragung</b> in eine Pensionskasse bzw. Betriebliche Kollektivversicherung. Der Vorteil entsteht dann aus Steuerstundung und Progressionsgef&auml;lle &ndash; nicht aus dem H&auml;lftesteuersatz.</div>
+      </div>
+      <div class="info-section">
+        <div class="info-note">Die Kleinbetragsgrenze ist im Rechner nicht hinterlegt. Ob ein konkreter Barwert darunter liegt, ist im Einzelfall zu pr&uuml;fen.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ MODAL: FREMDVERGLEICH ══════════ -->
+<div class="info-overlay" id="fv_overlay" onclick="if(event.target===this){closeModal('fv_overlay');}">
+  <div class="info-box">
+    <div class="info-hdr">
+      <div>
+        <div class="info-hdr-title">Fremdvergleich</div>
+        <div class="info-hdr-sub">Gilt f&uuml;r Gesellschafter und Familienmitglieder</div>
+      </div>
+      <button class="info-close" onclick="closeModal('fv_overlay')">&times;</button>
+    </div>
+    <div class="info-body">
+      <div class="info-section">
+        <div class="info-note">Gesellschafter und Familienmitglieder d&uuml;rfen <b>keine Vorteile genie&szlig;en, die sie als Nicht-Gesellschafter oder Nicht-Familienmitglieder nicht erhalten h&auml;tten.</b></div>
+      </div>
+      <div class="info-section">
+        <div class="info-section-title">Worauf die Finanzverwaltung schaut</div>
+        <div class="chk"><span class="chk-ic ok">&bull;</span><span class="chk-tx"><b>H&ouml;he</b> &ndash; die Zusage muss der T&auml;tigkeit und dem Bezug angemessen sein.</span></div>
+        <div class="chk"><span class="chk-ic ok">&bull;</span><span class="chk-tx"><b>Ernsthaftigkeit</b> &ndash; schriftlich, unwiderruflich, rechtsverbindlich, tats&auml;chlich durchgef&uuml;hrt.</span></div>
+        <div class="chk"><span class="chk-ic ok">&bull;</span><span class="chk-tx"><b>&Uuml;blichkeit</b> &ndash; so, wie es einem fremden Dritten in vergleichbarer Position zugesagt worden w&auml;re.</span></div>
+        <div class="chk"><span class="chk-ic ok">&bull;</span><span class="chk-tx"><b>Zeitpunkt</b> &ndash; im Vorhinein klar und eindeutig vereinbart.</span></div>
+      </div>
+      <div class="info-section">
+        <div class="info-note">Der Fremdvergleich l&auml;sst sich nicht rechnerisch pr&uuml;fen. Er ist im konkreten Fall mit dem Steuerberater abzukl&auml;ren &ndash; h&auml;lt er nicht, droht die Einstufung als <b>verdeckte Aussch&uuml;ttung</b>.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="calc-layout">
+
+  <!-- ══════════ LEFT: PARAMS ══════════ -->
+  <aside class="params-panel">
+    <div class="ps">
+      <div class="sl">Person</div>
+      <div class="f">
+        <label>Geburtsdatum</label>
+        <input type="date" id="gebdat" value="1980-06-15" onchange="calculate()">
+      </div>
+      <div class="f">
+        <label>Geschlecht</label>
+        <select id="geschlecht" onchange="calculate()">
+          <option value="m" selected>M&auml;nnlich</option>
+          <option value="w">Weiblich</option>
+        </select>
+        <div class="hint-sub">Bestimmt die Sterbetafel f&uuml;r R&uuml;ckstellung und Rentenbarwert.</div>
+      </div>
+      <div class="f">
+        <label style="display:flex;align-items:center;gap:5px">Monatliches Bruttoeinkommen
+          <span class="info-icon" onclick="openInfoModal()">i<span class="info-tip">Rechenweg &amp; Grundlagen</span></span>
+        </label>
+        <div class="fu"><input type="number" id="einkommen" value="8000" min="0" step="100" onchange="calculate()"><span class="ub">&euro; / Mo.</span></div>
+        <div class="hint-sub">Laufender Aktivbezug &ndash; Basis f&uuml;r Grenzsteuersatz und Angemessenheit.</div>
+      </div>
+      <div class="f">
+        <label>Pensionsantritt</label>
+        <div class="fu"><input type="number" id="pension" value="65" min="55" max="70" step="1" onchange="calculate()"><span class="ub">Jahre</span></div>
+        <div class="hint-sub">Unter 60 entf&auml;llt der H&auml;lftesteuersatz &mdash; die Kapitalabfindung darf fr&uuml;hestens ab dem 60. Lebensjahr bzw. bei Erwerbsunf&auml;higkeit in Anspruch genommen werden.</div>
+      </div>
+      <div class="auto-info">
+        <div class="ai-row"><span>Alter</span><span class="ai-val" id="ai-alter">&mdash;</span></div>
+        <div class="ai-row"><span>Laufzeit bis Pension</span><span class="ai-val" id="ai-laufzeit">&mdash;</span></div>
+        <div class="ai-row"><span>Grenzsteuersatz</span><span class="ai-val" id="ai-grenz">&mdash;</span></div>
+        <div class="ai-row"><span>H&auml;lftesteuersatz</span><span class="ai-val" id="ai-hst">&mdash;</span></div>
+      </div>
+    </div>
+
+    <div class="ct" onclick="toggleSection(this)">
+      <div class="sl">Unternehmen</div><span class="ca">&#9660;</span>
+    </div>
+    <div class="cb">
+      <div class="f">
+        <label>Rechtsform</label>
+        <select id="rechtsform" onchange="onRechtsformChange()">
+          <option value="gmbh" selected>GmbH / FlexKapG (FlexCo)</option>
+          <option value="ag">Aktiengesellschaft</option>
+          <option value="eu">Einzelunternehmen</option>
+          <option value="og">Offene Gesellschaft (OG)</option>
+          <option value="kg">Kommanditgesellschaft (KG)</option>
+          <option value="gmbhcokg">GmbH &amp; Co KG</option>
+          <option value="gen">Genossenschaft</option>
+        </select>
+      </div>
+      <div class="f">
+        <label>Rolle der Person</label>
+        <select id="rolle" onchange="calculate()"></select>
+        <div class="hint-sub" id="rolle_hint"></div>
+      </div>
+      <div class="f" id="btlg_wrap">
+        <label>Beteiligung an der Gesellschaft</label>
+        <div class="fu"><input type="number" id="beteiligung" value="100" min="0" max="100" step="1" onchange="calculate()"><span class="ub">%</span></div>
+        <div class="hint-sub">&Uuml;ber 25 % = wesentlich beteiligt &rarr; H&auml;lftesteuersatz m&ouml;glich.</div>
+      </div>
+      <div class="f">
+        <label>Zuschlag zum Dienstgeberbeitrag (DZ)</label>
+        <div class="fu"><input type="number" id="dz" value="0.36" min="0" max="1" step="0.01" onchange="calculate()"><span class="ub">%</span></div>
+        <div class="hint-sub">Variiert je Bundesland, rund 0,32&ndash;0,42 %.</div>
+      </div>
+    </div>
+
+    <div class="ct" onclick="toggleSection(this)">
+      <div class="sl">Zusage</div><span class="ca">&#9660;</span>
+    </div>
+    <div class="cb">
+      <div class="f">
+        <label>Art der Zusage</label>
+        <select id="zusageart" onchange="onZusageArtChange()">
+          <option value="leistung" selected>Leistungsorientiert &ndash; Pension vorgeben</option>
+          <option value="beitrag">Beitragsorientiert &ndash; aus Produkt</option>
+        </select>
+        <div class="hint-sub" id="zusageart_hint">Fixleistung bei Alter, Berufsunf&auml;higkeit und Tod &ndash; arbeitnehmerfreundlich.</div>
+      </div>
+      <div class="f" id="zusage_leistung_wrap">
+        <label>Zugesagte monatliche Firmenpension</label>
+        <div class="fu"><input type="number" id="zusage_pension" value="2000" min="0" step="100" onchange="calculate()"><span class="ub">&euro; / Mo.</span></div>
+        <div class="hint-sub">Richtwert: bis 80 % des letzten laufenden Bezuges.</div>
+      </div>
+      <div class="f">
+        <label>Bez&uuml;ge pro Jahr</label>
+        <div class="bn-toggle">
+          <button class="bn-btn active" id="btn_bez12" onclick="setBezuege(12)">12&times;</button>
+          <button class="bn-btn" id="btn_bez14" onclick="setBezuege(14)">14&times;</button>
+        </div>
+        <div class="hint-sub" id="bez_hint">Zw&ouml;lf Monatsraten &ndash; der Regelfall bei einer Firmenpension.</div>
+      </div>
+      <div class="f">
+        <label>Zusage erteilt am</label>
+        <input type="date" id="zusagedat" value="" onchange="calculate()">
+      </div>
+      <div class="f" id="selbst_wrap">
+        <label>Jahre als selbst&auml;ndiger Unternehmer bei Pensionsantritt</label>
+        <div class="fu"><input type="number" id="selbst_jahre" value="25" min="0" max="50" step="1" onchange="calculate()"><span class="ub">Jahre</span></div>
+        <div class="hint-sub">Die Sieben-Jahres-Frist des &sect;&nbsp;37 Abs.&nbsp;5 EStG bezieht sich auf die selbst&auml;ndige Erwerbst&auml;tigkeit, nicht auf die Laufzeit der Zusage.</div>
+      </div>
+      <div class="f">
+        <label>Auszahlungsform</label>
+        <div class="bn-toggle" style="grid-template-columns:1fr 1fr 1fr">
+          <button class="bn-btn active" id="btn_kapital" onclick="setModus('kapital')">KAPITAL</button>
+          <button class="bn-btn" id="btn_rente" onclick="setModus('rente')">RENTE</button>
+          <button class="bn-btn" id="btn_pk" onclick="setModus('pk')">PK</button>
+        </div>
+        <div class="hint-sub" id="modus_hint">Kapitalabfindung &ndash; nur hier greift der H&auml;lftesteuersatz.</div>
+      </div>
+      <div class="f">
+        <label>Sonstige Eink&uuml;nfte im Auszahlungsjahr</label>
+        <div class="fu"><input type="number" id="sonst_eink" value="0" min="0" step="1000" onchange="calculate()"><span class="ub">&euro; / Jahr</span></div>
+        <div class="hint-sub">Z.&nbsp;B. gesetzliche Pension &ndash; bestimmt den Durchschnittssteuersatz.</div>
+      </div>
+    </div>
+
+    <div class="ct" onclick="toggleSection(this)">
+      <div class="sl">R&uuml;ckdeckung &amp; Produkt</div><span class="ca">&#9660;</span>
+    </div>
+    <div class="cb">
+      <div class="f">
+        <label>Monatliche Pr&auml;mie (Unternehmensaufwand)</label>
+        <div class="fu"><input type="number" id="praemie" value="1000" min="0" step="50" onchange="calculate()"><span class="ub">&euro; / Mo.</span></div>
+        <div class="hint-sub">Flie&szlig;t ungek&uuml;rzt in die R&uuml;ckdeckungsversicherung &ndash; keine Lohnnebenkosten.</div>
+      </div>
+      <div class="f">
+        <label>Klassischer Anteil (Hybrid)</label>
+        <div class="fu"><input type="number" id="klassik" value="40" min="30" max="100" step="5" onchange="calculate()"><span class="ub">%</span></div>
+        <div class="hint-sub" id="klassik_hint">Garantierter Deckungsstock. Mindestens 30 % &ndash; das Deckungserfordernis muss wertm&auml;&szlig;ig gesichert sein.</div>
+      </div>
+      <div class="f">
+        <label>Tarif / Modellrechnung</label>
+        <select id="rdv_tarif" onchange="calculate()">
+          <option value="none" selected>&ndash; keine Produktdaten hinterlegt &ndash;</option>
+        </select>
+        <div class="hint-sub" id="rdv_hint">Sobald eine Modellrechnung eingespielt ist, erscheint sie hier.</div>
+      </div>
+      <div class="f">
+        <label>Abfindungszins (Barwert der Zusage)</label>
+        <div class="fu"><input type="number" id="abf_zins" value="6" min="0" max="10" step="0.5" onchange="calculate()"><span class="ub">%</span></div>
+        <div class="hint-sub">Vorbelegt mit dem Rechnungszins nach &sect; 14 EStG.</div>
+      </div>
+    </div>
+
+    <div class="ct" onclick="toggleSection(this)">
+      <div class="sl">Vergleich</div><span class="ca">&#9660;</span>
+    </div>
+    <div class="cb">
+      <div class="f">
+        <label>Alternative</label>
+        <select id="vergleich" onchange="calculate()">
+          <option value="auto" selected>Automatisch je nach Rolle</option>
+          <option value="gehalt">Gehaltserh&ouml;hung</option>
+          <option value="ausschuettung">Gewinnaussch&uuml;ttung</option>
+        </select>
+        <div class="hint-sub" id="vergleich_hint"></div>
+      </div>
+      <div class="f">
+        <label>Rendite Privatdepot</label>
+        <div class="fu"><input type="number" id="depot_rendite" value="6" min="0" max="15" step="0.5" onchange="calculate()"><span class="ub">% p.a.</span></div>
+      </div>
+      <div class="f">
+        <label>KESt privat</label>
+        <div class="fu"><input type="number" id="kest" value="27.5" min="0" max="50" step="0.5" onchange="calculate()"><span class="ub">%</span></div>
+      </div>
+    </div>
+
+    <div class="ps ps-sticky">
+      <button class="btn-calc" onclick="calculate()">Berechnen</button>
+    </div>
+  </aside>
+
+  <!-- ══════════ RIGHT: RESULTS ══════════ -->
+  <div class="rp">
+
+    <div class="pz-note err hidden" id="note-zul"></div>
+    <div class="pz-note err hidden" id="note-bpg"></div>
+    <div class="pz-note warn hidden" id="note-produkt"></div>
+    <div class="pz-note warn hidden" id="note-kongruenz"></div>
+    <div class="pz-note warn hidden" id="note-sonst"></div>
+    <div class="pz-note warn hidden" id="note-vgl"></div>
+    <div class="pz-note warn hidden" id="note-angem"></div>
+    <div class="pz-note warn hidden" id="note-deckung"></div>
+    <div class="pz-note info hidden" id="note-fv"></div>
+
+    <!-- Vorteil Hero -->
+    <div class="pz-hero" id="hero">
+      <div class="ml" id="hero-title">Dein Vorteil gegen&uuml;ber der Alternative</div>
+      <div class="pz-big" id="hero-val">&mdash;</div>
+      <div class="pz-label" id="hero-label">&mdash;</div>
+      <div class="pz-pill" id="hero-pill"><span id="hero-pill-tx">&mdash;</span></div>
+      <div class="pz-sub" id="hero-sub">&mdash;</div>
+    </div>
+
+    <!-- Renditekennzahlen -->
+    <div class="card">
+      <div class="ch"><span class="ct-title">Systemrendite</span><span class="ct-badge" id="rend-badge">&mdash;</span></div>
+      <div class="cb2">
+        <div class="g3">
+          <div class="met"><div class="ml">Vergleichsrendite</div><div class="mv" id="m-rvgl">&mdash;</div><div class="ms">Alternative, nach allen Steuern</div></div>
+          <div class="met hi"><div class="ml">Systemrendite</div><div class="mv ac" id="m-rsys">&mdash;</div><div class="ms">Zusage, nach allen Steuern</div></div>
+          <div class="met"><div class="ml">Steuervorsprung</div><div class="mv green" id="m-rdiff">&mdash;</div><div class="ms">Differenz in Prozentpunkten</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Wasserfall -->
+    <div class="card">
+      <div class="ch"><span class="ct-title">Woher der Vorteil kommt</span></div>
+      <div class="cb2">
+        <div class="wf" id="wf"></div>
+        <div class="pz-sub" style="margin-top:14px;text-align:left" id="wf-note"></div>
+      </div>
+    </div>
+
+    <!-- Vergleichsgitter -->
+    <div class="card">
+      <div class="ch"><span class="ct-title">Gegen&uuml;berstellung</span><span class="ct-badge" id="cmp-badge">&mdash;</span></div>
+      <div class="cb2">
+        <div class="tw" style="max-height:none">
+          <table class="cmp">
+            <thead><tr>
+              <th></th><th class="hi">Pensionszusage</th><th id="cmp-alt-head">Alternative</th><th>Pensionskasse</th>
+            </tr></thead>
+            <tbody id="cmp-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Chart -->
+    <div class="card">
+      <div class="ch"><span class="ct-title">Verlauf bis zum Pensionsantritt</span></div>
+      <div class="legend" id="chart-legend"></div>
+      <div class="cb2">
+        <div class="chart-box"><canvas id="lineChart"></canvas></div>
+      </div>
+    </div>
+
+    <!-- Bilanz -->
+    <div class="card">
+      <div class="ch ch-toggle" id="bil-head" onclick="toggleTable('bil')">
+        <span class="ct-title">Bilanz &amp; R&uuml;ckstellung nach &sect; 14 EStG</span><span class="ca">&#9660;</span>
+      </div>
+      <div class="tw collapsed" id="bil-wrap">
+        <table>
+          <thead><tr>
+            <th>Alter</th><th>Pr&auml;mie</th><th>R&uuml;ckstellung</th><th>Dotierung</th>
+            <th>Aktivwert RDV</th><th>Deckungssoll</th><th>Deckung</th><th>Ergebnis&shy;effekt</th><th>Steuer&shy;effekt</th>
+          </tr></thead>
+          <tbody id="bil-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Berechnungsblatt -->
+    <div class="card" id="rb-card">
+      <div class="ch ch-toggle" id="rb-head" onclick="toggleTable('rb')">
+        <span class="ct-title">Berechnungsblatt &ndash; Schritt f&uuml;r Schritt</span><span class="ca">&#9660;</span>
+      </div>
+      <div class="tw collapsed" id="rb-wrap" style="max-height:none">
+        <div class="rb-actions">
+          <button class="rb-btn" onclick="druckeBerechnungsblatt()">Drucken / als PDF sichern</button>
+          <button class="rb-btn" onclick="kopiereBerechnungsblatt(this)">Als Text kopieren</button>
+        </div>
+        <div class="rb" id="rb"></div>
+      </div>
+    </div>
+
+    <div class="calc-disclaimer" id="disclaimer"></div>
+
+  </div>
+</div>
+
+<script src="shared.js"></script>
+<script>
+/* ══════════ ACCESS PROTECTION ══════════ */
+(function(){
+  const isLocal = ['localhost','127.0.0.1',''].includes(location.hostname);
+  let validRef = false;
+  try { const u = new URL(document.referrer); validRef = u.hostname === 'jasonschreiber.at' || u.hostname.endsWith('.jasonschreiber.at'); } catch {}
+  const ACCESS_KEY = 'pz2026';
+  const urlKey = new URLSearchParams(location.search).get('access');
+  if(!isLocal && !validRef && urlKey !== ACCESS_KEY){
+    window.__PZ_BLOCKED = true;
+    document.body.innerHTML = '<div style="padding:60px 20px;text-align:center;font-family:Inter,sans-serif;color:#888">Kein Zugriff.</div>';
+  }
+})();
+</script>
+<script src="pensionszusage-core.js"></script>
+</body>
+</html>

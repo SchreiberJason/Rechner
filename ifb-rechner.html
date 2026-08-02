@@ -15,9 +15,26 @@
   <aside class="params-panel">
     <div class="ps">
       <div class="sl">Gewinn</div>
-      <div class="f"><label>Jahresgewinn (vor GFB)</label>
-        <div class="fu"><input type="number" id="gfb_gewinn" value="80000" min="0" step="1000"><span class="ub">€</span></div></div>
-      <div class="auto-info" id="auto_steuer">Grenzsteuersatz: <b>—</b></div>
+      <div class="f"><label>Jahresgewinn (vor Gewinnfreibetrag)</label>
+        <div class="fu"><input type="number" id="gfb_gewinn" value="80000" min="0" step="1000" oninput="onInput()"><span class="ub">€</span></div>
+        <div class="hint-sub">Gesamtgewinn aus betrieblicher Tätigkeit (Einnahmen-Ausgaben-Rechnung oder Bilanz) — vor Abzug des Gewinnfreibetrags.</div>
+      </div>
+      <div class="auto-info" id="auto_steuer">
+        <div class="ai-row"><span>Grenzsteuersatz</span><span class="ai-val">—</span></div>
+      </div>
+    </div>
+
+    <div class="ps">
+      <div class="sl">Investition</div>
+      <div class="tog-row">
+        <span class="tog-label">Maximum ausnutzen</span>
+        <div class="pill on" id="gfb_max_pill" onclick="toggleMax()"></div>
+      </div>
+      <div class="f"><label>Investition in §14-Wertpapiere</label>
+        <div class="fu"><input type="number" id="gfb_invest" value="0" min="0" step="500" oninput="onInvestInput()"><span class="ub">€</span></div>
+        <div class="hint-sub">Jeder Euro investitionsbedingter Freibetrag erfordert einen Euro begünstigte Investition — Wertpapiere gem. §14 Abs 7 EStG oder abnutzbare Anlagegüter mit mindestens 4 Jahren Nutzungsdauer.</div>
+      </div>
+      <div class="auto-info" id="auto_invest">—</div>
     </div>
 
     <div class="ps ps-sticky">
@@ -29,28 +46,33 @@
 
     <!-- KPIs row 1: Freibeträge -->
     <div class="g3">
-      <div class="met hi"><span class="mi">📋</span><div class="ml">Gesamt-Freibetrag</div><div class="mv ac" id="r_gfb_total">—</div><div class="ms" id="r_gfb_total_sub">—</div></div>
-      <div class="met"><span class="mi">🏦</span><div class="ml">Fondsinvestition</div><div class="mv blue" id="r_invest">—</div><div class="ms">in §14-Wertpapiere</div></div>
-      <div class="met"><span class="mi">🎯</span><div class="ml">Grundfreibetrag</div><div class="mv yellow" id="r_grund">—</div><div class="ms">ohne Investment</div></div>
+      <div class="met hi"><span class="mi">📋</span><div class="ml">Gewinnfreibetrag</div><div class="mv ac" id="r_gfb_total">—</div><div class="ms" id="r_gfb_total_sub">—</div></div>
+      <div class="met"><span class="mi">🎯</span><div class="ml">Grundfreibetrag</div><div class="mv yellow" id="r_grund">—</div><div class="ms" id="r_grund_sub">ohne Investition</div></div>
+      <div class="met"><span class="mi">🏦</span><div class="ml">Investitionsbedingt</div><div class="mv blue" id="r_invest">—</div><div class="ms" id="r_invest_sub">—</div></div>
     </div>
 
     <!-- KPIs row 2: Vorteile -->
     <div class="g3">
-      <div class="met hi"><span class="mi">💰</span><div class="ml">Gesamtvorteil</div><div class="mv green" id="r_gesamt_vorteil">—</div><div class="ms">Steuer + SVS</div></div>
-      <div class="met"><span class="mi">📊</span><div class="ml">Steuervorteil</div><div class="mv ac" id="r_steuer_vorteil">—</div><div class="ms" id="r_steuer_sub">—</div></div>
-      <div class="met"><span class="mi">🛡️</span><div class="ml">SVS-Vorteil</div><div class="mv violet" id="r_svs_vorteil">—</div><div class="ms" id="r_svs_sub">—</div></div>
+      <div class="met hi"><span class="mi">💰</span><div class="ml">Steuervorteil</div><div class="mv green" id="r_steuer_vorteil">—</div><div class="ms" id="r_steuer_sub">—</div></div>
+      <div class="met"><span class="mi">⚡</span><div class="ml">Sofort-Effekt</div><div class="mv violet" id="r_sofort">—</div><div class="ms" id="r_sofort_sub">—</div></div>
+      <div class="met"><span class="mi">📈</span><div class="ml">Ungenutzt</div><div class="mv yellow" id="r_ungenutzt">—</div><div class="ms" id="r_ungenutzt_sub">—</div></div>
     </div>
 
     <!-- Vorteils-Vergleich -->
     <div class="card">
       <div class="ch">
         <span class="ct-title">Vergleich: ohne vs. mit GFB</span>
+        <span class="ct-badge" id="r_vergleich_badge">—</span>
       </div>
       <div class="cb2">
         <div class="adv-grid">
           <div class="adv-cell head"></div>
           <div class="adv-cell head">Ohne GFB</div>
           <div class="adv-cell head">Mit GFB</div>
+
+          <div class="adv-cell head">Steuerbemessung</div>
+          <div class="adv-cell"><div class="av" id="r_bmg_ohne">—</div></div>
+          <div class="adv-cell"><div class="av blue" id="r_bmg_mit">—</div><div class="as" id="r_bmg_diff">—</div></div>
 
           <div class="adv-cell head">Einkommensteuer</div>
           <div class="adv-cell"><div class="av" id="r_est_ohne">—</div></div>
@@ -67,10 +89,10 @@
       </div>
     </div>
 
-    <!-- Staffelung -->
+    <!-- Staffelung: Ihre Werte -->
     <div class="card">
       <div class="ch">
-        <span class="ct-title">Staffelung §10 EStG</span>
+        <span class="ct-title">Ihre Staffelung §10 EStG</span>
         <span class="ct-badge" id="r_max_badge">—</span>
       </div>
       <div class="cb2">
@@ -79,15 +101,34 @@
       </div>
       <div class="tw">
         <table>
-          <thead><tr><th>Stufe</th><th>Gewinn-Bereich</th><th>Satz</th><th>Freibetrag</th></tr></thead>
+          <thead><tr><th>Stufe</th><th>Gewinn-Bereich €</th><th>Satz</th><th>Möglich</th><th>Genutzt</th></tr></thead>
           <tbody id="r_tbody"></tbody>
         </table>
+      </div>
+      <div class="cb2" style="padding-top:0">
+        <div class="info-note">* Der Grundfreibetrag steht ohne Investition automatisch zu. Alle weiteren Stufen setzen eine begünstigte Investition in gleicher Höhe voraus.</div>
+      </div>
+    </div>
+
+    <!-- Gesetzliche Staffelung (Referenz) -->
+    <div class="card">
+      <div class="ch">
+        <span class="ct-title">Gesetzliche Staffelung</span>
+        <span class="ct-badge" id="r_gesetz_badge">—</span>
+      </div>
+      <div class="cb2">
+        <div class="info-example" id="r_gesetz_liste"></div>
+        <div class="info-note" id="r_gesetz_note">—</div>
       </div>
     </div>
 
     <!-- Info -->
     <div class="info-strip">
       <b>Behaltefrist:</b> Die §14-Wertpapiere müssen mindestens <b>4 Jahre</b> (taggenau 48 Monate) im Betriebsvermögen verbleiben. Bei vorzeitigem Verkauf wird der Freibetrag gewinnerhöhend nachversteuert.
+    </div>
+
+    <div class="info-strip">
+      <b>SVS:</b> Der Gewinnfreibetrag senkt nur die Einkommensteuer — <b>nicht</b> die SVS-Beitragsgrundlage. Nach §25 Abs 1 GSVG wird der Freibetrag den Einkünften für die Beitragsgrundlage wieder hinzugerechnet.
     </div>
 
   </div>
@@ -119,6 +160,20 @@ let SVS_RATE = SVS_PV + SVS_KV;
 let SVS_HBGL = 97020;
 let SVS_MBGL = 6613;
 
+/* Aus GFB_STUFEN abgeleitete Maxima — nie hartcodieren, damit
+   Gesetzesaenderungen ausschliesslich in config.json passieren. */
+let MAX_GRUND = 0, MAX_INVEST = 0, MAX_GFB = 0, GFB_GRENZE = 0;
+
+function ableitenMaxima() {
+  MAX_GRUND = 0; MAX_INVEST = 0; GFB_GRENZE = 0;
+  for (const s of GFB_STUFEN) {
+    const fb = (s.bis - s.von) * s.satz;
+    if (s.invest) MAX_INVEST += fb; else MAX_GRUND += fb;
+    GFB_GRENZE = Math.max(GFB_GRENZE, s.bis);
+  }
+  MAX_GFB = MAX_GRUND + MAX_INVEST;
+}
+
 function applyConfig() {
   if (!CONFIG || !CONFIG.ifb) return;
   const ifb = CONFIG.ifb;
@@ -138,14 +193,21 @@ function applyConfig() {
   if (ifb.svs_mbgl_jahr_eur) SVS_MBGL = ifb.svs_mbgl_jahr_eur;
 }
 
+/* ── Formatierung ── */
+/** 0.045 → "4,5 %", 0.15 → "15 %" (ohne ",0") */
+function satzTxt(v) {
+  return (v * 100).toFixed(1).replace(/[.,]0$/, '').replace('.', ',') + ' %';
+}
+
 /* ── ESt Berechnung ── */
 function berechneESt(einkommen) {
   let steuer = 0, prev = 0;
+  const e = Math.max(0, einkommen);
   for (const s of EST_STUFEN) {
-    const band = Math.max(0, Math.min(einkommen, s.bis) - prev);
+    const band = Math.max(0, Math.min(e, s.bis) - prev);
     steuer += band * s.satz;
     prev = s.bis;
-    if (einkommen <= s.bis) break;
+    if (e <= s.bis) break;
   }
   return steuer;
 }
@@ -154,7 +216,7 @@ function getGrenzsteuersatz(einkommen) {
   for (const s of EST_STUFEN) {
     if (einkommen <= s.bis) return s.satz;
   }
-  return 0.55;
+  return EST_STUFEN[EST_STUFEN.length - 1].satz;
 }
 
 /* ── SVS Berechnung ── */
@@ -164,52 +226,132 @@ function berechneSVS(einkommen) {
 }
 
 /* ══════════════════════════════════
+   INPUT-HANDLING
+══════════════════════════════════ */
+let maxMode = true;   /* true = investitionsbedingten GFB voll ausschoepfen */
+
+function onInput() { berechneGFB(); }
+
+function toggleMax() {
+  maxMode = !maxMode;
+  document.getElementById('gfb_max_pill').classList.toggle('on', maxMode);
+  berechneGFB();
+}
+
+/* Manuelle Eingabe im Investitionsfeld verlaesst automatisch den Maximum-Modus */
+function onInvestInput() {
+  if (maxMode) {
+    maxMode = false;
+    document.getElementById('gfb_max_pill').classList.remove('on');
+  }
+  berechneGFB();
+}
+
+/* ══════════════════════════════════
    HAUPTBERECHNUNG
 ══════════════════════════════════ */
 function berechneGFB() {
   const gewinn = Math.max(0, parseFloat(document.getElementById('gfb_gewinn').value) || 0);
+  const investEl = document.getElementById('gfb_invest');
 
-  let grundFB = 0, investFB = 0;
+  /* ── Freibetraege je Stufe (bei diesem Gewinn moeglich) ── */
+  let grundFB = 0, investFBMoeglich = 0;
   const details = [];
   for (const s of GFB_STUFEN) {
     const inRange = Math.max(0, Math.min(gewinn, s.bis) - s.von);
     const fb = inRange * s.satz;
-    details.push({ ...s, basis: inRange, fb });
-    if (s.invest) investFB += fb; else grundFB += fb;
+    details.push({ ...s, basis: inRange, moeglich: fb, genutzt: 0 });
+    if (s.invest) investFBMoeglich += fb; else grundFB += fb;
   }
+
+  /* ── Investition: Maximum-Modus schreibt den Bedarf ins Feld ── */
+  if (maxMode) investEl.value = Math.round(investFBMoeglich);
+  const investBetrag = Math.max(0, parseFloat(investEl.value) || 0);
+
+  /* 1 € Investition = 1 € investitionsbedingter Freibetrag, gedeckelt
+     durch die bei diesem Gewinn erreichbare Staffelung. */
+  const investFB = Math.min(investFBMoeglich, investBetrag);
+  const investUeberschuss = Math.max(0, investBetrag - investFBMoeglich);
+  const ungenutzt = investFBMoeglich - investFB;
   const totalFB = grundFB + investFB;
 
+  /* Genutzten Freibetrag stufenweise von unten auffuellen */
+  let restInvest = investFB;
+  for (const d of details) {
+    if (!d.invest) { d.genutzt = d.moeglich; continue; }
+    d.genutzt = Math.min(d.moeglich, restInvest);
+    restInvest -= d.genutzt;
+  }
+
+  /* ── Steuer & SVS ── */
   const grenz = getGrenzsteuersatz(gewinn);
+  const grenzNachher = getGrenzsteuersatz(gewinn - totalFB);
   document.getElementById('auto_steuer').innerHTML =
-    'Grenzsteuersatz: <b>' + (grenz * 100) + ' %</b> (automatisch ermittelt)';
+    '<div class="ai-row"><span>Grenzsteuersatz</span><span class="ai-val">' + satzTxt(grenz) + '</span></div>' +
+    '<div class="ai-row"><span>… nach Abzug des GFB</span><span class="ai-val">' + satzTxt(grenzNachher) + '</span></div>';
 
   const estOhne = berechneESt(gewinn);
   const estMit = berechneESt(gewinn - totalFB);
   const steuerVorteil = estOhne - estMit;
 
-  // GFB reduziert NUR die ESt-Bemessungsgrundlage, NICHT die SVS-Beitragsgrundlage
-  // (§25 GSVG: Bezugnahme auf Gewinn aus Gewerbebetrieb vor Freibeträgen).
+  /* Sofort-Effekt: Steuerersparnis, die ausschliesslich der Investition
+     zuzurechnen ist — der Grundfreibetrag kommt ohnehin ohne Investition. */
+  const estNurGrund = berechneESt(gewinn - grundFB);
+  const steuerVorteilInvest = estNurGrund - estMit;
+  const sofortEffekt = investFB > 0 ? steuerVorteilInvest / investFB : 0;
+
+  /* GFB reduziert NUR die ESt-Bemessungsgrundlage, NICHT die SVS-Beitragsgrundlage
+     (§25 Abs 1 GSVG: der Freibetrag wird den Einkuenften wieder hinzugerechnet). */
   const svsOhne = berechneSVS(gewinn);
   const svsMit = svsOhne;
   const svsVorteil = 0;
   const gesamtVorteil = steuerVorteil;
 
-  /* ── UI UPDATE ── */
+  /* ══════ UI: KPI-Reihe 1 ══════ */
   document.getElementById('r_gfb_total').textContent = eur(totalFB);
   document.getElementById('r_gfb_total_sub').textContent =
-    totalFB >= 46400 ? 'Maximum erreicht' : ((totalFB / 46400 * 100).toFixed(0) + ' % vom Maximum');
-  document.getElementById('r_invest').textContent = eur(investFB);
+    gewinn <= 0 ? 'kein Gewinn eingegeben'
+      : (totalFB / MAX_GFB * 100).toFixed(0) + ' % des gesetzlichen Maximums';
   document.getElementById('r_grund').textContent = eur(grundFB);
+  document.getElementById('r_grund_sub').textContent =
+    grundFB >= MAX_GRUND ? 'voll ausgeschöpft' : 'ohne Investition, automatisch';
+  document.getElementById('r_invest').textContent = eur(investFB);
+  document.getElementById('r_invest_sub').textContent =
+    investFBMoeglich <= 0 ? 'erst über ' + eur(GFB_STUFEN[1] ? GFB_STUFEN[1].von : 0) + ' Gewinn möglich'
+      : eur(investFB) + ' Investition erforderlich';
 
-  document.getElementById('r_gesamt_vorteil').textContent = eur(gesamtVorteil);
+  /* ══════ UI: KPI-Reihe 2 ══════ */
   document.getElementById('r_steuer_vorteil').textContent = eur(steuerVorteil);
-  document.getElementById('r_steuer_sub').textContent = 'bei ' + (grenz * 100) + ' % Grenzsteuersatz';
-  document.getElementById('r_svs_vorteil').textContent = eur(0);
-  document.getElementById('r_svs_sub').textContent = 'GFB reduziert keine SVS-Beiträge (§25 GSVG)';
+  document.getElementById('r_steuer_sub').textContent =
+    'bei ' + satzTxt(grenz) + ' Grenzsteuersatz';
+  document.getElementById('r_sofort').textContent = satzTxt(sofortEffekt);
+  document.getElementById('r_sofort_sub').textContent =
+    investFB > 0 ? eur(steuerVorteilInvest) + ' Ersparnis auf ' + eur(investFB) : 'keine Investition angesetzt';
+  document.getElementById('r_ungenutzt').textContent = eur(ungenutzt);
+  document.getElementById('r_ungenutzt_sub').textContent =
+    ungenutzt > 0 ? 'zusätzlich möglich bei voller Investition'
+      : (investFBMoeglich > 0 ? 'Staffelung voll genutzt' : 'kein investitionsbedingter GFB möglich');
 
+  /* ══════ UI: Investitions-Hinweis im Panel ══════ */
+  const invInfo = document.getElementById('auto_invest');
+  if (investFBMoeglich <= 0) {
+    invInfo.innerHTML = 'Ein investitionsbedingter Gewinnfreibetrag ist erst ab einem Gewinn von <b>' +
+      eur(GFB_STUFEN[1] ? GFB_STUFEN[1].von : 0) + '</b> möglich.';
+  } else if (investUeberschuss > 0) {
+    invInfo.innerHTML = '<div class="ai-row"><span>Nutzbar</span><span class="ai-val">' + eur(investFB) + '</span></div>' +
+      '<div class="ai-row"><span>Ohne GFB-Wirkung</span><span class="ai-val">' + eur(investUeberschuss) + '</span></div>';
+  } else {
+    invInfo.innerHTML = '<div class="ai-row"><span>Maximal nutzbar</span><span class="ai-val">' + eur(investFBMoeglich) + '</span></div>' +
+      '<div class="ai-row"><span>Davon eingesetzt</span><span class="ai-val">' + eur(investFB) + '</span></div>';
+  }
+
+  /* ══════ UI: Vergleich ══════ */
+  document.getElementById('r_bmg_ohne').textContent = eur(gewinn);
+  document.getElementById('r_bmg_mit').textContent = eur(gewinn - totalFB);
+  document.getElementById('r_bmg_diff').textContent = totalFB > 0 ? '− ' + eur(totalFB) : '±0';
   document.getElementById('r_est_ohne').textContent = eur(estOhne);
   document.getElementById('r_est_mit').textContent = eur(estMit);
-  document.getElementById('r_est_diff').textContent = '− ' + eur(steuerVorteil);
+  document.getElementById('r_est_diff').textContent = steuerVorteil > 0 ? '− ' + eur(steuerVorteil) : '±0';
   document.getElementById('r_svs_ohne').textContent = eur(svsOhne);
   document.getElementById('r_svs_mit').textContent = eur(svsMit);
   document.getElementById('r_svs_diff').textContent = svsVorteil > 0 ? '− ' + eur(svsVorteil) : '±0';
@@ -218,43 +360,85 @@ function berechneGFB() {
   const totalMit = estMit + svsMit;
   document.getElementById('r_total_ohne').textContent = eur(totalOhne);
   document.getElementById('r_total_mit').textContent = eur(totalMit);
-  document.getElementById('r_total_diff').textContent = '− ' + eur(gesamtVorteil);
+  document.getElementById('r_total_diff').textContent = gesamtVorteil > 0 ? '− ' + eur(gesamtVorteil) : '±0';
+  document.getElementById('r_vergleich_badge').textContent =
+    gesamtVorteil > 0 ? '− ' + eur(gesamtVorteil) + ' Belastung' : 'kein Vorteil';
 
+  /* ══════ UI: Balken, Legende, Tabelle ══════ */
   document.getElementById('r_max_badge').textContent =
-    totalFB >= 46400 ? 'Maximum' : (totalFB / 46400 * 100).toFixed(0) + ' %';
+    investFBMoeglich <= 0 ? 'nur Grundfreibetrag'
+      : ungenutzt > 0 ? (investFB / investFBMoeglich * 100).toFixed(0) + ' % der Investstufen genutzt'
+      : 'voll genutzt';
 
   let barHTML = '', legendHTML = '';
   for (const d of details) {
-    if (d.fb <= 0) continue;
-    const p = totalFB > 0 ? (d.fb / totalFB * 100) : 0;
+    if (d.genutzt <= 0) continue;
+    const p = totalFB > 0 ? (d.genutzt / totalFB * 100) : 0;
     barHTML += '<div class="sb-seg" style="background:' + d.color + ';width:' + p + '%"></div>';
-    legendHTML += '<div class="bd-item"><div class="bd-dot" style="background:' + d.color + '"></div>' + d.name + ': ' + eur(d.fb) + '</div>';
+    legendHTML += '<div class="bd-item"><div class="bd-dot" style="background:' + d.color + '"></div>' + d.name + ': ' + eur(d.genutzt) + '</div>';
+  }
+  if (ungenutzt > 0 && totalFB + ungenutzt > 0) {
+    const pu = ungenutzt / (totalFB + ungenutzt) * 100;
+    /* Balken auf Gesamt-Potenzial normieren, sobald ungenutzter Teil existiert */
+    barHTML = '';
+    for (const d of details) {
+      if (d.genutzt <= 0) continue;
+      barHTML += '<div class="sb-seg" style="background:' + d.color + ';width:' + (d.genutzt / (totalFB + ungenutzt) * 100) + '%"></div>';
+    }
+    barHTML += '<div class="sb-seg" style="background:var(--brd);width:' + pu + '%"></div>';
+    legendHTML += '<div class="bd-item"><div class="bd-dot" style="background:var(--brd)"></div>ungenutzt: ' + eur(ungenutzt) + '</div>';
   }
   document.getElementById('r_bar').innerHTML = barHTML;
   document.getElementById('r_legend').innerHTML = legendHTML;
 
   let tbody = '';
   for (const d of details) {
-    const active = d.basis > 0;
-    const opac = active ? '' : ' style="opacity:0.35"';
+    const opac = d.basis > 0 ? '' : ' style="opacity:0.35"';
     tbody += '<tr' + opac + '>';
     tbody += '<td>' + d.name + (d.invest ? '' : ' *') + '</td>';
-    tbody += '<td>' + eur(d.von) + ' – ' + eur(d.bis) + '</td>';
-    tbody += '<td>' + (d.satz * 100).toFixed(1) + ' %</td>';
-    tbody += '<td>' + eur(d.fb) + '</td>';
+    /* Kompakt ohne Waehrungszeichen — Spalte muss auf Mobile passen */
+    tbody += '<td>' + d.von.toLocaleString('de-AT') + ' – ' + d.bis.toLocaleString('de-AT') + '</td>';
+    tbody += '<td>' + satzTxt(d.satz) + '</td>';
+    tbody += '<td>' + eur(d.moeglich) + '</td>';
+    tbody += '<td class="' + (d.genutzt > 0 ? 'hl' : '') + '">' + eur(d.genutzt) + '</td>';
     tbody += '</tr>';
   }
-  tbody += '<tr class="total"><td>Gesamt</td><td></td><td></td><td class="ac-val">' + eur(totalFB) + '</td></tr>';
+  tbody += '<tr class="total"><td>Gesamt</td><td></td><td></td><td>' + eur(grundFB + investFBMoeglich) +
+           '</td><td class="ac-val">' + eur(totalFB) + '</td></tr>';
   document.getElementById('r_tbody').innerHTML = tbody;
+
+  /* ══════ UI: Gesetzliche Staffelung ══════ */
+  let liste = '';
+  GFB_STUFEN.forEach((s, i) => {
+    const label = i === 0
+      ? s.name + ' — bis ' + eur(s.bis)
+      : 'für die nächsten ' + eur(s.bis - s.von);
+    const aktiv = gewinn > s.von;
+    liste += '<div class="ie-row"' + (aktiv ? '' : ' style="opacity:0.45"') +
+      '><span class="ie-label">' + label + '</span><span class="ie-val' + (aktiv ? ' green' : '') + '">' + satzTxt(s.satz) + '</span></div>';
+  });
+  liste += '<div class="ie-row"><span class="ie-label">ab ' + eur(GFB_GRENZE) + '</span><span class="ie-val">kein weiterer GFB</span></div>';
+  liste += '<div class="ie-divider"></div>';
+  liste += '<div class="ie-row"><span class="ie-label">Gesetzliches Maximum</span><span class="ie-val">' + eur(MAX_GFB) + '</span></div>';
+  liste += '<div class="ie-row"><span class="ie-label">davon investitionsbedingt</span><span class="ie-val">' + eur(MAX_INVEST) + '</span></div>';
+  liste += '<div class="ie-row"><span class="ie-label">Ihr Freibetrag bei ' + eur(gewinn) + ' Gewinn</span><span class="ie-val green">' + eur(totalFB) + '</span></div>';
+  document.getElementById('r_gesetz_liste').innerHTML = liste;
+  document.getElementById('r_gesetz_badge').textContent = 'max. ' + eur(MAX_GFB);
+  document.getElementById('r_gesetz_note').innerHTML =
+    'Der maximale Gewinnfreibetrag von <b>' + eur(MAX_GFB) + '</b> wird erst ab einem Gewinn von ' + eur(GFB_GRENZE) +
+    ' erreicht. Bei ' + eur(gewinn) + ' Gewinn beträgt Ihr Freibetrag <b>' + eur(totalFB) + '</b> — davon ' +
+    eur(grundFB) + ' Grundfreibetrag ohne Investition.';
 
   /* ── Axion Bridge ── */
   if (window.__axionSendResult) window.__axionSendResult({
     type: 'ifb',
-    inputs: { gewinn },
+    inputs: { gewinn, investition: investBetrag, max_modus: maxMode },
     results: {
-      gfb_total: totalFB, invest_freibetrag: investFB, grund_freibetrag: grundFB,
-      steuer_vorteil: steuerVorteil, svs_vorteil: svsVorteil, gesamt_vorteil: gesamtVorteil,
-      grenzsteuersatz: grenz
+      gfb_total: totalFB, invest_freibetrag: investFB, invest_freibetrag_moeglich: investFBMoeglich,
+      grund_freibetrag: grundFB, ungenutzt,
+      steuer_vorteil: steuerVorteil, steuer_vorteil_invest: steuerVorteilInvest,
+      sofort_effekt: sofortEffekt, svs_vorteil: svsVorteil, gesamt_vorteil: gesamtVorteil,
+      grenzsteuersatz: grenz, max_gfb: MAX_GFB
     }
   });
 
@@ -265,6 +449,7 @@ function berechneGFB() {
 window.addEventListener('DOMContentLoaded', async () => {
   await loadConfig();
   applyConfig();
+  ableitenMaxima();
   berechneGFB();
   setTimeout(updatePanelMaxHeight, 0);
   setTimeout(sendHeight, 100);
